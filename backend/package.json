@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "test": "node --env-file-if-exists=.env --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "dev": "node --env-file-if-exists=.env --watch src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js"
   },
   "keywords": [],
   "author": "",
@@ -14,7 +14,9 @@
   "type": "module",
   "private": true,
   "dependencies": {
-    "express": "^5.2.1"
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "express-oauth2-jwt-bearer": "^1.10.0"
   },
   "devDependencies": {
     "jest": "^30.5.2",
