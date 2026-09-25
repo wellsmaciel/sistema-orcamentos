@@ -7,13 +7,17 @@ info:
     do Sistema de Orçamentos.
   version: 0.1.0
 
+servers:
+  - url: http://localhost:3000
+    description: Ambiente local de desenvolvimento
+
 tags:
   - name: Status
     description: Verificação do funcionamento da API.
   - name: Usuário
     description: Informações do usuário autenticado.
   - name: Clientes
-    description: Operações relacionadas aos clientes do prestador.
+    description: Operações relacionadas aos clientes salvos pelo prestador.
 
 paths:
   /health:
@@ -64,9 +68,11 @@ paths:
     get:
       tags:
         - Clientes
-      summary: Lista os clientes do prestador
+      summary: Lista os clientes salvos
       description: >
-        Retorna somente os clientes pertencentes ao prestador autenticado.
+        Retorna os clientes salvos pelo prestador autenticado para
+        reutilização na criação de orçamentos. Quando não houver clientes,
+        retorna uma lista vazia.
       operationId: listClients
       security:
         - Auth0Bearer: []
@@ -130,7 +136,8 @@ components:
       properties:
         status:
           type: string
-          example: ok
+          examples:
+            - 'OK'
 
     AuthenticatedUser:
       type: object
@@ -228,11 +235,13 @@ components:
         code:
           type: string
           description: Código estável que identifica o tipo do erro.
-          example: UNAUTHORIZED
+          examples:
+            - 'UNAUTHORIZED'
         message:
           type: string
           description: Mensagem compreensível sobre o erro.
-          example: É necessário apresentar um token de acesso válido.
+          examples:
+            - 'É necessário apresentar um token de acesso válido.'
         details:
           type: array
           description: Detalhes adicionais, principalmente sobre validações.
