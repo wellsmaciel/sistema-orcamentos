@@ -1,0 +1,246 @@
+openapi: 3.1.0
+
+info:
+  title: API do Sistema de Orçamentos
+  description: >
+    API REST responsável pelas regras de negócio e pelo acesso aos dados
+    do Sistema de Orçamentos.
+  version: 0.1.0
+
+tags:
+  - name: Status
+    description: Verificação do funcionamento da API.
+  - name: Usuário
+    description: Informações do usuário autenticado.
+  - name: Clientes
+    description: Operações relacionadas aos clientes do prestador.
+
+paths:
+  /health:
+    get:
+      tags:
+        - Status
+      summary: Verifica o funcionamento da API
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: API disponível.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/me:
+    get:
+      tags:
+        - Usuário
+      summary: Consulta o usuário autenticado
+      description: >
+        Retorna os dados básicos do prestador identificado pelo token
+        de acesso emitido pelo Auth0.
+      operationId: getAuthenticatedUser
+      security:
+        - Auth0Bearer: []
+      responses:
+        '200':
+          description: Usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticatedUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/clients:
+    get:
+      tags:
+        - Clientes
+      summary: Lista os clientes do prestador
+      description: >
+        Retorna somente os clientes pertencentes ao prestador autenticado.
+      operationId: listClients
+      security:
+        - Auth0Bearer: []
+      responses:
+        '200':
+          description: Lista de clientes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    Auth0Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token de acesso emitido pelo Auth0.
+
+  responses:
+    Unauthorized:
+      description: Token ausente, inválido ou expirado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Usuário autenticado, mas sem permissão para a operação.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Recurso não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Erro interno inesperado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ok
+
+    AuthenticatedUser:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - email
+      properties:
+        id:
+          type: string
+          description: Identificador do usuário no sistema.
+        name:
+          type: string
+          description: Nome do prestador.
+        email:
+          type: string
+          format: email
+          description: E-mail do prestador.
+
+    ClientListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Client'
+
+    Client:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - email
+        - phone
+        - address
+      properties:
+        id:
+          type: string
+          description: Identificador do cliente.
+        name:
+          type: string
+          description: Nome completo ou nome empresarial do cliente.
+        email:
+          type: string
+          format: email
+          description: E-mail utilizado para o envio do orçamento.
+        phone:
+          type: string
+          description: Telefone para contato com o cliente.
+        address:
+          $ref: '#/components/schemas/Address'
+
+    Address:
+      type: object
+      additionalProperties: false
+      required:
+        - street
+        - number
+        - postalCode
+        - district
+        - city
+        - state
+      properties:
+        street:
+          type: string
+          description: Rua, avenida ou outra identificação do logradouro.
+        number:
+          type: string
+          description: Número do endereço.
+        postalCode:
+          type: string
+          description: CEP.
+        district:
+          type: string
+          description: Bairro.
+        city:
+          type: string
+          description: Cidade.
+        state:
+          type: string
+          description: Estado.
+
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Código estável que identifica o tipo do erro.
+          example: UNAUTHORIZED
+        message:
+          type: string
+          description: Mensagem compreensível sobre o erro.
+          example: É necessário apresentar um token de acesso válido.
+        details:
+          type: array
+          description: Detalhes adicionais, principalmente sobre validações.
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              field:
+                type: string
+              message:
+                type: string
