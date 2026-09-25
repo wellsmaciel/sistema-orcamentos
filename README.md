@@ -8,12 +8,12 @@ O sistema permitirá cadastrar clientes, criar orçamentos, compartilhar um link
 
 sistema-orcamentos/
 
-- frontend/ # Aplicação web
-- backend/ # API e regras de negócio
-- docs/ # Documentação técnica e diagramas
-- .github/ # Configuração futura do GitHub Actions
-- .gitignore
-- README.md
+- `frontend/` — Aplicação web
+- `backend/` — API e regras de negócio
+- `docs/` — Documentação técnica e diagramas
+- `.github/` — Configuração futura do GitHub Actions
+- `.gitignore`
+- `README.md`
 
 ## Tecnologias confirmadas
 
@@ -37,6 +37,15 @@ sistema-orcamentos/
 - PostgreSQL
 - Sequelize v6
 - Docker Compose para execução local do PostgreSQL
+
+### Autenticação e autorização
+
+- Auth0
+- Universal Login
+- Acesso por e-mail e senha
+- Acesso por Conta Google
+- OAuth e OpenID Connect
+- Tokens de acesso para proteção da API
 
 ### Testes
 
@@ -68,7 +77,6 @@ As variáveis necessárias serão documentadas em arquivos `.env.example`, sem i
 
 ## Decisões pendentes
 
-- Provedor de autenticação gerenciada
 - Provedor de computação em nuvem
 - Serviço de envio de e-mails
 - Serviço de armazenamento de imagens
