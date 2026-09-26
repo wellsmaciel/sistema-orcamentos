@@ -147,14 +147,21 @@ components:
       properties:
         id:
           type: string
-          description: Identificador do usuário no sistema.
+          format: uuid
+          description: Identificador interno do usuário no Sistema de Orçamentos.
+          examples:
+            - 550e8400-e29b-41d4-a716-446655440000
         name:
           type: string
-          description: Nome do prestador.
+          description: Nome do usuário autenticado.
+          examples:
+            - Maria da Silva
         email:
           type: string
           format: email
-          description: E-mail do prestador.
+          description: E-mail do usuário autenticado.
+          examples:
+            - maria@example.com
 
     ClientListResponse:
       type: object

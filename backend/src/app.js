@@ -1,9 +1,17 @@
+import cors from 'cors';
 import express from 'express';
 import { InsufficientScopeError, InvalidTokenError, UnauthorizedError } from 'express-oauth2-jwt-bearer';
+
 import { getAuthenticatedUser } from './controllers/user.js';
 import { validateAccessToken } from './middlewares/auth.js';
 
 const app = express();
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_ORIGIN_URL,
+  }),
+);
 
 app.use(express.json());
 
