@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
-function ClientList({ getAccessTokenSilently }) {
-  const [clients, setClients] = useState([]);
+function ClientList({ clients, getAccessTokenSilently, onClientsChange }) {
   const [listError, setListError] = useState('');
   const [isLoadingClients, setIsLoadingClients] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -25,10 +24,10 @@ function ClientList({ getAccessTokenSilently }) {
         throw new Error(responseBody.message ?? 'Não foi possível consultar os clientes.');
       }
 
-      setClients(responseBody.items);
+      onClientsChange(responseBody.items);
       setHasLoaded(true);
     } catch (requestError) {
-      setClients([]);
+      onClientsChange([]);
       setListError(requestError.message);
     } finally {
       setIsLoadingClients(false);

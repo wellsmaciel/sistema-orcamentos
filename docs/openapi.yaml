@@ -18,6 +18,8 @@ tags:
     description: Informações do usuário autenticado.
   - name: Clientes
     description: Operações relacionadas aos clientes salvos pelo prestador.
+  - name: Orçamentos
+    description: Operações relacionadas à criação e ao acompanhamento de orçamentos.
 
 paths:
   /health:
@@ -117,6 +119,41 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/quotes:
+    post:
+      tags:
+        - Orçamentos
+      summary: Cria um orçamento em rascunho
+      description: >
+        Cria um orçamento editável associado a um cliente do prestador
+        autenticado. Os dados de contato do cliente e o endereço do serviço
+        são copiados para preservar o histórico do orçamento.
+      operationId: createQuoteDraft
+      security:
+        - Auth0Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteCreateRequest'
+      responses:
+        '201':
+          description: Orçamento criado em rascunho.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 components:
@@ -299,7 +336,116 @@ components:
         state:
           type: string
           description: Estado.
+    QuoteCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - clientId
+        - description
+        - totalAmount
+        - serviceDate
+        - serviceAddress
+      properties:
+        clientId:
+          type: string
+          format: uuid
+          description: Identificador do cliente cadastrado.
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+          description: Descrição livre dos serviços e valores do orçamento.
+        totalAmount:
+          type: string
+          pattern: '^\d{1,10}(\.\d{1,2})?$'
+          description: Valor total informado manualmente, maior que zero.
+          examples:
+            - '1500.50'
+        serviceDate:
+          type: string
+          format: date
+          description: Data prevista para a execução do serviço.
+          examples:
+            - '2026-10-15'
+        serviceAddress:
+          $ref: '#/components/schemas/Address'
+        locationNotes:
+          type: string
+          maxLength: 2000
+          description: Observações opcionais sobre o local do serviço.
 
+    QuoteClientSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - email
+        - phone
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identificador do cliente cadastrado.
+        name:
+          type: string
+          description: Nome do cliente no momento da criação do orçamento.
+        email:
+          type: string
+          format: email
+          description: E-mail do cliente no momento da criação do orçamento.
+        phone:
+          type: string
+          description: Telefone do cliente no momento da criação do orçamento.
+
+    Quote:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - client
+        - description
+        - totalAmount
+        - serviceDate
+        - serviceAddress
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identificador do orçamento.
+        client:
+          $ref: '#/components/schemas/QuoteClientSnapshot'
+        description:
+          type: string
+          description: Descrição livre do orçamento.
+        totalAmount:
+          type: string
+          description: Valor total preservado com duas casas decimais.
+          examples:
+            - '1500.50'
+        serviceDate:
+          type: string
+          format: date
+          description: Data prevista para a execução do serviço.
+        serviceAddress:
+          $ref: '#/components/schemas/Address'
+        locationNotes:
+          type: string
+          description: Observações opcionais sobre o local do serviço.
+        status:
+          type: string
+          enum:
+            - DRAFT
+            - SENT
+            - ACCEPTED
+            - REJECTED
+          description: Situação atual do orçamento.
+        createdAt:
+          type: string
+          format: date-time
+          description: Data e horário de criação do orçamento.
     ErrorResponse:
       type: object
       additionalProperties: false

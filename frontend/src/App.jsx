@@ -10,7 +10,7 @@ function App() {
   const [apiProfile, setApiProfile] = useState(null);
   const [apiError, setApiError] = useState('');
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
-
+  const [clients, setClients] = useState([]);
   async function handleLoadProfile() {
     try {
       setIsLoadingProfile(true);
@@ -73,7 +73,7 @@ function App() {
 
           {apiError && <p>{apiError}</p>}
           <ClientForm getAccessTokenSilently={getAccessTokenSilently} />
-          <ClientList getAccessTokenSilently={getAccessTokenSilently} />
+          <ClientList clients={clients} getAccessTokenSilently={getAccessTokenSilently} onClientsChange={setClients} />
 
           <button
             type="button"
