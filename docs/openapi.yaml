@@ -508,6 +508,7 @@ components:
       additionalProperties: false
       required:
         - id
+        - quoteNumber
         - client
         - description
         - totalAmount
@@ -520,6 +521,12 @@ components:
           type: string
           format: uuid
           description: Identificador do orçamento.
+        quoteNumber:
+          type: integer
+          minimum: 1
+          description: Número sequencial utilizado para identificar o orçamento.
+          examples:
+            - 1
         client:
           $ref: '#/components/schemas/QuoteClientSnapshot'
         description:

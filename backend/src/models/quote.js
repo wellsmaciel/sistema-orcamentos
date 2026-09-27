@@ -13,6 +13,14 @@ Quote.init(
       defaultValue: Sequelize.literal('gen_random_uuid()'),
     },
 
+    quoteNumber: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      autoIncrement: true,
+      unique: true,
+      field: 'quote_number',
+    },
+
     userId: {
       type: DataTypes.UUID,
       allowNull: false,

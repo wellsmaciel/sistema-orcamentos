@@ -16,6 +16,7 @@ function serializeQuote(quote) {
 
   const responseBody = {
     id: quote.id,
+    quoteNumber: quote.quoteNumber,
     client: {
       id: quote.clientId,
       name: quote.clientName,

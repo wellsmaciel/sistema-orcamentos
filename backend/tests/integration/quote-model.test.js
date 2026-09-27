@@ -83,6 +83,8 @@ describe('Modelo Quote', () => {
     );
 
     expect(quote.id).toBeDefined();
+    expect(quote.quoteNumber).toEqual(expect.any(Number));
+    expect(quote.quoteNumber).toBeGreaterThan(0);
     expect(quote.userId).toBe(user.id);
     expect(quote.clientId).toBe(client.id);
     expect(quote.clientName).toBe('Cliente de Teste');

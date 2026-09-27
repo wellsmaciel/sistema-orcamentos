@@ -20,6 +20,10 @@ function formatDate(value) {
   return `${day}/${month}/${year}`;
 }
 
+function formatQuoteNumber(value) {
+  return String(value).padStart(6, '0');
+}
+
 async function requestQuotes(getAccessTokenSilently) {
   const accessToken = await getAccessTokenSilently();
 
@@ -103,12 +107,16 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
           {quotes.map((quote) => (
             <li key={quote.id}>
               <article>
+                <h3>Orçamento nº {formatQuoteNumber(quote.quoteNumber)}</h3>
                 {quote.status === 'DRAFT' && onEdit && (
                   <button type="button" onClick={() => onEdit(quote)}>
                     Editar orçamento
                   </button>
                 )}
-                <h3>{quote.client.name}</h3>
+
+                <p>
+                  <strong>Cliente:</strong> {quote.client.name}
+                </p>
 
                 <p>
                   <strong>Situação:</strong> {statusLabels[quote.status] ?? quote.status}
