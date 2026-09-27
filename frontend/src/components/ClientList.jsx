@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { requestClients } from '../services/client.js';
 
 function ClientList({ clients, getAccessTokenSilently, onClientsChange }) {
   const [listError, setListError] = useState('');
@@ -10,21 +11,9 @@ function ClientList({ clients, getAccessTokenSilently, onClientsChange }) {
       setIsLoadingClients(true);
       setListError('');
 
-      const accessToken = await getAccessTokenSilently();
+      const items = await requestClients(getAccessTokenSilently);
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/clients`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      const responseBody = await response.json();
-
-      if (!response.ok) {
-        throw new Error(responseBody.message ?? 'Não foi possível consultar os clientes.');
-      }
-
-      onClientsChange(responseBody.items);
+      onClientsChange(items);
       setHasLoaded(true);
     } catch (requestError) {
       onClientsChange([]);

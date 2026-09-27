@@ -7,6 +7,7 @@ import ClientList from './components/ClientList.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import QuoteForm from './components/QuoteForm.jsx';
 import QuoteList from './components/QuoteList.jsx';
+import { requestClients } from './services/client.js';
 
 function App() {
   const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
@@ -16,6 +17,8 @@ function App() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [clients, setClients] = useState([]);
   const [currentView, setCurrentView] = useState('home');
+  const [isLoadingQuoteClients, setIsLoadingQuoteClients] = useState(false);
+  const [quoteClientsError, setQuoteClientsError] = useState('');
 
   async function handleLoadProfile() {
     try {
@@ -42,6 +45,28 @@ function App() {
       setApiError(requestError.message);
     } finally {
       setIsLoadingProfile(false);
+    }
+  }
+
+  async function handleNavigate(view) {
+    setCurrentView(view);
+
+    if (view !== 'new-quote') {
+      return;
+    }
+
+    try {
+      setIsLoadingQuoteClients(true);
+      setQuoteClientsError('');
+
+      const items = await requestClients(getAccessTokenSilently);
+
+      setClients(items);
+    } catch (requestError) {
+      setClients([]);
+      setQuoteClientsError(requestError.message);
+    } finally {
+      setIsLoadingQuoteClients(false);
     }
   }
 
@@ -72,7 +97,7 @@ function App() {
           </p>
 
           {currentView === 'home' ? (
-            <Dashboard onNavigate={setCurrentView} />
+            <Dashboard onNavigate={handleNavigate} />
           ) : (
             <>
               <button type="button" onClick={() => setCurrentView('home')}>
@@ -93,9 +118,21 @@ function App() {
                 <section>
                   <h2>Novo orçamento</h2>
 
-                  <ClientList clients={clients} getAccessTokenSilently={getAccessTokenSilently} onClientsChange={setClients} />
+                  {isLoadingQuoteClients && <p role="status">Carregando clientes...</p>}
 
-                  <QuoteForm clients={clients} getAccessTokenSilently={getAccessTokenSilently} />
+                  {quoteClientsError && <p role="alert">{quoteClientsError}</p>}
+
+                  {!isLoadingQuoteClients && !quoteClientsError && clients.length === 0 && (
+                    <>
+                      <p>Cadastre um cliente antes de criar um orçamento.</p>
+
+                      <button type="button" onClick={() => handleNavigate('clients')}>
+                        Ir para clientes
+                      </button>
+                    </>
+                  )}
+
+                  {!isLoadingQuoteClients && !quoteClientsError && clients.length > 0 && <QuoteForm clients={clients} getAccessTokenSilently={getAccessTokenSilently} />}
                 </section>
               )}
 
@@ -117,7 +154,7 @@ function App() {
 
                   {apiProfile && <pre>{JSON.stringify(apiProfile, null, 2)}</pre>}
 
-                  {apiError && <p>{apiError}</p>}
+                  {apiError && <p role="alert">{apiError}</p>}
                 </section>
               )}
             </>
