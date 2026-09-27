@@ -3,6 +3,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import './App.css';
 import ClientForm from './components/ClientForm.jsx';
 import ClientList from './components/ClientList.jsx';
+import QuoteForm from './components/QuoteForm.jsx';
 
 function App() {
   const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
@@ -11,6 +12,7 @@ function App() {
   const [apiError, setApiError] = useState('');
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [clients, setClients] = useState([]);
+
   async function handleLoadProfile() {
     try {
       setIsLoadingProfile(true);
@@ -74,6 +76,8 @@ function App() {
           {apiError && <p>{apiError}</p>}
           <ClientForm getAccessTokenSilently={getAccessTokenSilently} />
           <ClientList clients={clients} getAccessTokenSilently={getAccessTokenSilently} onClientsChange={setClients} />
+
+          <QuoteForm clients={clients} getAccessTokenSilently={getAccessTokenSilently} />
 
           <button
             type="button"
