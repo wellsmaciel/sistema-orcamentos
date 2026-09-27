@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+
 import './App.css';
 import ClientForm from './components/ClientForm.jsx';
 import ClientList from './components/ClientList.jsx';
+import Dashboard from './components/Dashboard.jsx';
 import QuoteForm from './components/QuoteForm.jsx';
+import QuoteList from './components/QuoteList.jsx';
 
 function App() {
   const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
@@ -12,6 +15,7 @@ function App() {
   const [apiError, setApiError] = useState('');
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [clients, setClients] = useState([]);
+  const [currentView, setCurrentView] = useState('home');
 
   async function handleLoadProfile() {
     try {
@@ -67,17 +71,57 @@ function App() {
             Você entrou como <strong>{user?.name ?? user?.email}</strong>.
           </p>
 
-          <button type="button" onClick={handleLoadProfile} disabled={isLoadingProfile}>
-            {isLoadingProfile ? 'Consultando...' : 'Consultar perfil na API'}
-          </button>
+          {currentView === 'home' ? (
+            <Dashboard onNavigate={setCurrentView} />
+          ) : (
+            <>
+              <button type="button" onClick={() => setCurrentView('home')}>
+                Voltar ao início
+              </button>
 
-          {apiProfile && <pre>{JSON.stringify(apiProfile, null, 2)}</pre>}
+              {currentView === 'clients' && (
+                <section>
+                  <h2>Clientes</h2>
 
-          {apiError && <p>{apiError}</p>}
-          <ClientForm getAccessTokenSilently={getAccessTokenSilently} />
-          <ClientList clients={clients} getAccessTokenSilently={getAccessTokenSilently} onClientsChange={setClients} />
+                  <ClientForm getAccessTokenSilently={getAccessTokenSilently} />
 
-          <QuoteForm clients={clients} getAccessTokenSilently={getAccessTokenSilently} />
+                  <ClientList clients={clients} getAccessTokenSilently={getAccessTokenSilently} onClientsChange={setClients} />
+                </section>
+              )}
+
+              {currentView === 'new-quote' && (
+                <section>
+                  <h2>Novo orçamento</h2>
+
+                  <ClientList clients={clients} getAccessTokenSilently={getAccessTokenSilently} onClientsChange={setClients} />
+
+                  <QuoteForm clients={clients} getAccessTokenSilently={getAccessTokenSilently} />
+                </section>
+              )}
+
+              {currentView === 'quotes' && (
+                <section>
+                  <h2>Meus orçamentos</h2>
+
+                  <QuoteList getAccessTokenSilently={getAccessTokenSilently} />
+                </section>
+              )}
+
+              {currentView === 'account' && (
+                <section>
+                  <h2>Minha conta</h2>
+
+                  <button type="button" onClick={handleLoadProfile} disabled={isLoadingProfile}>
+                    {isLoadingProfile ? 'Consultando...' : 'Consultar meus dados'}
+                  </button>
+
+                  {apiProfile && <pre>{JSON.stringify(apiProfile, null, 2)}</pre>}
+
+                  {apiError && <p>{apiError}</p>}
+                </section>
+              )}
+            </>
+          )}
 
           <button
             type="button"
