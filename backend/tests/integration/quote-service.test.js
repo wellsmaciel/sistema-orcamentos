@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import sequelize from '../../src/config/database.js';
 import Client from '../../src/models/client.js';
 import User from '../../src/models/user.js';
-import { confirmQuote, createQuote, listQuotes, updateQuote } from '../../src/services/quote.js';
+import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote } from '../../src/services/quote.js';
 
 describe('Serviço de orçamentos', () => {
   let transaction;
@@ -295,5 +295,33 @@ describe('Serviço de orçamentos', () => {
     expect(secondResult).toEqual({
       outcome: 'NOT_CONFIRMABLE',
     });
+  });
+  test('deve localizar um orçamento confirmado pelo token público', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const confirmationResult = await confirmQuote(user.id, quote.id, {
+      transaction,
+    });
+
+    const publicQuote = await getPublicQuote(confirmationResult.quote.publicToken, {
+      transaction,
+    });
+
+    expect(publicQuote).not.toBeNull();
+    expect(publicQuote.id).toBe(quote.id);
+    expect(publicQuote.status).toBe('SENT');
+  });
+
+  test('não deve consultar publicamente um orçamento sem token válido', async () => {
+    const publicQuote = await getPublicQuote('token-invalido', {
+      transaction,
+    });
+
+    expect(publicQuote).toBeNull();
   });
 });

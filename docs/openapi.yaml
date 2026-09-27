@@ -264,7 +264,37 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
+  /api/v1/public/quotes/{publicToken}:
+    get:
+      tags:
+        - Orçamentos
+      summary: Consulta um orçamento pelo link público
+      description: >
+        Retorna os dados públicos de um orçamento confirmado. Não exige
+        autenticação, pois o token presente no link funciona como chave de acesso.
+      operationId: getPublicQuote
+      security: []
+      parameters:
+        - name: publicToken
+          in: path
+          required: true
+          description: Token público gerado na confirmação do orçamento.
+          schema:
+            type: string
+            minLength: 64
+            maxLength: 64
+            pattern: '^[0-9a-f]{64}$'
+      responses:
+        '200':
+          description: Dados públicos do orçamento.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicQuote'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   securitySchemes:
     Auth0Bearer:
@@ -611,6 +641,55 @@ components:
           type: string
           format: date-time
           description: Data e horário de criação do orçamento.
+
+    PublicQuote:
+      type: object
+      additionalProperties: false
+      required:
+        - quoteNumber
+        - clientName
+        - description
+        - totalAmount
+        - serviceDate
+        - serviceAddress
+        - status
+        - sentAt
+      properties:
+        quoteNumber:
+          type: integer
+          minimum: 1
+          description: Número sequencial utilizado para identificar o orçamento.
+        clientName:
+          type: string
+          description: Nome do cliente no momento da criação do orçamento.
+        description:
+          type: string
+          description: Descrição livre do orçamento.
+        totalAmount:
+          type: string
+          description: Valor total preservado com duas casas decimais.
+          examples:
+            - '1500.50'
+        serviceDate:
+          type: string
+          format: date
+          description: Data prevista para a execução do serviço.
+        serviceAddress:
+          $ref: '#/components/schemas/Address'
+        locationNotes:
+          type: string
+          description: Observações opcionais sobre o local do serviço.
+        status:
+          type: string
+          enum:
+            - SENT
+            - ACCEPTED
+            - REJECTED
+          description: Situação atual do orçamento.
+        sentAt:
+          type: string
+          format: date-time
+          description: Data e horário em que o orçamento foi confirmado.
 
     QuoteListResponse:
       type: object

@@ -1,13 +1,12 @@
 import cors from 'cors';
 import express from 'express';
 import { InsufficientScopeError, InvalidTokenError, UnauthorizedError } from 'express-oauth2-jwt-bearer';
-
 import { getAuthenticatedUser } from './controllers/user.js';
 import { validateAccessToken } from './middlewares/auth.js';
 import { loadAuthenticatedUser } from './middlewares/authenticated-user.js';
 import { createClient, listClients } from './controllers/client.js';
 import { validateClient } from './middlewares/validate-client.js';
-import { confirmQuote, createQuote, listQuotes, updateQuote } from './controllers/quote.js';
+import { confirmQuote, createQuote, listQuotes, updateQuote, getPublicQuote } from './controllers/quote.js';
 import { validateQuote, validateQuoteIdParameter, validateQuoteUpdate } from './middlewares/validate-quote.js';
 const app = express();
 
@@ -23,6 +22,7 @@ app.get('/health', (_request, response) => {
   response.status(200).json({ status: 'ok' });
 });
 
+app.get('/api/v1/public/quotes/:publicToken', getPublicQuote);
 app.get('/api/v1/me', validateAccessToken, loadAuthenticatedUser, getAuthenticatedUser);
 app.post('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, validateClient, createClient);
 app.get('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, listClients);

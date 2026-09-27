@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-
 import './App.css';
 import ClientForm from './components/ClientForm.jsx';
 import ClientList from './components/ClientList.jsx';
@@ -8,10 +7,11 @@ import Dashboard from './components/Dashboard.jsx';
 import QuoteForm from './components/QuoteForm.jsx';
 import QuoteList from './components/QuoteList.jsx';
 import { requestClients } from './services/client.js';
+import PublicQuote from './components/PublicQuote.jsx';
 
 function App() {
   const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
-
+  const publicToken = new URLSearchParams(window.location.search).get('quote');
   const [apiProfile, setApiProfile] = useState(null);
   const [apiError, setApiError] = useState('');
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
@@ -20,6 +20,10 @@ function App() {
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [isLoadingQuoteClients, setIsLoadingQuoteClients] = useState(false);
   const [quoteClientsError, setQuoteClientsError] = useState('');
+
+  if (publicToken) {
+    return <PublicQuote publicToken={publicToken} />;
+  }
 
   async function handleLoadProfile() {
     try {

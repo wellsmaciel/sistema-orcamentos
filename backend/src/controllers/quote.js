@@ -1,4 +1,10 @@
-import { confirmQuote as confirmQuoteService, createQuote as createQuoteService, listQuotes as listQuotesService, updateQuote as updateQuoteService } from '../services/quote.js';
+import {
+  confirmQuote as confirmQuoteService,
+  createQuote as createQuoteService,
+  listQuotes as listQuotesService,
+  updateQuote as updateQuoteService,
+  getPublicQuote as getPublicQuoteService,
+} from '../services/quote.js';
 
 function serializeQuote(quote) {
   const serviceAddress = {
@@ -35,9 +41,47 @@ function serializeQuote(quote) {
     responseBody.locationNotes = quote.locationNotes;
   }
 
+  if (quote.publicToken) {
+    responseBody.publicToken = quote.publicToken;
+  }
+
+  if (quote.sentAt) {
+    responseBody.sentAt = quote.sentAt;
+  }
+
   return responseBody;
 }
+function serializePublicQuote(quote) {
+  const serviceAddress = {
+    street: quote.serviceStreet,
+    number: quote.serviceNumber,
+    postalCode: quote.servicePostalCode,
+    district: quote.serviceDistrict,
+    city: quote.serviceCity,
+    state: quote.serviceState,
+  };
 
+  if (quote.serviceComplement) {
+    serviceAddress.complement = quote.serviceComplement;
+  }
+
+  const responseBody = {
+    quoteNumber: quote.quoteNumber,
+    clientName: quote.clientName,
+    description: quote.description,
+    totalAmount: quote.totalAmount,
+    serviceDate: quote.serviceDate,
+    serviceAddress,
+    status: quote.status,
+    sentAt: quote.sentAt,
+  };
+
+  if (quote.locationNotes) {
+    responseBody.locationNotes = quote.locationNotes;
+  }
+
+  return responseBody;
+}
 async function createQuote(request, response, next) {
   try {
     const quote = await createQuoteService(request.authenticatedUser.id, request.body);
@@ -111,4 +155,20 @@ async function confirmQuote(request, response, next) {
     return next(error);
   }
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote };
+async function getPublicQuote(request, response, next) {
+  try {
+    const quote = await getPublicQuoteService(request.params.publicToken);
+
+    if (!quote) {
+      return response.status(404).json({
+        code: 'QUOTE_NOT_FOUND',
+        message: 'Orçamento não encontrado ou link inválido.',
+      });
+    }
+
+    return response.status(200).json(serializePublicQuote(quote));
+  } catch (error) {
+    return next(error);
+  }
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote };

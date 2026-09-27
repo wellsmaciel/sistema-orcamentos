@@ -1,6 +1,7 @@
 import Client from '../models/client.js';
 import Quote from '../models/quote.js';
 import { randomBytes } from 'node:crypto';
+const PUBLIC_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 
 function normalizeOptionalString(value) {
   if (typeof value !== 'string') {
@@ -153,4 +154,17 @@ async function confirmQuote(userId, quoteId, { transaction } = {}) {
     quote: confirmedQuote,
   };
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote };
+async function getPublicQuote(publicToken, { transaction } = {}) {
+  if (typeof publicToken !== 'string' || !PUBLIC_TOKEN_PATTERN.test(publicToken)) {
+    return null;
+  }
+
+  return Quote.findOne({
+    where: {
+      publicToken,
+      status: ['SENT', 'ACCEPTED', 'REJECTED'],
+    },
+    transaction,
+  });
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote };

@@ -41,4 +41,13 @@ describe('Rotas de orçamentos', () => {
       message: 'É necessário apresentar um token de acesso válido.',
     });
   });
+  test('GET /api/v1/public/quotes/:publicToken deve ser público', async () => {
+    const response = await request(app).get('/api/v1/public/quotes/token-invalido');
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({
+      code: 'QUOTE_NOT_FOUND',
+      message: 'Orçamento não encontrado ou link inválido.',
+    });
+  });
 });

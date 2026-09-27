@@ -24,6 +24,14 @@ function formatQuoteNumber(value) {
   return String(value).padStart(6, '0');
 }
 
+function buildPublicQuoteUrl(publicToken) {
+  const publicUrl = new URL(window.location.origin);
+
+  publicUrl.searchParams.set('quote', publicToken);
+
+  return publicUrl.toString();
+}
+
 async function requestQuotes(getAccessTokenSilently) {
   const accessToken = await getAccessTokenSilently();
 
@@ -66,6 +74,7 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [confirmingQuoteId, setConfirmingQuoteId] = useState(null);
+  const [copiedQuoteId, setCopiedQuoteId] = useState(null);
 
   useEffect(() => {
     let isCancelled = false;
@@ -131,6 +140,18 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
     }
   }
 
+  async function handleCopyLink(quote) {
+    try {
+      setErrorMessage('');
+
+      await navigator.clipboard.writeText(buildPublicQuoteUrl(quote.publicToken));
+
+      setCopiedQuoteId(quote.id);
+    } catch {
+      setErrorMessage('Não foi possível copiar o link. Utilize a opção de abrir o orçamento.');
+    }
+  }
+
   return (
     <div>
       <button type="button" onClick={handleRefresh} disabled={isLoading}>
@@ -163,6 +184,18 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
 
                       <button type="button" onClick={() => handleConfirm(quote)} disabled={isConfirming}>
                         {isConfirming ? 'Confirmando...' : 'Confirmar orçamento'}
+                      </button>
+                    </div>
+                  )}
+
+                  {quote.publicToken && (
+                    <div>
+                      <a href={buildPublicQuoteUrl(quote.publicToken)} target="_blank" rel="noreferrer">
+                        Abrir orçamento público
+                      </a>
+
+                      <button type="button" onClick={() => handleCopyLink(quote)}>
+                        {copiedQuoteId === quote.id ? 'Link copiado' : 'Copiar link'}
                       </button>
                     </div>
                   )}
