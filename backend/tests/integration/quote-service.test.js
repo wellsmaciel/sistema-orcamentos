@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import sequelize from '../../src/config/database.js';
 import Client from '../../src/models/client.js';
 import User from '../../src/models/user.js';
-import { createQuote, listQuotes } from '../../src/services/quote.js';
+import { createQuote, listQuotes, updateQuote } from '../../src/services/quote.js';
 
 describe('Serviço de orçamentos', () => {
   let transaction;
@@ -162,5 +162,82 @@ describe('Serviço de orçamentos', () => {
     expect(quotes[0].id).toBe(newerQuote.id);
     expect(quotes[1].id).toBe(olderQuote.id);
     expect(quotes.map((quote) => quote.id)).not.toContain(otherUserQuote.id);
+  });
+  test('deve atualizar um orçamento em rascunho', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const updateInput = buildQuoteInput(client.id);
+
+    delete updateInput.clientId;
+
+    updateInput.description = '  Descrição atualizada.  ';
+    updateInput.totalAmount = '2000';
+
+    const result = await updateQuote(user.id, quote.id, updateInput, {
+      transaction,
+    });
+
+    expect(result.outcome).toBe('UPDATED');
+    expect(result.quote.description).toBe('Descrição atualizada.');
+    expect(result.quote.totalAmount).toBe('2000.00');
+    expect(result.quote.clientId).toBe(client.id);
+    expect(result.quote.clientName).toBe(client.name);
+  });
+
+  test('não deve atualizar orçamento pertencente a outro usuário', async () => {
+    const owner = await createUser('Proprietário do Orçamento');
+    const otherUser = await createUser('Outro Prestador');
+    const client = await createClient(owner.id);
+
+    const quote = await createQuote(owner.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const updateInput = buildQuoteInput(client.id);
+
+    delete updateInput.clientId;
+
+    const result = await updateQuote(otherUser.id, quote.id, updateInput, {
+      transaction,
+    });
+
+    expect(result).toEqual({
+      outcome: 'NOT_FOUND',
+    });
+  });
+
+  test('não deve atualizar orçamento que não está em rascunho', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    await quote.update(
+      {
+        status: 'SENT',
+      },
+      {
+        transaction,
+      },
+    );
+
+    const updateInput = buildQuoteInput(client.id);
+
+    delete updateInput.clientId;
+
+    const result = await updateQuote(user.id, quote.id, updateInput, {
+      transaction,
+    });
+
+    expect(result).toEqual({
+      outcome: 'NOT_EDITABLE',
+    });
   });
 });

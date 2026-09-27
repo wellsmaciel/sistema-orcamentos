@@ -66,4 +66,51 @@ async function listQuotes(userId, { transaction } = {}) {
     transaction,
   });
 }
-export { createQuote, listQuotes };
+async function updateQuote(userId, quoteId, input, { transaction } = {}) {
+  const quote = await Quote.findOne({
+    where: {
+      id: quoteId,
+      userId,
+    },
+    transaction,
+  });
+
+  if (!quote) {
+    return {
+      outcome: 'NOT_FOUND',
+    };
+  }
+
+  if (quote.status !== 'DRAFT') {
+    return {
+      outcome: 'NOT_EDITABLE',
+    };
+  }
+
+  const { serviceAddress } = input;
+
+  const updatedQuote = await quote.update(
+    {
+      description: input.description.trim(),
+      totalAmount: normalizeAmount(input.totalAmount),
+      serviceDate: input.serviceDate,
+      serviceStreet: serviceAddress.street.trim(),
+      serviceNumber: serviceAddress.number.trim(),
+      serviceComplement: normalizeOptionalString(serviceAddress.complement),
+      servicePostalCode: serviceAddress.postalCode.trim(),
+      serviceDistrict: serviceAddress.district.trim(),
+      serviceCity: serviceAddress.city.trim(),
+      serviceState: serviceAddress.state.trim(),
+      locationNotes: normalizeOptionalString(input.locationNotes),
+    },
+    {
+      transaction,
+    },
+  );
+
+  return {
+    outcome: 'UPDATED',
+    quote: updatedQuote,
+  };
+}
+export { createQuote, listQuotes, updateQuote };

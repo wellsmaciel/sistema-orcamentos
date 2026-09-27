@@ -1,4 +1,4 @@
-import { validateQuoteInput } from '../../src/validators/quote.js';
+import { validateQuoteId, validateQuoteInput, validateQuoteUpdateInput } from '../../src/validators/quote.js';
 
 const CURRENT_DATE = '2026-09-27';
 
@@ -84,5 +84,41 @@ describe('Validação de orçamento', () => {
       field: 'status',
       message: 'Este campo não é permitido.',
     });
+  });
+  test('deve aceitar a atualização sem clientId', () => {
+    const input = buildValidInput();
+
+    delete input.clientId;
+
+    const errors = validateQuoteUpdateInput(input, CURRENT_DATE);
+
+    expect(errors).toEqual([]);
+  });
+
+  test('deve rejeitar a troca do cliente na atualização', () => {
+    const input = buildValidInput();
+
+    const errors = validateQuoteUpdateInput(input, CURRENT_DATE);
+
+    expect(errors).toContainEqual({
+      field: 'clientId',
+      message: 'Este campo não é permitido.',
+    });
+  });
+  test('deve aceitar um identificador de orçamento válido', () => {
+    const errors = validateQuoteId('550e8400-e29b-41d4-a716-446655440000');
+
+    expect(errors).toEqual([]);
+  });
+
+  test('deve rejeitar um identificador de orçamento inválido', () => {
+    const errors = validateQuoteId('identificador-invalido');
+
+    expect(errors).toEqual([
+      {
+        field: 'quoteId',
+        message: 'Informe um identificador válido.',
+      },
+    ]);
   });
 });

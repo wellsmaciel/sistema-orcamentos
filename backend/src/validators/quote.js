@@ -85,8 +85,20 @@ function validateServiceAddress(address, errors) {
 
   validateRequiredString(address.state, 'serviceAddress.state', errors, 100);
 }
+function validateQuoteId(value) {
+  if (typeof value !== 'string' || !UUID_PATTERN.test(value.trim())) {
+    return [
+      {
+        field: 'quoteId',
+        message: 'Informe um identificador válido.',
+      },
+    ];
+  }
 
-function validateQuoteInput(input, currentDate = getCurrentDate()) {
+  return [];
+}
+function validateQuoteInput(input, currentDate = getCurrentDate(), options = {}) {
+  const { requireClientId = true } = options;
   const errors = [];
 
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
@@ -98,12 +110,20 @@ function validateQuoteInput(input, currentDate = getCurrentDate()) {
     ];
   }
 
-  validateAllowedProperties(input, ['clientId', 'description', 'totalAmount', 'serviceDate', 'serviceAddress', 'locationNotes'], '', errors);
+  const allowedProperties = ['description', 'totalAmount', 'serviceDate', 'serviceAddress', 'locationNotes'];
 
-  if (typeof input.clientId !== 'string' || input.clientId.trim().length === 0) {
-    addError(errors, 'clientId', 'Este campo é obrigatório.');
-  } else if (!UUID_PATTERN.test(input.clientId.trim())) {
-    addError(errors, 'clientId', 'Informe um identificador válido.');
+  if (requireClientId) {
+    allowedProperties.unshift('clientId');
+  }
+
+  validateAllowedProperties(input, allowedProperties, '', errors);
+
+  if (requireClientId) {
+    if (typeof input.clientId !== 'string' || input.clientId.trim().length === 0) {
+      addError(errors, 'clientId', 'Este campo é obrigatório.');
+    } else if (!UUID_PATTERN.test(input.clientId.trim())) {
+      addError(errors, 'clientId', 'Informe um identificador válido.');
+    }
   }
 
   validateRequiredString(input.description, 'description', errors, 10000);
@@ -130,5 +150,9 @@ function validateQuoteInput(input, currentDate = getCurrentDate()) {
 
   return errors;
 }
-
-export { validateQuoteInput };
+function validateQuoteUpdateInput(input, currentDate = getCurrentDate()) {
+  return validateQuoteInput(input, currentDate, {
+    requireClientId: false,
+  });
+}
+export { validateQuoteInput, validateQuoteUpdateInput, validateQuoteId };

@@ -181,6 +181,50 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/quotes/{quoteId}:
+    put:
+      tags:
+        - Orçamentos
+      summary: Atualiza um orçamento em rascunho
+      description: >
+        Atualiza os dados editáveis de um orçamento pertencente ao prestador
+        autenticado. Somente orçamentos em rascunho podem ser alterados.
+      operationId: updateQuoteDraft
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: quoteId
+          in: path
+          required: true
+          description: Identificador do orçamento.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteUpdateRequest'
+      responses:
+        '200':
+          description: Orçamento atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   securitySchemes:
     Auth0Bearer:
@@ -216,7 +260,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-
+    Conflict:
+      description: O estado atual do recurso não permite esta operação.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     InternalServerError:
       description: Erro interno inesperado.
       content:
@@ -299,7 +348,38 @@ components:
           description: Telefone para contato com o cliente.
         address:
           $ref: '#/components/schemas/Address'
-
+    QuoteUpdateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - description
+        - totalAmount
+        - serviceDate
+        - serviceAddress
+      properties:
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+          description: Descrição livre dos serviços e valores do orçamento.
+        totalAmount:
+          type: string
+          pattern: '^\d{1,10}(\.\d{1,2})?$'
+          description: Valor total informado manualmente, maior que zero.
+          examples:
+            - '1500.50'
+        serviceDate:
+          type: string
+          format: date
+          description: Data prevista para a execução do serviço.
+          examples:
+            - '2026-10-15'
+        serviceAddress:
+          $ref: '#/components/schemas/Address'
+        locationNotes:
+          type: string
+          maxLength: 2000
+          description: Observações opcionais sobre o local do serviço.
     Client:
       type: object
       additionalProperties: false
