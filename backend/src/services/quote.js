@@ -57,5 +57,13 @@ async function createQuote(userId, input, { transaction } = {}) {
     },
   );
 }
-
-export { createQuote };
+async function listQuotes(userId, { transaction } = {}) {
+  return Quote.findAll({
+    where: {
+      userId,
+    },
+    order: [['created_at', 'DESC']],
+    transaction,
+  });
+}
+export { createQuote, listQuotes };

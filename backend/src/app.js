@@ -7,7 +7,7 @@ import { validateAccessToken } from './middlewares/auth.js';
 import { loadAuthenticatedUser } from './middlewares/authenticated-user.js';
 import { createClient, listClients } from './controllers/client.js';
 import { validateClient } from './middlewares/validate-client.js';
-import { createQuote } from './controllers/quote.js';
+import { createQuote, listQuotes } from './controllers/quote.js';
 import { validateQuote } from './middlewares/validate-quote.js';
 const app = express();
 
@@ -27,6 +27,7 @@ app.get('/api/v1/me', validateAccessToken, loadAuthenticatedUser, getAuthenticat
 app.post('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, validateClient, createClient);
 app.get('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, listClients);
 app.post('/api/v1/quotes', validateAccessToken, loadAuthenticatedUser, validateQuote, createQuote);
+app.get('/api/v1/quotes', validateAccessToken, loadAuthenticatedUser, listQuotes);
 app.use((error, _request, response, _next) => {
   if (error instanceof InsufficientScopeError) {
     return response.status(403).json({

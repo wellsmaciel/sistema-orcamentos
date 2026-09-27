@@ -1,4 +1,4 @@
-import { createQuote as createQuoteService } from '../services/quote.js';
+import { createQuote as createQuoteService, listQuotes as listQuotesService } from '../services/quote.js';
 
 function serializeQuote(quote) {
   const serviceAddress = {
@@ -53,5 +53,15 @@ async function createQuote(request, response, next) {
     return next(error);
   }
 }
+async function listQuotes(request, response, next) {
+  try {
+    const quotes = await listQuotesService(request.authenticatedUser.id);
 
-export { createQuote };
+    return response.status(200).json({
+      items: quotes.map(serializeQuote),
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+export { createQuote, listQuotes };
