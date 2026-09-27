@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import './App.css';
+import ClientForm from './components/ClientForm.jsx';
+import ClientList from './components/ClientList.jsx';
 
 function App() {
   const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
@@ -70,6 +72,8 @@ function App() {
           {apiProfile && <pre>{JSON.stringify(apiProfile, null, 2)}</pre>}
 
           {apiError && <p>{apiError}</p>}
+          <ClientForm getAccessTokenSilently={getAccessTokenSilently} />
+          <ClientList getAccessTokenSilently={getAccessTokenSilently} />
 
           <button
             type="button"

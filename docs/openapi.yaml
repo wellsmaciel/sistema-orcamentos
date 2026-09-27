@@ -61,14 +61,13 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
   /api/v1/clients:
     get:
       tags:
         - Clientes
       summary: Lista os clientes salvos
       description: >
-        Retorna os clientes salvos pelo prestador autenticado para
+        Retorna os clientes ativos salvos pelo prestador autenticado para
         reutilização na criação de orçamentos. Quando não houver clientes,
         retorna uma lista vazia.
       operationId: listClients
@@ -88,6 +87,38 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+    post:
+      tags:
+        - Clientes
+      summary: Cadastra um cliente
+      description: >
+        Cadastra um cliente e o associa automaticamente ao prestador
+        autenticado. O identificador do prestador não é recebido no corpo
+        da requisição.
+      operationId: createClient
+      security:
+        - Auth0Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+      responses:
+        '201':
+          description: Cliente cadastrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   securitySchemes:
     Auth0Bearer:
@@ -97,6 +128,12 @@ components:
       description: Token de acesso emitido pelo Auth0.
 
   responses:
+    BadRequest:
+      description: Dados enviados são inválidos.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     Unauthorized:
       description: Token ausente, inválido ou expirado.
       content:
@@ -174,6 +211,33 @@ components:
           items:
             $ref: '#/components/schemas/Client'
 
+    ClientCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - email
+        - phone
+        - address
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: Nome completo ou nome empresarial do cliente.
+        email:
+          type: string
+          format: email
+          maxLength: 320
+          description: E-mail utilizado para o envio do orçamento.
+        phone:
+          type: string
+          minLength: 8
+          maxLength: 30
+          description: Telefone para contato com o cliente.
+        address:
+          $ref: '#/components/schemas/Address'
+
     Client:
       type: object
       additionalProperties: false
@@ -186,7 +250,9 @@ components:
       properties:
         id:
           type: string
+          format: uuid
           description: Identificador do cliente.
+
         name:
           type: string
           description: Nome completo ou nome empresarial do cliente.
@@ -217,6 +283,10 @@ components:
         number:
           type: string
           description: Número do endereço.
+        complement:
+          type: string
+          maxLength: 150
+          description: Complemento opcional do endereço.
         postalCode:
           type: string
           description: CEP.

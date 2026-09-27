@@ -4,7 +4,9 @@ import { InsufficientScopeError, InvalidTokenError, UnauthorizedError } from 'ex
 
 import { getAuthenticatedUser } from './controllers/user.js';
 import { validateAccessToken } from './middlewares/auth.js';
-
+import { loadAuthenticatedUser } from './middlewares/authenticated-user.js';
+import { createClient, listClients } from './controllers/client.js';
+import { validateClient } from './middlewares/validate-client.js';
 const app = express();
 
 app.use(
@@ -19,8 +21,9 @@ app.get('/health', (_request, response) => {
   response.status(200).json({ status: 'ok' });
 });
 
-app.get('/api/v1/me', validateAccessToken, getAuthenticatedUser);
-
+app.get('/api/v1/me', validateAccessToken, loadAuthenticatedUser, getAuthenticatedUser);
+app.post('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, validateClient, createClient);
+app.get('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, listClients);
 app.use((error, _request, response, _next) => {
   if (error instanceof InsufficientScopeError) {
     return response.status(403).json({
