@@ -38,7 +38,7 @@ async function requestQuotes(getAccessTokenSilently) {
   return responseBody.items;
 }
 
-function QuoteList({ getAccessTokenSilently }) {
+function QuoteList({ getAccessTokenSilently, onEdit }) {
   const [quotes, setQuotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -103,6 +103,11 @@ function QuoteList({ getAccessTokenSilently }) {
           {quotes.map((quote) => (
             <li key={quote.id}>
               <article>
+                {quote.status === 'DRAFT' && onEdit && (
+                  <button type="button" onClick={() => onEdit(quote)}>
+                    Editar orçamento
+                  </button>
+                )}
                 <h3>{quote.client.name}</h3>
 
                 <p>

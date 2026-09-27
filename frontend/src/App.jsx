@@ -17,6 +17,7 @@ function App() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [clients, setClients] = useState([]);
   const [currentView, setCurrentView] = useState('home');
+  const [selectedQuote, setSelectedQuote] = useState(null);
   const [isLoadingQuoteClients, setIsLoadingQuoteClients] = useState(false);
   const [quoteClientsError, setQuoteClientsError] = useState('');
 
@@ -49,6 +50,7 @@ function App() {
   }
 
   async function handleNavigate(view) {
+    setSelectedQuote(null);
     setCurrentView(view);
 
     if (view !== 'new-quote') {
@@ -68,6 +70,26 @@ function App() {
     } finally {
       setIsLoadingQuoteClients(false);
     }
+  }
+
+  function handleEditQuote(quote) {
+    setSelectedQuote(quote);
+    setCurrentView('edit-quote');
+  }
+
+  function handleQuoteUpdated() {
+    setSelectedQuote(null);
+    setCurrentView('quotes');
+  }
+
+  function handleBack() {
+    if (currentView === 'edit-quote') {
+      setSelectedQuote(null);
+      setCurrentView('quotes');
+      return;
+    }
+
+    setCurrentView('home');
   }
 
   if (isLoading) {
@@ -100,8 +122,8 @@ function App() {
             <Dashboard onNavigate={handleNavigate} />
           ) : (
             <>
-              <button type="button" onClick={() => setCurrentView('home')}>
-                Voltar ao início
+              <button type="button" onClick={handleBack}>
+                {currentView === 'edit-quote' ? 'Voltar aos orçamentos' : 'Voltar ao início'}
               </button>
 
               {currentView === 'clients' && (
@@ -140,9 +162,11 @@ function App() {
                 <section>
                   <h2>Meus orçamentos</h2>
 
-                  <QuoteList getAccessTokenSilently={getAccessTokenSilently} />
+                  <QuoteList getAccessTokenSilently={getAccessTokenSilently} onEdit={handleEditQuote} />
                 </section>
               )}
+
+              {currentView === 'edit-quote' && selectedQuote && <QuoteForm quote={selectedQuote} getAccessTokenSilently={getAccessTokenSilently} onSaved={handleQuoteUpdated} />}
 
               {currentView === 'account' && (
                 <section>

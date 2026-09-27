@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const initialFormData = {
+const emptyFormData = {
   clientId: '',
   description: '',
   totalAmount: '',
@@ -15,6 +15,27 @@ const initialFormData = {
   locationNotes: '',
 };
 
+function buildInitialFormData(quote) {
+  if (!quote) {
+    return { ...emptyFormData };
+  }
+
+  return {
+    clientId: quote.client.id,
+    description: quote.description,
+    totalAmount: quote.totalAmount,
+    serviceDate: quote.serviceDate,
+    street: quote.serviceAddress.street,
+    number: quote.serviceAddress.number,
+    complement: quote.serviceAddress.complement ?? '',
+    postalCode: quote.serviceAddress.postalCode,
+    district: quote.serviceAddress.district,
+    city: quote.serviceAddress.city,
+    state: quote.serviceAddress.state,
+    locationNotes: quote.locationNotes ?? '',
+  };
+}
+
 function getCurrentDate() {
   const now = new Date();
   const year = now.getFullYear();
@@ -24,12 +45,15 @@ function getCurrentDate() {
   return `${year}-${month}-${day}`;
 }
 
-function QuoteForm({ clients, getAccessTokenSilently }) {
-  const [formData, setFormData] = useState(initialFormData);
-  const [createdQuote, setCreatedQuote] = useState(null);
+function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved }) {
+  const [formData, setFormData] = useState(() => buildInitialFormData(quote));
+  const [savedQuote, setSavedQuote] = useState(null);
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const selectedClient = clients.find((client) => client.id === formData.clientId);
+
+  const isEditing = Boolean(quote);
+
+  const selectedClient = isEditing ? quote.client : clients.find((client) => client.id === formData.clientId);
 
   function handleClientChange(event) {
     const clientId = event.target.value;
@@ -79,32 +103,39 @@ function QuoteForm({ clients, getAccessTokenSilently }) {
     try {
       setIsSubmitting(true);
       setSubmitError('');
-      setCreatedQuote(null);
+      setSavedQuote(null);
 
       const accessToken = await getAccessTokenSilently();
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes`, {
-        method: 'POST',
+      const requestBody = {
+        description: formData.description,
+        totalAmount: formData.totalAmount,
+        serviceDate: formData.serviceDate,
+        serviceAddress: {
+          street: formData.street,
+          number: formData.number,
+          complement: formData.complement,
+          postalCode: formData.postalCode,
+          district: formData.district,
+          city: formData.city,
+          state: formData.state,
+        },
+        locationNotes: formData.locationNotes,
+      };
+
+      if (!isEditing) {
+        requestBody.clientId = formData.clientId;
+      }
+
+      const endpoint = isEditing ? `${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes/${quote.id}` : `${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes`;
+
+      const response = await fetch(endpoint, {
+        method: isEditing ? 'PUT' : 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          clientId: formData.clientId,
-          description: formData.description,
-          totalAmount: formData.totalAmount,
-          serviceDate: formData.serviceDate,
-          serviceAddress: {
-            street: formData.street,
-            number: formData.number,
-            complement: formData.complement,
-            postalCode: formData.postalCode,
-            district: formData.district,
-            city: formData.city,
-            state: formData.state,
-          },
-          locationNotes: formData.locationNotes,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const responseBody = await response.json();
@@ -112,11 +143,18 @@ function QuoteForm({ clients, getAccessTokenSilently }) {
       if (!response.ok) {
         const detailsMessage = responseBody.details?.map((detail) => `${detail.field}: ${detail.message}`).join(' ');
 
-        throw new Error(detailsMessage ?? responseBody.message ?? 'Não foi possível criar o orçamento.');
+        throw new Error(detailsMessage || responseBody.message || `Não foi possível ${isEditing ? 'alterar' : 'criar'} o orçamento.`);
       }
 
-      setCreatedQuote(responseBody);
-      setFormData(initialFormData);
+      setSavedQuote(responseBody);
+
+      if (!isEditing) {
+        setFormData({ ...emptyFormData });
+      }
+
+      if (onSaved) {
+        onSaved(responseBody);
+      }
     } catch (requestError) {
       setSubmitError(requestError.message);
     } finally {
@@ -124,43 +162,60 @@ function QuoteForm({ clients, getAccessTokenSilently }) {
     }
   }
 
-  if (clients.length === 0) {
+  if (!isEditing && clients.length === 0) {
     return (
       <section>
         <h2>Novo orçamento</h2>
-        <p>Atualize a lista de clientes antes de criar um orçamento.</p>
+        <p>Carregue a lista de clientes antes de criar um orçamento.</p>
       </section>
     );
   }
 
   return (
     <section>
-      <h2>Novo orçamento</h2>
+      <h2>{isEditing ? 'Editar orçamento' : 'Novo orçamento'}</h2>
 
       <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="quote-client">Cliente</label>
-
-          <select id="quote-client" value={formData.clientId} onChange={handleClientChange} required>
-            <option value="">Selecione um cliente</option>
-
-            {clients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {selectedClient && (
+        {isEditing ? (
           <div>
+            <p>
+              <strong>Cliente:</strong> {selectedClient.name}
+            </p>
             <p>
               <strong>E-mail:</strong> {selectedClient.email}
             </p>
             <p>
               <strong>Telefone:</strong> {selectedClient.phone}
             </p>
+            <p>O cliente não pode ser alterado depois da criação do orçamento.</p>
           </div>
+        ) : (
+          <>
+            <div>
+              <label htmlFor="quote-client">Cliente</label>
+
+              <select id="quote-client" value={formData.clientId} onChange={handleClientChange} required>
+                <option value="">Selecione um cliente</option>
+
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {selectedClient && (
+              <div>
+                <p>
+                  <strong>E-mail:</strong> {selectedClient.email}
+                </p>
+                <p>
+                  <strong>Telefone:</strong> {selectedClient.phone}
+                </p>
+              </div>
+            )}
+          </>
         )}
 
         <div>
@@ -221,20 +276,21 @@ function QuoteForm({ clients, getAccessTokenSilently }) {
           <label htmlFor="quote-location-notes">Observações do local</label>
           <textarea id="quote-location-notes" name="locationNotes" value={formData.locationNotes} onChange={handleChange} maxLength={2000} />
         </div>
+
         <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Salvando...' : 'Salvar rascunho'}
+          {isSubmitting ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Salvar rascunho'}
         </button>
 
         {submitError && <p role="alert">{submitError}</p>}
 
-        {createdQuote && (
-          <div>
-            <p>Orçamento criado com sucesso.</p>
+        {savedQuote && (
+          <div role="status">
+            <p>{isEditing ? 'Orçamento alterado com sucesso.' : 'Orçamento criado com sucesso.'}</p>
             <p>
-              <strong>Status:</strong> {createdQuote.status}
+              <strong>Status:</strong> {savedQuote.status}
             </p>
             <p>
-              <strong>Valor:</strong> R$ {createdQuote.totalAmount}
+              <strong>Valor:</strong> R$ {savedQuote.totalAmount}
             </p>
           </div>
         )}
