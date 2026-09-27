@@ -94,6 +94,9 @@ jobs:
       - name: Preparar o npm
         run: npm install --global npm@11.6.2
 
+      - name: Instalar as dependências
+        run: npm ci --include=dev
+
       - name: Aplicar as migrations
         run: npm run db:migrate
 
