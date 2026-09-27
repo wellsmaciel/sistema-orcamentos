@@ -42,10 +42,30 @@ async function requestQuotes(getAccessTokenSilently) {
   return responseBody.items;
 }
 
+async function requestQuoteConfirmation(getAccessTokenSilently, quoteId) {
+  const accessToken = await getAccessTokenSilently();
+
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes/${quoteId}/confirm`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  const responseBody = await response.json();
+
+  if (!response.ok) {
+    throw new Error(responseBody.message ?? 'Não foi possível confirmar o orçamento.');
+  }
+
+  return responseBody;
+}
+
 function QuoteList({ getAccessTokenSilently, onEdit }) {
   const [quotes, setQuotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [confirmingQuoteId, setConfirmingQuoteId] = useState(null);
 
   useEffect(() => {
     let isCancelled = false;
@@ -90,6 +110,27 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
     }
   }
 
+  async function handleConfirm(quote) {
+    const shouldConfirm = window.confirm('Depois de confirmar, este orçamento não poderá mais ser editado. Deseja continuar?');
+
+    if (!shouldConfirm) {
+      return;
+    }
+
+    try {
+      setConfirmingQuoteId(quote.id);
+      setErrorMessage('');
+
+      const confirmedQuote = await requestQuoteConfirmation(getAccessTokenSilently, quote.id);
+
+      setQuotes((currentQuotes) => currentQuotes.map((currentQuote) => (currentQuote.id === confirmedQuote.id ? confirmedQuote : currentQuote)));
+    } catch (requestError) {
+      setErrorMessage(requestError.message);
+    } finally {
+      setConfirmingQuoteId(null);
+    }
+  }
+
   return (
     <div>
       <button type="button" onClick={handleRefresh} disabled={isLoading}>
@@ -104,38 +145,51 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
 
       {!isLoading && !errorMessage && quotes.length > 0 && (
         <ul>
-          {quotes.map((quote) => (
-            <li key={quote.id}>
-              <article>
-                <h3>Orçamento nº {formatQuoteNumber(quote.quoteNumber)}</h3>
-                {quote.status === 'DRAFT' && onEdit && (
-                  <button type="button" onClick={() => onEdit(quote)}>
-                    Editar orçamento
-                  </button>
-                )}
+          {quotes.map((quote) => {
+            const isConfirming = confirmingQuoteId === quote.id;
 
-                <p>
-                  <strong>Cliente:</strong> {quote.client.name}
-                </p>
+            return (
+              <li key={quote.id}>
+                <article>
+                  <h3>Orçamento nº {formatQuoteNumber(quote.quoteNumber)}</h3>
 
-                <p>
-                  <strong>Situação:</strong> {statusLabels[quote.status] ?? quote.status}
-                </p>
+                  {quote.status === 'DRAFT' && (
+                    <div>
+                      {onEdit && (
+                        <button type="button" onClick={() => onEdit(quote)} disabled={isConfirming}>
+                          Editar orçamento
+                        </button>
+                      )}
 
-                <p>
-                  <strong>Valor:</strong> {formatAmount(quote.totalAmount)}
-                </p>
+                      <button type="button" onClick={() => handleConfirm(quote)} disabled={isConfirming}>
+                        {isConfirming ? 'Confirmando...' : 'Confirmar orçamento'}
+                      </button>
+                    </div>
+                  )}
 
-                <p>
-                  <strong>Data do serviço:</strong> {formatDate(quote.serviceDate)}
-                </p>
+                  <p>
+                    <strong>Cliente:</strong> {quote.client.name}
+                  </p>
 
-                <p>
-                  <strong>Descrição:</strong> {quote.description}
-                </p>
-              </article>
-            </li>
-          ))}
+                  <p>
+                    <strong>Situação:</strong> {statusLabels[quote.status] ?? quote.status}
+                  </p>
+
+                  <p>
+                    <strong>Valor:</strong> {formatAmount(quote.totalAmount)}
+                  </p>
+
+                  <p>
+                    <strong>Data do serviço:</strong> {formatDate(quote.serviceDate)}
+                  </p>
+
+                  <p>
+                    <strong>Descrição:</strong> {quote.description}
+                  </p>
+                </article>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

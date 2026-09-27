@@ -30,4 +30,15 @@ describe('Rotas de orçamentos', () => {
       message: 'É necessário apresentar um token de acesso válido.',
     });
   });
+  test('POST /api/v1/quotes/:quoteId/confirm deve responder 401 sem token', async () => {
+    const quoteId = '550e8400-e29b-41d4-a716-446655440000';
+
+    const response = await request(app).post(`/api/v1/quotes/${quoteId}/confirm`);
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({
+      code: 'UNAUTHORIZED',
+      message: 'É necessário apresentar um token de acesso válido.',
+    });
+  });
 });

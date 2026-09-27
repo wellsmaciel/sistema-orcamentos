@@ -1,4 +1,4 @@
-import { createQuote as createQuoteService, listQuotes as listQuotesService, updateQuote as updateQuoteService } from '../services/quote.js';
+import { confirmQuote as confirmQuoteService, createQuote as createQuoteService, listQuotes as listQuotesService, updateQuote as updateQuoteService } from '../services/quote.js';
 
 function serializeQuote(quote) {
   const serviceAddress = {
@@ -88,4 +88,27 @@ async function updateQuote(request, response, next) {
     return next(error);
   }
 }
-export { createQuote, listQuotes, updateQuote };
+async function confirmQuote(request, response, next) {
+  try {
+    const result = await confirmQuoteService(request.authenticatedUser.id, request.params.quoteId);
+
+    if (result.outcome === 'NOT_FOUND') {
+      return response.status(404).json({
+        code: 'QUOTE_NOT_FOUND',
+        message: 'Orçamento não encontrado.',
+      });
+    }
+
+    if (result.outcome === 'NOT_CONFIRMABLE') {
+      return response.status(409).json({
+        code: 'QUOTE_NOT_CONFIRMABLE',
+        message: 'Somente orçamentos em rascunho podem ser confirmados.',
+      });
+    }
+
+    return response.status(200).json(serializeQuote(result.quote));
+  } catch (error) {
+    return next(error);
+  }
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote };

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import sequelize from '../../src/config/database.js';
 import Client from '../../src/models/client.js';
 import User from '../../src/models/user.js';
-import { createQuote, listQuotes, updateQuote } from '../../src/services/quote.js';
+import { confirmQuote, createQuote, listQuotes, updateQuote } from '../../src/services/quote.js';
 
 describe('Serviço de orçamentos', () => {
   let transaction;
@@ -238,6 +238,62 @@ describe('Serviço de orçamentos', () => {
 
     expect(result).toEqual({
       outcome: 'NOT_EDITABLE',
+    });
+  });
+  test('deve confirmar um orçamento em rascunho e gerar o token público', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const result = await confirmQuote(user.id, quote.id, {
+      transaction,
+    });
+
+    expect(result.outcome).toBe('CONFIRMED');
+    expect(result.quote.status).toBe('SENT');
+    expect(result.quote.publicToken).toMatch(/^[0-9a-f]{64}$/);
+    expect(result.quote.sentAt).toBeInstanceOf(Date);
+  });
+
+  test('não deve confirmar orçamento pertencente a outro usuário', async () => {
+    const owner = await createUser('Proprietário do Orçamento');
+    const otherUser = await createUser('Outro Prestador');
+    const client = await createClient(owner.id);
+
+    const quote = await createQuote(owner.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const result = await confirmQuote(otherUser.id, quote.id, {
+      transaction,
+    });
+
+    expect(result).toEqual({
+      outcome: 'NOT_FOUND',
+    });
+  });
+
+  test('não deve confirmar novamente um orçamento enviado', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    await confirmQuote(user.id, quote.id, {
+      transaction,
+    });
+
+    const secondResult = await confirmQuote(user.id, quote.id, {
+      transaction,
+    });
+
+    expect(secondResult).toEqual({
+      outcome: 'NOT_CONFIRMABLE',
     });
   });
 });

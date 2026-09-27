@@ -91,5 +91,7 @@ describe('Modelo Quote', () => {
     expect(quote.totalAmount).toBe('1500.50');
     expect(quote.serviceDate).toBe('2026-10-15');
     expect(quote.status).toBe('DRAFT');
+    expect(quote.publicToken).toBeNull();
+    expect(quote.sentAt).toBeNull();
   });
 });

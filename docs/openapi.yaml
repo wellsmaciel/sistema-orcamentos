@@ -225,6 +225,46 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/quotes/{quoteId}/confirm:
+    post:
+      tags:
+        - Orçamentos
+      summary: Confirma um orçamento em rascunho
+      description: >
+        Confirma um orçamento pertencente ao prestador autenticado, altera
+        seu status para enviado, bloqueia novas edições e gera o token usado
+        no link público.
+      operationId: confirmQuote
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: quoteId
+          in: path
+          required: true
+          description: Identificador do orçamento.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Orçamento confirmado e preparado para compartilhamento.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   securitySchemes:
     Auth0Bearer:
@@ -348,6 +388,7 @@ components:
           description: Telefone para contato com o cliente.
         address:
           $ref: '#/components/schemas/Address'
+
     QuoteUpdateRequest:
       type: object
       additionalProperties: false
@@ -380,6 +421,7 @@ components:
           type: string
           maxLength: 2000
           description: Observações opcionais sobre o local do serviço.
+
     Client:
       type: object
       additionalProperties: false
@@ -441,6 +483,7 @@ components:
         state:
           type: string
           description: Estado.
+
     QuoteCreateRequest:
       type: object
       additionalProperties: false
@@ -554,10 +597,21 @@ components:
             - ACCEPTED
             - REJECTED
           description: Situação atual do orçamento.
+        publicToken:
+          type: string
+          minLength: 64
+          maxLength: 64
+          pattern: '^[0-9a-f]{64}$'
+          description: Token utilizado para acessar o orçamento pelo link público.
+        sentAt:
+          type: string
+          format: date-time
+          description: Data e horário em que o orçamento foi confirmado.
         createdAt:
           type: string
           format: date-time
           description: Data e horário de criação do orçamento.
+
     QuoteListResponse:
       type: object
       additionalProperties: false
@@ -568,6 +622,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Quote'
+
     ErrorResponse:
       type: object
       additionalProperties: false

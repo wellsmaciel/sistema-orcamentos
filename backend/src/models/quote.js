@@ -124,6 +124,18 @@ Quote.init(
         isIn: [['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED']],
       },
     },
+    publicToken: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+      unique: true,
+      field: 'public_token',
+    },
+
+    sentAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'sent_at',
+    },
   },
   {
     sequelize,

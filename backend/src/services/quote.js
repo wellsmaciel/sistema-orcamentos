@@ -1,5 +1,6 @@
 import Client from '../models/client.js';
 import Quote from '../models/quote.js';
+import { randomBytes } from 'node:crypto';
 
 function normalizeOptionalString(value) {
   if (typeof value !== 'string') {
@@ -113,4 +114,43 @@ async function updateQuote(userId, quoteId, input, { transaction } = {}) {
     quote: updatedQuote,
   };
 }
-export { createQuote, listQuotes, updateQuote };
+async function confirmQuote(userId, quoteId, { transaction } = {}) {
+  const quote = await Quote.findOne({
+    where: {
+      id: quoteId,
+      userId,
+    },
+    transaction,
+  });
+
+  if (!quote) {
+    return {
+      outcome: 'NOT_FOUND',
+    };
+  }
+
+  if (quote.status !== 'DRAFT') {
+    return {
+      outcome: 'NOT_CONFIRMABLE',
+    };
+  }
+
+  const publicToken = randomBytes(32).toString('hex');
+
+  const confirmedQuote = await quote.update(
+    {
+      status: 'SENT',
+      publicToken,
+      sentAt: new Date(),
+    },
+    {
+      transaction,
+    },
+  );
+
+  return {
+    outcome: 'CONFIRMED',
+    quote: confirmedQuote,
+  };
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote };
