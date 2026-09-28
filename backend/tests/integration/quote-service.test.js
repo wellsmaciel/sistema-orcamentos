@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import sequelize from '../../src/config/database.js';
 import Client from '../../src/models/client.js';
 import User from '../../src/models/user.js';
-import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote } from '../../src/services/quote.js';
+import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote, respondToPublicQuote } from '../../src/services/quote.js';
 
 describe('Serviço de orçamentos', () => {
   let transaction;
@@ -124,6 +124,7 @@ describe('Serviço de orçamentos', () => {
 
     expect(quote).toBeNull();
   });
+
   test('deve listar somente os orçamentos do usuário, do mais recente para o mais antigo', async () => {
     const user = await createUser('Prestador de Teste');
     const otherUser = await createUser('Outro Prestador');
@@ -163,6 +164,7 @@ describe('Serviço de orçamentos', () => {
     expect(quotes[1].id).toBe(olderQuote.id);
     expect(quotes.map((quote) => quote.id)).not.toContain(otherUserQuote.id);
   });
+
   test('deve atualizar um orçamento em rascunho', async () => {
     const user = await createUser('Prestador de Teste');
     const client = await createClient(user.id);
@@ -296,6 +298,7 @@ describe('Serviço de orçamentos', () => {
       outcome: 'NOT_CONFIRMABLE',
     });
   });
+
   test('deve localizar um orçamento confirmado pelo token público', async () => {
     const user = await createUser('Prestador de Teste');
     const client = await createClient(user.id);
@@ -323,5 +326,100 @@ describe('Serviço de orçamentos', () => {
     });
 
     expect(publicQuote).toBeNull();
+  });
+
+  test('deve registrar a aceitação do orçamento pelo cliente', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const confirmationResult = await confirmQuote(user.id, quote.id, {
+      transaction,
+    });
+
+    const result = await respondToPublicQuote(
+      confirmationResult.quote.publicToken,
+      {
+        decision: 'ACCEPTED',
+      },
+      {
+        transaction,
+      },
+    );
+
+    expect(result.outcome).toBe('RESPONDED');
+    expect(result.quote.status).toBe('ACCEPTED');
+    expect(result.quote.respondedAt).toBeInstanceOf(Date);
+    expect(result.quote.rejectionReason).toBeNull();
+  });
+
+  test('deve registrar a recusa e normalizar o motivo', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const confirmationResult = await confirmQuote(user.id, quote.id, {
+      transaction,
+    });
+
+    const result = await respondToPublicQuote(
+      confirmationResult.quote.publicToken,
+      {
+        decision: 'REJECTED',
+        reason: '  O valor precisa ser revisto.  ',
+      },
+      {
+        transaction,
+      },
+    );
+
+    expect(result.outcome).toBe('RESPONDED');
+    expect(result.quote.status).toBe('REJECTED');
+    expect(result.quote.respondedAt).toBeInstanceOf(Date);
+    expect(result.quote.rejectionReason).toBe('O valor precisa ser revisto.');
+  });
+
+  test('não deve permitir uma segunda resposta ao orçamento', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const confirmationResult = await confirmQuote(user.id, quote.id, {
+      transaction,
+    });
+
+    await respondToPublicQuote(
+      confirmationResult.quote.publicToken,
+      {
+        decision: 'ACCEPTED',
+      },
+      {
+        transaction,
+      },
+    );
+
+    const secondResult = await respondToPublicQuote(
+      confirmationResult.quote.publicToken,
+      {
+        decision: 'REJECTED',
+        reason: 'Tentativa de alterar a resposta.',
+      },
+      {
+        transaction,
+      },
+    );
+
+    expect(secondResult).toEqual({
+      outcome: 'NOT_RESPONDABLE',
+    });
   });
 });

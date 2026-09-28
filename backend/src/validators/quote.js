@@ -155,4 +155,30 @@ function validateQuoteUpdateInput(input, currentDate = getCurrentDate()) {
     requireClientId: false,
   });
 }
-export { validateQuoteInput, validateQuoteUpdateInput, validateQuoteId };
+function validateQuoteResponseInput(input) {
+  const errors = [];
+
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return [
+      {
+        field: 'body',
+        message: 'O corpo da requisição deve ser um objeto.',
+      },
+    ];
+  }
+
+  validateAllowedProperties(input, ['decision', 'reason'], '', errors);
+
+  if (typeof input.decision !== 'string' || !['ACCEPTED', 'REJECTED'].includes(input.decision)) {
+    addError(errors, 'decision', 'Informe ACCEPTED ou REJECTED.');
+  }
+
+  validateOptionalString(input.reason, 'reason', errors, 2000);
+
+  if (input.decision === 'ACCEPTED' && typeof input.reason === 'string' && input.reason.trim().length > 0) {
+    addError(errors, 'reason', 'O motivo deve ser informado somente em caso de recusa.');
+  }
+
+  return errors;
+}
+export { validateQuoteInput, validateQuoteUpdateInput, validateQuoteId, validateQuoteResponseInput };

@@ -1,9 +1,10 @@
 import {
   confirmQuote as confirmQuoteService,
   createQuote as createQuoteService,
-  listQuotes as listQuotesService,
-  updateQuote as updateQuoteService,
   getPublicQuote as getPublicQuoteService,
+  listQuotes as listQuotesService,
+  respondToPublicQuote as respondToPublicQuoteService,
+  updateQuote as updateQuoteService,
 } from '../services/quote.js';
 
 function serializeQuote(quote) {
@@ -48,7 +49,13 @@ function serializeQuote(quote) {
   if (quote.sentAt) {
     responseBody.sentAt = quote.sentAt;
   }
+  if (quote.respondedAt) {
+    responseBody.respondedAt = quote.respondedAt;
+  }
 
+  if (quote.rejectionReason) {
+    responseBody.rejectionReason = quote.rejectionReason;
+  }
   return responseBody;
 }
 function serializePublicQuote(quote) {
@@ -79,7 +86,13 @@ function serializePublicQuote(quote) {
   if (quote.locationNotes) {
     responseBody.locationNotes = quote.locationNotes;
   }
+  if (quote.respondedAt) {
+    responseBody.respondedAt = quote.respondedAt;
+  }
 
+  if (quote.rejectionReason) {
+    responseBody.rejectionReason = quote.rejectionReason;
+  }
   return responseBody;
 }
 async function createQuote(request, response, next) {
@@ -171,4 +184,27 @@ async function getPublicQuote(request, response, next) {
     return next(error);
   }
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote };
+async function respondToPublicQuote(request, response, next) {
+  try {
+    const result = await respondToPublicQuoteService(request.params.publicToken, request.body);
+
+    if (result.outcome === 'NOT_FOUND') {
+      return response.status(404).json({
+        code: 'QUOTE_NOT_FOUND',
+        message: 'Orçamento não encontrado ou link inválido.',
+      });
+    }
+
+    if (result.outcome === 'NOT_RESPONDABLE') {
+      return response.status(409).json({
+        code: 'QUOTE_ALREADY_RESPONDED',
+        message: 'Este orçamento já recebeu uma resposta.',
+      });
+    }
+
+    return response.status(200).json(serializePublicQuote(result.quote));
+  } catch (error) {
+    return next(error);
+  }
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote };

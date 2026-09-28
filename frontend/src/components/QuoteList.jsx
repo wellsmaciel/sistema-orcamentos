@@ -219,6 +219,11 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
                   <p>
                     <strong>Descrição:</strong> {quote.description}
                   </p>
+                  {quote.rejectionReason && (
+                    <p>
+                      <strong>Motivo da recusa:</strong> {quote.rejectionReason}
+                    </p>
+                  )}
                 </article>
               </li>
             );

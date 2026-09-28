@@ -50,4 +50,33 @@ describe('Rotas de orçamentos', () => {
       message: 'Orçamento não encontrado ou link inválido.',
     });
   });
+  test('POST /api/v1/public/quotes/:publicToken/respond deve validar a decisão', async () => {
+    const response = await request(app).post('/api/v1/public/quotes/token-invalido/respond').send({
+      decision: 'PENDING',
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      code: 'VALIDATION_ERROR',
+      message: 'Os dados informados são inválidos.',
+      details: [
+        {
+          field: 'decision',
+          message: 'Informe ACCEPTED ou REJECTED.',
+        },
+      ],
+    });
+  });
+
+  test('POST /api/v1/public/quotes/:publicToken/respond deve ser público', async () => {
+    const response = await request(app).post('/api/v1/public/quotes/token-invalido/respond').send({
+      decision: 'ACCEPTED',
+    });
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({
+      code: 'QUOTE_NOT_FOUND',
+      message: 'Orçamento não encontrado ou link inválido.',
+    });
+  });
 });

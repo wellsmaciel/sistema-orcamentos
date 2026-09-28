@@ -93,5 +93,7 @@ describe('Modelo Quote', () => {
     expect(quote.status).toBe('DRAFT');
     expect(quote.publicToken).toBeNull();
     expect(quote.sentAt).toBeNull();
+    expect(quote.respondedAt).toBeNull();
+    expect(quote.rejectionReason).toBeNull();
   });
 });

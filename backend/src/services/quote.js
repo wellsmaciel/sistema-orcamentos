@@ -167,4 +167,39 @@ async function getPublicQuote(publicToken, { transaction } = {}) {
     transaction,
   });
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote };
+async function respondToPublicQuote(publicToken, input, { transaction } = {}) {
+  const quote = await getPublicQuote(publicToken, {
+    transaction,
+  });
+
+  if (!quote) {
+    return {
+      outcome: 'NOT_FOUND',
+    };
+  }
+
+  if (quote.status !== 'SENT') {
+    return {
+      outcome: 'NOT_RESPONDABLE',
+    };
+  }
+
+  const rejectionReason = input.decision === 'REJECTED' ? normalizeOptionalString(input.reason) : null;
+
+  const respondedQuote = await quote.update(
+    {
+      status: input.decision,
+      respondedAt: new Date(),
+      rejectionReason,
+    },
+    {
+      transaction,
+    },
+  );
+
+  return {
+    outcome: 'RESPONDED',
+    quote: respondedQuote,
+  };
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote };

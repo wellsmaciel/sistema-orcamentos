@@ -38,7 +38,6 @@ paths:
                 $ref: '#/components/schemas/HealthResponse'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
   /api/v1/me:
     get:
       tags:
@@ -295,6 +294,48 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/public/quotes/{publicToken}/respond:
+    post:
+      tags:
+        - Orçamentos
+      summary: Registra a resposta do cliente
+      description: >
+        Permite que o cliente aceite ou recuse um orçamento por meio do
+        token público. Um orçamento só pode receber uma resposta.
+      operationId: respondToPublicQuote
+      security: []
+      parameters:
+        - name: publicToken
+          in: path
+          required: true
+          description: Token público gerado na confirmação do orçamento.
+          schema:
+            type: string
+            minLength: 64
+            maxLength: 64
+            pattern: '^[0-9a-f]{64}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteResponseRequest'
+      responses:
+        '200':
+          description: Resposta registrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicQuote'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   securitySchemes:
     Auth0Bearer:
@@ -637,10 +678,35 @@ components:
           type: string
           format: date-time
           description: Data e horário em que o orçamento foi confirmado.
+        respondedAt:
+          type: string
+          format: date-time
+          description: Data e horário da resposta do cliente.
+        rejectionReason:
+          type: string
+          maxLength: 2000
+          description: Motivo informado pelo cliente em caso de recusa.
         createdAt:
           type: string
           format: date-time
           description: Data e horário de criação do orçamento.
+
+    QuoteResponseRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - decision
+      properties:
+        decision:
+          type: string
+          enum:
+            - ACCEPTED
+            - REJECTED
+          description: Decisão tomada pelo cliente.
+        reason:
+          type: string
+          maxLength: 2000
+          description: Motivo opcional informado em caso de recusa.
 
     PublicQuote:
       type: object
@@ -690,6 +756,14 @@ components:
           type: string
           format: date-time
           description: Data e horário em que o orçamento foi confirmado.
+        respondedAt:
+          type: string
+          format: date-time
+          description: Data e horário da resposta do cliente.
+        rejectionReason:
+          type: string
+          maxLength: 2000
+          description: Motivo informado pelo cliente em caso de recusa.
 
     QuoteListResponse:
       type: object

@@ -1,4 +1,4 @@
-import { validateQuoteId, validateQuoteInput, validateQuoteUpdateInput } from '../../src/validators/quote.js';
+import { validateQuoteId, validateQuoteInput, validateQuoteUpdateInput, validateQuoteResponseInput } from '../../src/validators/quote.js';
 
 const CURRENT_DATE = '2026-09-27';
 
@@ -120,5 +120,44 @@ describe('Validação de orçamento', () => {
         message: 'Informe um identificador válido.',
       },
     ]);
+  });
+  test('deve aceitar a aprovação de um orçamento', () => {
+    const errors = validateQuoteResponseInput({
+      decision: 'ACCEPTED',
+    });
+
+    expect(errors).toEqual([]);
+  });
+
+  test('deve aceitar a recusa com motivo', () => {
+    const errors = validateQuoteResponseInput({
+      decision: 'REJECTED',
+      reason: 'O valor precisa ser revisto.',
+    });
+
+    expect(errors).toEqual([]);
+  });
+
+  test('deve rejeitar uma decisão inválida', () => {
+    const errors = validateQuoteResponseInput({
+      decision: 'PENDING',
+    });
+
+    expect(errors).toContainEqual({
+      field: 'decision',
+      message: 'Informe ACCEPTED ou REJECTED.',
+    });
+  });
+
+  test('não deve aceitar motivo em uma aprovação', () => {
+    const errors = validateQuoteResponseInput({
+      decision: 'ACCEPTED',
+      reason: 'Texto indevido.',
+    });
+
+    expect(errors).toContainEqual({
+      field: 'reason',
+      message: 'O motivo deve ser informado somente em caso de recusa.',
+    });
   });
 });

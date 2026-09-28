@@ -130,11 +130,20 @@ Quote.init(
       unique: true,
       field: 'public_token',
     },
-
     sentAt: {
       type: DataTypes.DATE,
       allowNull: true,
       field: 'sent_at',
+    },
+    respondedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'responded_at',
+    },
+    rejectionReason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'rejection_reason',
     },
   },
   {
