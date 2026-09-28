@@ -1,5 +1,6 @@
 import Client from '../models/client.js';
 import Quote from '../models/quote.js';
+import Company from '../models/company.js';
 import { randomBytes } from 'node:crypto';
 const PUBLIC_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 
@@ -135,6 +136,19 @@ async function confirmQuote(userId, quoteId, { transaction } = {}) {
       outcome: 'NOT_CONFIRMABLE',
     };
   }
+  const company = await Company.findOne({
+    where: {
+      ownerUserId: userId,
+      active: true,
+    },
+    transaction,
+  });
+
+  if (!company) {
+    return {
+      outcome: 'COMPANY_NOT_FOUND',
+    };
+  }
 
   const publicToken = randomBytes(32).toString('hex');
 
@@ -143,6 +157,17 @@ async function confirmQuote(userId, quoteId, { transaction } = {}) {
       status: 'SENT',
       publicToken,
       sentAt: new Date(),
+      providerName: company.name,
+      providerEmail: company.email,
+      providerPhone: company.phone,
+      providerTaxId: company.taxId,
+      providerStreet: company.street,
+      providerNumber: company.number,
+      providerComplement: company.complement,
+      providerPostalCode: company.postalCode,
+      providerDistrict: company.district,
+      providerCity: company.city,
+      providerState: company.state,
     },
     {
       transaction,

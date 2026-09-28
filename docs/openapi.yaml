@@ -292,7 +292,8 @@ paths:
       description: >
         Confirma um orçamento pertencente ao prestador autenticado, altera
         seu status para enviado, bloqueia novas edições e gera o token usado
-        no link público.
+        no link público. Exige um perfil profissional ativo e copia seus dados
+        para o orçamento, preservando o histórico.
       operationId: confirmQuote
       security:
         - Auth0Bearer: []
@@ -774,6 +775,30 @@ components:
           type: string
           description: Telefone do cliente no momento da criação do orçamento.
 
+    QuoteProviderSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+          description: Nome profissional no momento da confirmação do orçamento.
+        email:
+          type: string
+          format: email
+          description: E-mail comercial no momento da confirmação do orçamento.
+        phone:
+          type: string
+          description: Telefone comercial no momento da confirmação do orçamento.
+        taxId:
+          type: string
+          description: CPF ou CNPJ no momento da confirmação do orçamento.
+        address:
+          $ref: '#/components/schemas/Address'
+
     Quote:
       type: object
       additionalProperties: false
@@ -851,6 +876,7 @@ components:
           type: string
           format: uuid
           description: Identificador do orçamento recusado que originou esta correção.
+
     QuoteResponseRequest:
       type: object
       additionalProperties: false
@@ -888,6 +914,8 @@ components:
         clientName:
           type: string
           description: Nome do cliente no momento da criação do orçamento.
+        provider:
+          $ref: '#/components/schemas/QuoteProviderSnapshot'
         description:
           type: string
           description: Descrição livre do orçamento.

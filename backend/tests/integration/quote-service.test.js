@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import sequelize from '../../src/config/database.js';
 import Client from '../../src/models/client.js';
 import User from '../../src/models/user.js';
+import Company from '../../src/models/company.js';
 import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote, respondToPublicQuote, createQuoteCorrection } from '../../src/services/quote.js';
 
 describe('Serviço de orçamentos', () => {
@@ -26,7 +27,7 @@ describe('Serviço de orçamentos', () => {
     await sequelize.close();
   });
 
-  async function createUser(name) {
+  async function createUserWithoutCompany(name) {
     return User.create(
       {
         auth0Subject: `auth0|quote-service-${randomUUID()}`,
@@ -38,6 +39,32 @@ describe('Serviço de orçamentos', () => {
         transaction,
       },
     );
+  }
+
+  async function createUser(name) {
+    const user = await createUserWithoutCompany(name);
+
+    await Company.create(
+      {
+        ownerUserId: user.id,
+        name: `${name} Serviços`,
+        email: 'profissional@example.com',
+        phone: '11988887777',
+        taxId: '12345678901',
+        street: 'Rua Profissional',
+        number: '200',
+        complement: 'Sala 1',
+        postalCode: '01001-001',
+        district: 'Centro',
+        city: 'São Paulo',
+        state: 'SP',
+      },
+      {
+        transaction,
+      },
+    );
+
+    return user;
   }
 
   async function createClient(userId, active = true) {
@@ -242,6 +269,7 @@ describe('Serviço de orçamentos', () => {
       outcome: 'NOT_EDITABLE',
     });
   });
+
   test('deve confirmar um orçamento em rascunho e gerar o token público', async () => {
     const user = await createUser('Prestador de Teste');
     const client = await createClient(user.id);
@@ -258,6 +286,41 @@ describe('Serviço de orçamentos', () => {
     expect(result.quote.status).toBe('SENT');
     expect(result.quote.publicToken).toMatch(/^[0-9a-f]{64}$/);
     expect(result.quote.sentAt).toBeInstanceOf(Date);
+    expect(result.quote.providerName).toBe('Prestador de Teste Serviços');
+    expect(result.quote.providerEmail).toBe('profissional@example.com');
+    expect(result.quote.providerPhone).toBe('11988887777');
+    expect(result.quote.providerTaxId).toBe('12345678901');
+    expect(result.quote.providerStreet).toBe('Rua Profissional');
+    expect(result.quote.providerNumber).toBe('200');
+    expect(result.quote.providerComplement).toBe('Sala 1');
+    expect(result.quote.providerPostalCode).toBe('01001-001');
+    expect(result.quote.providerDistrict).toBe('Centro');
+    expect(result.quote.providerCity).toBe('São Paulo');
+    expect(result.quote.providerState).toBe('SP');
+  });
+
+  test('não deve confirmar um orçamento sem perfil profissional', async () => {
+    const user = await createUserWithoutCompany('Prestador sem Perfil');
+    const client = await createClient(user.id);
+
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const result = await confirmQuote(user.id, quote.id, {
+      transaction,
+    });
+
+    expect(result).toEqual({
+      outcome: 'COMPANY_NOT_FOUND',
+    });
+
+    await quote.reload({
+      transaction,
+    });
+
+    expect(quote.status).toBe('DRAFT');
+    expect(quote.publicToken).toBeNull();
   });
 
   test('não deve confirmar orçamento pertencente a outro usuário', async () => {

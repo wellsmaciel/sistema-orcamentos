@@ -148,7 +148,44 @@ function PublicQuote({ publicToken }) {
     <main>
       <section>
         <h1>Orçamento nº {formatQuoteNumber(quote.quoteNumber)}</h1>
+        {quote.provider && (
+          <section aria-labelledby="quote-provider-title">
+            <h2 id="quote-provider-title">Prestador do serviço</h2>
 
+            <p>
+              <strong>{quote.provider.name}</strong>
+            </p>
+
+            <p>
+              <strong>E-mail:</strong> {quote.provider.email}
+            </p>
+
+            <p>
+              <strong>Telefone:</strong> {quote.provider.phone}
+            </p>
+
+            {quote.provider.taxId && (
+              <p>
+                <strong>CPF/CNPJ:</strong> {quote.provider.taxId}
+              </p>
+            )}
+
+            {quote.provider.address && (
+              <>
+                <p>
+                  {quote.provider.address.street}, {quote.provider.address.number}
+                  {quote.provider.address.complement ? `, ${quote.provider.address.complement}` : ''}
+                </p>
+
+                <p>
+                  {quote.provider.address.district}, {quote.provider.address.city} – {quote.provider.address.state}
+                </p>
+
+                <p>CEP {quote.provider.address.postalCode}</p>
+              </>
+            )}
+          </section>
+        )}
         <p>
           Preparado para <strong>{quote.clientName}</strong>.
         </p>
