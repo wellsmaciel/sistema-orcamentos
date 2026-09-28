@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { requestClients } from './services/client.js';
 import './App.css';
 import ClientForm from './components/ClientForm.jsx';
 import ClientList from './components/ClientList.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import QuoteForm from './components/QuoteForm.jsx';
 import QuoteList from './components/QuoteList.jsx';
-import { requestClients } from './services/client.js';
 import PublicQuote from './components/PublicQuote.jsx';
+import CompanyForm from './components/CompanyForm.jsx';
 
 function App() {
   const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
@@ -129,6 +130,8 @@ function App() {
               <button type="button" onClick={handleBack}>
                 {currentView === 'edit-quote' ? 'Voltar aos orçamentos' : 'Voltar ao início'}
               </button>
+
+              {currentView === 'company' && <CompanyForm getAccessTokenSilently={getAccessTokenSilently} />}
 
               {currentView === 'clients' && (
                 <section>
