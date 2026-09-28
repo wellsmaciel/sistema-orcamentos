@@ -111,10 +111,10 @@ function App() {
 
       {!isAuthenticated ? (
         <>
-          <p>Entre para acessar o sistema.</p>
+          <p>Crie, compartilhe e acompanhe seus orçamentos em um só lugar.</p>
 
           <button type="button" onClick={() => loginWithRedirect()}>
-            Entrar
+            Entrar no sistema
           </button>
         </>
       ) : (
@@ -128,7 +128,7 @@ function App() {
           ) : (
             <>
               <button type="button" onClick={handleBack}>
-                {currentView === 'edit-quote' ? 'Voltar aos orçamentos' : 'Voltar ao início'}
+                {currentView === 'edit-quote' ? 'Voltar aos orçamentos' : 'Voltar ao menu'}
               </button>
 
               {currentView === 'company' && <CompanyForm getAccessTokenSilently={getAccessTokenSilently} />}
@@ -191,18 +191,20 @@ function App() {
             </>
           )}
 
-          <button
-            type="button"
-            onClick={() =>
-              logout({
-                logoutParams: {
-                  returnTo: window.location.origin,
-                },
-              })
-            }
-          >
-            Sair
-          </button>
+          {currentView === 'home' && (
+            <button
+              type="button"
+              onClick={() =>
+                logout({
+                  logoutParams: {
+                    returnTo: window.location.origin,
+                  },
+                })
+              }
+            >
+              Sair da conta
+            </button>
+          )}
         </>
       )}
     </main>
