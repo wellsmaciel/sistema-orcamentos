@@ -2,7 +2,7 @@
 
 Aplicação web responsiva para criação, envio e acompanhamento de orçamentos, destinada a prestadores de serviços autônomos e pequenas empresas.
 
-O sistema permitirá cadastrar clientes, criar orçamentos, compartilhar um link para consulta e registrar a aceitação ou recusa pelo cliente. Correções deverão preservar o histórico do orçamento anterior.
+O sistema permite cadastrar clientes, criar orçamentos, compartilhar um link para consulta e registrar a aceitação ou recusa pelo cliente. As correções preservam o histórico do orçamento anterior.
 
 ## Estrutura do repositório
 
@@ -11,7 +11,7 @@ sistema-orcamentos/
 - `frontend/` — Aplicação web
 - `backend/` — API e regras de negócio
 - `docs/` — Documentação técnica e diagramas
-- `.github/` — Configuração futura do GitHub Actions
+- `.github/` — Workflows de integração contínua
 - `.gitignore`
 - `README.md`
 
@@ -51,33 +51,117 @@ sistema-orcamentos/
 
 - Jest para testes de unidade
 - Jest e Supertest para testes de integração
-- Cypress para testes de aceite
+- Testes manuais de aceite no ambiente publicado
 
 ### Controle de versão e automação
 
 - Git
 - GitHub
 - GitHub Actions
+- Railway para publicação contínua
 
 ## Instalação
 
-As instruções de instalação serão adicionadas após a inicialização do frontend e do backend.
+### Requisitos
 
-## Execução
+- Node.js e npm
+- Docker e Docker Compose
+- Uma aplicação do tipo Single Page Application configurada no Auth0
 
-Os comandos para executar a aplicação e o banco de dados serão documentados durante a configuração do ambiente de desenvolvimento.
+### Banco de dados local
 
-## Testes
+Na raiz do repositório, inicie o PostgreSQL:
 
-Os comandos para execução dos testes serão adicionados conforme as ferramentas de teste forem configuradas.
+```bash
+docker compose up -d
+```
+
+### Backend
+
+Na pasta `backend`, instale as dependências:
+
+```bash
+npm install
+```
+
+Crie o arquivo `.env` com base em `.env.example` e configure as variáveis necessárias.
+
+Execute as migrations:
+
+```bash
+npm run db:migrate
+```
+
+Inicie a API:
+
+```bash
+npm run dev
+```
+
+A API ficará disponível em `http://localhost:3000`. O endpoint de verificação é `GET /health`.
+
+### Frontend
+
+Na pasta `frontend`, instale as dependências:
+
+```bash
+npm install
+```
+
+Crie o arquivo `.env` com base em `.env.example` e configure as variáveis necessárias.
+
+Inicie o frontend:
+
+```bash
+npm run dev
+```
+
+O frontend ficará disponível em `http://localhost:5173`.
+
+## Testes e verificações
+
+Na pasta `backend`:
+
+```bash
+npm test
+```
+
+Na pasta `frontend`:
+
+```bash
+npm run lint
+npm run build
+```
+
+As verificações também são executadas automaticamente pelo GitHub Actions.
 
 ## Variáveis de ambiente
 
-As variáveis necessárias serão documentadas em arquivos `.env.example`, sem incluir senhas, tokens ou outras informações confidenciais.
+As variáveis necessárias estão documentadas nos seguintes arquivos:
+
+- `backend/.env.example`
+- `frontend/.env.example`
+
+Os arquivos `.env` reais não devem ser enviados ao GitHub, pois podem conter credenciais e configurações privadas.
+
+No Railway, as configurações são cadastradas diretamente na aba `Variables` de cada serviço.
+
+## Publicação
+
+A aplicação está publicada no Railway:
+
+- Frontend: https://frontend-production-dd49.up.railway.app
+- Verificação da API: https://backend-production-4ec1.up.railway.app/health
+- Banco de dados: PostgreSQL gerenciado pelo Railway
+- Autenticação: Auth0
+
+O frontend e o backend são publicados como serviços separados. O Railway monitora a branch `main` e aguarda a conclusão bem-sucedida do GitHub Actions antes de iniciar um novo deployment.
+
+As migrations do banco são executadas automaticamente antes da inicialização de uma nova versão do backend.
 
 ## Decisões pendentes
 
-- Provedor de computação em nuvem
 - Serviço de envio de e-mails
 - Serviço de armazenamento de imagens
 - Ferramenta de infraestrutura como código
+- Domínio próprio
