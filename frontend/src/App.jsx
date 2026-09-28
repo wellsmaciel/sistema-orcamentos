@@ -21,6 +21,7 @@ function App() {
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [isLoadingQuoteClients, setIsLoadingQuoteClients] = useState(false);
   const [quoteClientsError, setQuoteClientsError] = useState('');
+  const [selectedClient, setSelectedClient] = useState(null);
 
   if (publicToken) {
     return <PublicQuote publicToken={publicToken} />;
@@ -57,7 +58,7 @@ function App() {
   async function handleNavigate(view) {
     setSelectedQuote(null);
     setCurrentView(view);
-
+    setSelectedClient(null);
     if (view !== 'new-quote') {
       return;
     }
@@ -104,7 +105,15 @@ function App() {
   if (error) {
     return <p>Não foi possível autenticar: {error.message}</p>;
   }
+  function handleEditClient(client) {
+    setSelectedClient(client);
+    setCurrentView('edit-client');
+  }
 
+  function handleClientSaved() {
+    setSelectedClient(null);
+    setCurrentView('clients');
+  }
   return (
     <main>
       <h1>Sistema de Orçamentos</h1>
@@ -128,7 +137,7 @@ function App() {
           ) : (
             <>
               <button type="button" onClick={handleBack}>
-                {currentView === 'edit-quote' ? 'Voltar aos orçamentos' : 'Voltar ao menu'}
+                {currentView === 'edit-quote' ? 'Voltar aos orçamentos' : currentView === 'new-client' || currentView === 'edit-client' ? 'Voltar aos clientes' : 'Voltar ao menu'}
               </button>
 
               {currentView === 'company' && <CompanyForm getAccessTokenSilently={getAccessTokenSilently} />}
@@ -137,10 +146,18 @@ function App() {
                 <section>
                   <h2>Clientes</h2>
 
-                  <ClientForm getAccessTokenSilently={getAccessTokenSilently} />
-
-                  <ClientList clients={clients} getAccessTokenSilently={getAccessTokenSilently} onClientsChange={setClients} />
+                  <ClientList getAccessTokenSilently={getAccessTokenSilently} onEdit={handleEditClient} onNewClient={() => handleNavigate('new-client')} />
                 </section>
+              )}
+
+              {(currentView === 'new-client' || currentView === 'edit-client') && (
+                <ClientForm
+                  key={selectedClient?.id ?? 'new-client'}
+                  getAccessTokenSilently={getAccessTokenSilently}
+                  client={selectedClient}
+                  onSaved={handleClientSaved}
+                  onCancel={handleBack}
+                />
               )}
 
               {currentView === 'new-quote' && (

@@ -4,8 +4,8 @@ import { InsufficientScopeError, InvalidTokenError, UnauthorizedError } from 'ex
 import { getAuthenticatedUser } from './controllers/user.js';
 import { validateAccessToken } from './middlewares/auth.js';
 import { loadAuthenticatedUser } from './middlewares/authenticated-user.js';
-import { createClient, listClients } from './controllers/client.js';
-import { validateClient } from './middlewares/validate-client.js';
+import { createClient, listClients, listClientsPage, updateClient, deleteClient, deactivateClient, reactivateClient } from './controllers/client.js';
+import { validateClient, validateClientIdParameter, validateClientListQuery } from './middlewares/validate-client.js';
 import { confirmQuote, createQuote, listQuotes, updateQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection } from './controllers/quote.js';
 import { validateQuote, validateQuoteIdParameter, validateQuoteUpdate, validateQuoteResponse } from './middlewares/validate-quote.js';
 import { getCompany, saveCompany } from './controllers/company.js';
@@ -32,6 +32,11 @@ app.get('/api/v1/company', validateAccessToken, loadAuthenticatedUser, getCompan
 app.put('/api/v1/company', validateAccessToken, loadAuthenticatedUser, validateCompany, saveCompany);
 app.post('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, validateClient, createClient);
 app.get('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, listClients);
+app.get('/api/v1/clients/search', validateAccessToken, loadAuthenticatedUser, validateClientListQuery, listClientsPage);
+app.put('/api/v1/clients/:clientId', validateAccessToken, loadAuthenticatedUser, validateClientIdParameter, validateClient, updateClient);
+app.delete('/api/v1/clients/:clientId', validateAccessToken, loadAuthenticatedUser, validateClientIdParameter, deleteClient);
+app.post('/api/v1/clients/:clientId/deactivate', validateAccessToken, loadAuthenticatedUser, validateClientIdParameter, deactivateClient);
+app.post('/api/v1/clients/:clientId/reactivate', validateAccessToken, loadAuthenticatedUser, validateClientIdParameter, reactivateClient);
 app.post('/api/v1/quotes', validateAccessToken, loadAuthenticatedUser, validateQuote, createQuote);
 app.get('/api/v1/quotes', validateAccessToken, loadAuthenticatedUser, listQuotes);
 app.put('/api/v1/quotes/:quoteId', validateAccessToken, loadAuthenticatedUser, validateQuoteIdParameter, validateQuoteUpdate, updateQuote);

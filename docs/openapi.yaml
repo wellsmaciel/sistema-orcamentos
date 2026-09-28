@@ -240,6 +240,121 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/clients/{clientId}:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        description: Identificador do cliente.
+        schema:
+          type: string
+          format: uuid
+
+    put:
+      tags:
+        - Clientes
+      summary: Atualiza um cliente
+      description: >
+        Atualiza o cadastro de um cliente pertencente ao prestador autenticado.
+        Exige todos os campos obrigatórios do cadastro. Preserva o estado ativo
+        ou inativo e os dados já copiados para orçamentos anteriores.
+      operationId: updateClient
+      security:
+        - Auth0Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+      responses:
+        '200':
+          description: Cliente atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Clientes
+      summary: Exclui um cliente sem orçamentos
+      description: >
+        Exclui um cliente pertencente ao prestador autenticado somente quando
+        não existe nenhum orçamento vinculado, incluindo rascunhos.
+        Clientes com orçamentos devem ser inativados para preservar o histórico.
+      operationId: deleteClient
+      security:
+        - Auth0Bearer: []
+      responses:
+        '204':
+          description: Cliente excluído. Resposta sem corpo.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: >
+            O cliente possui orçamentos vinculados.
+            Código de erro CLIENT_HAS_QUOTES.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/clients/{clientId}/deactivate:
+    post:
+      tags:
+        - Clientes
+      summary: Inativa um cliente
+      description: >
+        Inativa um cliente pertencente ao prestador autenticado, preservando
+        seu cadastro e os orçamentos vinculados. Clientes inativos deixam de
+        aparecer na lista de ativos e não podem ser usados em novos orçamentos.
+        Repetir a operação mantém o cliente inativo.
+      operationId: deactivateClient
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Identificador do cliente.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Cliente inativado. O campo active retorna false.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/quotes/{quoteId}:
     put:
       tags:
@@ -435,6 +550,92 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/clients/search:
+    get:
+      tags:
+        - Clientes
+      summary: Pesquisa clientes com paginação
+      description: >
+        Pesquisa clientes do prestador autenticado pelo nome, sem distinguir
+        maiúsculas e minúsculas. Filtra clientes ativos ou inativos e retorna
+        até 20 registros por página, em ordem alfabética.
+      operationId: listClientsPage
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: search
+          in: query
+          description: Parte do nome do cliente. Espaços nas extremidades são removidos.
+          schema:
+            type: string
+            maxLength: 150
+            default: ''
+        - name: active
+          in: query
+          description: true para clientes ativos ou false para inativos.
+          schema:
+            type: boolean
+            default: true
+        - name: page
+          in: query
+          description: Número da página solicitada.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000000
+            default: 1
+      responses:
+        '200':
+          description: Resultado da pesquisa paginada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientPageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/clients/{clientId}/reactivate:
+    post:
+      tags:
+        - Clientes
+      summary: Reativa um cliente
+      description: >
+        Reativa um cliente pertencente ao prestador autenticado, preservando
+        seu cadastro e os orçamentos vinculados. O cliente volta a estar
+        disponível para novos orçamentos. Repetir a operação mantém o cliente ativo.
+      operationId: reactivateClient
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Identificador do cliente.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Cliente reativado. O campo active retorna true.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   securitySchemes:
     Auth0Bearer:
@@ -580,6 +781,38 @@ components:
         address:
           $ref: '#/components/schemas/Address'
 
+    ClientPageResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+        - totalPages
+      properties:
+        items:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Client'
+        total:
+          type: integer
+          minimum: 0
+          description: Total de clientes que correspondem aos filtros.
+        page:
+          type: integer
+          minimum: 1
+          description: Página solicitada.
+        pageSize:
+          type: integer
+          const: 20
+          description: Quantidade máxima de clientes por página.
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Total de páginas. Retorna zero quando não há resultados.
+
     ClientListResponse:
       type: object
       additionalProperties: false
@@ -660,6 +893,7 @@ components:
         - email
         - phone
         - address
+        - active
       properties:
         id:
           type: string
@@ -678,6 +912,12 @@ components:
           description: Telefone para contato com o cliente.
         address:
           $ref: '#/components/schemas/Address'
+        active:
+          type: boolean
+          description: Indica se o cliente está disponível para novos orçamentos.
+          examples:
+            - true
+            - false
 
     Address:
       type: object
