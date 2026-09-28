@@ -202,4 +202,69 @@ async function respondToPublicQuote(publicToken, input, { transaction } = {}) {
     quote: respondedQuote,
   };
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote };
+async function createQuoteCorrection(userId, quoteId, { transaction } = {}) {
+  const originalQuote = await Quote.findOne({
+    where: {
+      id: quoteId,
+      userId,
+    },
+    transaction,
+  });
+
+  if (!originalQuote) {
+    return {
+      outcome: 'NOT_FOUND',
+    };
+  }
+
+  if (originalQuote.status !== 'REJECTED') {
+    return {
+      outcome: 'NOT_CORRECTABLE',
+    };
+  }
+
+  const existingCorrection = await Quote.findOne({
+    where: {
+      correctedFromId: originalQuote.id,
+    },
+    transaction,
+  });
+
+  if (existingCorrection) {
+    return {
+      outcome: 'ALREADY_CORRECTED',
+      quote: existingCorrection,
+    };
+  }
+
+  const correction = await Quote.create(
+    {
+      userId: originalQuote.userId,
+      clientId: originalQuote.clientId,
+      clientName: originalQuote.clientName,
+      clientEmail: originalQuote.clientEmail,
+      clientPhone: originalQuote.clientPhone,
+      description: originalQuote.description,
+      totalAmount: originalQuote.totalAmount,
+      serviceDate: originalQuote.serviceDate,
+      serviceStreet: originalQuote.serviceStreet,
+      serviceNumber: originalQuote.serviceNumber,
+      serviceComplement: originalQuote.serviceComplement,
+      servicePostalCode: originalQuote.servicePostalCode,
+      serviceDistrict: originalQuote.serviceDistrict,
+      serviceCity: originalQuote.serviceCity,
+      serviceState: originalQuote.serviceState,
+      locationNotes: originalQuote.locationNotes,
+      correctedFromId: originalQuote.id,
+    },
+    {
+      transaction,
+    },
+  );
+
+  return {
+    outcome: 'CORRECTION_CREATED',
+    quote: correction,
+  };
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection };

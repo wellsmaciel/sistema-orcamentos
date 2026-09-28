@@ -335,7 +335,45 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
+  /api/v1/quotes/{quoteId}/corrections:
+    post:
+      tags:
+        - Orçamentos
+      summary: Cria uma correção de um orçamento recusado
+      description: >
+        Cria um novo orçamento em rascunho copiando os dados de um orçamento
+        recusado pertencente ao prestador autenticado. O orçamento original
+        é preservado no histórico.
+      operationId: createQuoteCorrection
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: quoteId
+          in: path
+          required: true
+          description: Identificador do orçamento recusado.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Correção criada em rascunho.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   securitySchemes:
     Auth0Bearer:
@@ -690,7 +728,10 @@ components:
           type: string
           format: date-time
           description: Data e horário de criação do orçamento.
-
+        correctedFromId:
+          type: string
+          format: uuid
+          description: Identificador do orçamento recusado que originou esta correção.
     QuoteResponseRequest:
       type: object
       additionalProperties: false

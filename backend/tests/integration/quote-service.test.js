@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import sequelize from '../../src/config/database.js';
 import Client from '../../src/models/client.js';
 import User from '../../src/models/user.js';
-import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote, respondToPublicQuote } from '../../src/services/quote.js';
+import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote, respondToPublicQuote, createQuoteCorrection } from '../../src/services/quote.js';
 
 describe('Serviço de orçamentos', () => {
   let transaction;
@@ -420,6 +420,115 @@ describe('Serviço de orçamentos', () => {
 
     expect(secondResult).toEqual({
       outcome: 'NOT_RESPONDABLE',
+    });
+  });
+  test('deve criar um novo rascunho a partir de um orçamento recusado', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const originalQuote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const confirmationResult = await confirmQuote(user.id, originalQuote.id, {
+      transaction,
+    });
+
+    await respondToPublicQuote(
+      confirmationResult.quote.publicToken,
+      {
+        decision: 'REJECTED',
+        reason: 'O valor precisa ser revisto.',
+      },
+      {
+        transaction,
+      },
+    );
+
+    const result = await createQuoteCorrection(user.id, originalQuote.id, {
+      transaction,
+    });
+
+    expect(result.outcome).toBe('CORRECTION_CREATED');
+    expect(result.quote.id).not.toBe(originalQuote.id);
+    expect(result.quote.quoteNumber).not.toBe(originalQuote.quoteNumber);
+    expect(result.quote.status).toBe('DRAFT');
+    expect(result.quote.correctedFromId).toBe(originalQuote.id);
+    expect(result.quote.description).toBe(originalQuote.description);
+    expect(result.quote.totalAmount).toBe(originalQuote.totalAmount);
+    expect(result.quote.publicToken).toBeNull();
+    expect(result.quote.sentAt).toBeNull();
+    expect(result.quote.respondedAt).toBeNull();
+    expect(result.quote.rejectionReason).toBeNull();
+  });
+
+  test('não deve criar correção de orçamento que não foi recusado', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const result = await createQuoteCorrection(user.id, quote.id, {
+      transaction,
+    });
+
+    expect(result).toEqual({
+      outcome: 'NOT_CORRECTABLE',
+    });
+  });
+
+  test('não deve criar duas correções para o mesmo orçamento', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+
+    const originalQuote = await createQuote(user.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const confirmationResult = await confirmQuote(user.id, originalQuote.id, {
+      transaction,
+    });
+
+    await respondToPublicQuote(
+      confirmationResult.quote.publicToken,
+      {
+        decision: 'REJECTED',
+      },
+      {
+        transaction,
+      },
+    );
+
+    const firstResult = await createQuoteCorrection(user.id, originalQuote.id, {
+      transaction,
+    });
+
+    const secondResult = await createQuoteCorrection(user.id, originalQuote.id, {
+      transaction,
+    });
+
+    expect(firstResult.outcome).toBe('CORRECTION_CREATED');
+    expect(secondResult.outcome).toBe('ALREADY_CORRECTED');
+    expect(secondResult.quote.id).toBe(firstResult.quote.id);
+  });
+
+  test('não deve corrigir orçamento pertencente a outro usuário', async () => {
+    const owner = await createUser('Proprietário do Orçamento');
+    const otherUser = await createUser('Outro Prestador');
+    const client = await createClient(owner.id);
+
+    const quote = await createQuote(owner.id, buildQuoteInput(client.id), {
+      transaction,
+    });
+
+    const result = await createQuoteCorrection(otherUser.id, quote.id, {
+      transaction,
+    });
+
+    expect(result).toEqual({
+      outcome: 'NOT_FOUND',
     });
   });
 });

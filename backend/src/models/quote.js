@@ -145,6 +145,11 @@ Quote.init(
       allowNull: true,
       field: 'rejection_reason',
     },
+    correctedFromId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      field: 'corrected_from_id',
+    },
   },
   {
     sequelize,

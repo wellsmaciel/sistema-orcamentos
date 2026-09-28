@@ -5,6 +5,7 @@ import {
   listQuotes as listQuotesService,
   respondToPublicQuote as respondToPublicQuoteService,
   updateQuote as updateQuoteService,
+  createQuoteCorrection as createQuoteCorrectionService,
 } from '../services/quote.js';
 
 function serializeQuote(quote) {
@@ -55,6 +56,9 @@ function serializeQuote(quote) {
 
   if (quote.rejectionReason) {
     responseBody.rejectionReason = quote.rejectionReason;
+  }
+  if (quote.correctedFromId) {
+    responseBody.correctedFromId = quote.correctedFromId;
   }
   return responseBody;
 }
@@ -207,4 +211,34 @@ async function respondToPublicQuote(request, response, next) {
     return next(error);
   }
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote };
+async function createQuoteCorrection(request, response, next) {
+  try {
+    const result = await createQuoteCorrectionService(request.authenticatedUser.id, request.params.quoteId);
+
+    if (result.outcome === 'NOT_FOUND') {
+      return response.status(404).json({
+        code: 'QUOTE_NOT_FOUND',
+        message: 'Orçamento não encontrado.',
+      });
+    }
+
+    if (result.outcome === 'NOT_CORRECTABLE') {
+      return response.status(409).json({
+        code: 'QUOTE_NOT_CORRECTABLE',
+        message: 'Somente orçamentos recusados podem gerar uma correção.',
+      });
+    }
+
+    if (result.outcome === 'ALREADY_CORRECTED') {
+      return response.status(409).json({
+        code: 'QUOTE_ALREADY_CORRECTED',
+        message: 'Este orçamento já possui uma correção.',
+      });
+    }
+
+    return response.status(201).json(serializeQuote(result.quote));
+  } catch (error) {
+    return next(error);
+  }
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection };

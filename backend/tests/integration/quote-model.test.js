@@ -95,5 +95,6 @@ describe('Modelo Quote', () => {
     expect(quote.sentAt).toBeNull();
     expect(quote.respondedAt).toBeNull();
     expect(quote.rejectionReason).toBeNull();
+    expect(quote.correctedFromId).toBeNull();
   });
 });

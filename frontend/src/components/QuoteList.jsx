@@ -69,13 +69,32 @@ async function requestQuoteConfirmation(getAccessTokenSilently, quoteId) {
   return responseBody;
 }
 
+async function requestQuoteCorrection(getAccessTokenSilently, quoteId) {
+  const accessToken = await getAccessTokenSilently();
+
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes/${quoteId}/corrections`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  const responseBody = await response.json();
+
+  if (!response.ok) {
+    throw new Error(responseBody.message ?? 'Não foi possível criar a correção.');
+  }
+
+  return responseBody;
+}
+
 function QuoteList({ getAccessTokenSilently, onEdit }) {
   const [quotes, setQuotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [confirmingQuoteId, setConfirmingQuoteId] = useState(null);
   const [copiedQuoteId, setCopiedQuoteId] = useState(null);
-
+  const [creatingCorrectionQuoteId, setCreatingCorrectionQuoteId] = useState(null);
   useEffect(() => {
     let isCancelled = false;
 
@@ -151,7 +170,22 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
       setErrorMessage('Não foi possível copiar o link. Utilize a opção de abrir o orçamento.');
     }
   }
+  async function handleCreateCorrection(quote) {
+    try {
+      setCreatingCorrectionQuoteId(quote.id);
+      setErrorMessage('');
 
+      const correction = await requestQuoteCorrection(getAccessTokenSilently, quote.id);
+
+      if (onEdit) {
+        onEdit(correction);
+      }
+    } catch (requestError) {
+      setErrorMessage(requestError.message);
+    } finally {
+      setCreatingCorrectionQuoteId(null);
+    }
+  }
   return (
     <div>
       <button type="button" onClick={handleRefresh} disabled={isLoading}>
@@ -168,7 +202,11 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
         <ul>
           {quotes.map((quote) => {
             const isConfirming = confirmingQuoteId === quote.id;
+            const isCreatingCorrection = creatingCorrectionQuoteId === quote.id;
 
+            const existingCorrection = quotes.find((candidate) => candidate.correctedFromId === quote.id);
+
+            const originalQuote = quote.correctedFromId ? quotes.find((candidate) => candidate.id === quote.correctedFromId) : null;
             return (
               <li key={quote.id}>
                 <article>
@@ -187,7 +225,6 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
                       </button>
                     </div>
                   )}
-
                   {quote.publicToken && (
                     <div>
                       <a href={buildPublicQuoteUrl(quote.publicToken)} target="_blank" rel="noreferrer">
@@ -199,7 +236,23 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
                       </button>
                     </div>
                   )}
+                  {quote.status === 'REJECTED' && !existingCorrection && onEdit && (
+                    <button type="button" onClick={() => handleCreateCorrection(quote)} disabled={isCreatingCorrection}>
+                      {isCreatingCorrection ? 'Criando correção...' : 'Criar correção'}
+                    </button>
+                  )}
 
+                  {existingCorrection && (
+                    <p>
+                      <strong>Correção criada:</strong> Orçamento nº {formatQuoteNumber(existingCorrection.quoteNumber)}
+                    </p>
+                  )}
+
+                  {originalQuote && (
+                    <p>
+                      <strong>Correção do orçamento:</strong> nº {formatQuoteNumber(originalQuote.quoteNumber)}
+                    </p>
+                  )}
                   <p>
                     <strong>Cliente:</strong> {quote.client.name}
                   </p>
@@ -233,5 +286,4 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
     </div>
   );
 }
-
 export default QuoteList;
