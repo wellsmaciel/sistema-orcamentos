@@ -116,6 +116,71 @@ Quote.init(
       field: 'location_notes',
     },
 
+    providerName: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
+      field: 'provider_name',
+    },
+
+    providerEmail: {
+      type: DataTypes.STRING(320),
+      allowNull: true,
+      field: 'provider_email',
+    },
+
+    providerPhone: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      field: 'provider_phone',
+    },
+
+    providerTaxId: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      field: 'provider_tax_id',
+    },
+
+    providerStreet: {
+      type: DataTypes.STRING(200),
+      allowNull: true,
+      field: 'provider_street',
+    },
+
+    providerNumber: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      field: 'provider_number',
+    },
+
+    providerComplement: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
+      field: 'provider_complement',
+    },
+
+    providerPostalCode: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      field: 'provider_postal_code',
+    },
+
+    providerDistrict: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: 'provider_district',
+    },
+
+    providerCity: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: 'provider_city',
+    },
+
+    providerState: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: 'provider_state',
+    },
     status: {
       type: DataTypes.STRING(20),
       allowNull: false,

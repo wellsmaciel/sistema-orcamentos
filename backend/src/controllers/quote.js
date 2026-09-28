@@ -97,6 +97,36 @@ function serializePublicQuote(quote) {
   if (quote.rejectionReason) {
     responseBody.rejectionReason = quote.rejectionReason;
   }
+  if (quote.providerName) {
+    const provider = {
+      name: quote.providerName,
+      email: quote.providerEmail,
+      phone: quote.providerPhone,
+    };
+
+    if (quote.providerTaxId) {
+      provider.taxId = quote.providerTaxId;
+    }
+
+    if (quote.providerStreet) {
+      const address = {
+        street: quote.providerStreet,
+        number: quote.providerNumber,
+        postalCode: quote.providerPostalCode,
+        district: quote.providerDistrict,
+        city: quote.providerCity,
+        state: quote.providerState,
+      };
+
+      if (quote.providerComplement) {
+        address.complement = quote.providerComplement;
+      }
+
+      provider.address = address;
+    }
+
+    responseBody.provider = provider;
+  }
   return responseBody;
 }
 async function createQuote(request, response, next) {
@@ -166,7 +196,12 @@ async function confirmQuote(request, response, next) {
         message: 'Somente orçamentos em rascunho podem ser confirmados.',
       });
     }
-
+    if (result.outcome === 'COMPANY_NOT_FOUND') {
+      return response.status(409).json({
+        code: 'COMPANY_PROFILE_REQUIRED',
+        message: 'Cadastre seus dados profissionais antes de confirmar o orçamento.',
+      });
+    }
     return response.status(200).json(serializeQuote(result.quote));
   } catch (error) {
     return next(error);

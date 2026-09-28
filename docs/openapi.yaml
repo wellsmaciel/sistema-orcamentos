@@ -16,6 +16,8 @@ tags:
     description: Verificação do funcionamento da API.
   - name: Usuário
     description: Informações do usuário autenticado.
+  - name: Perfil profissional
+    description: Dados profissionais ou empresariais do prestador autenticado.
   - name: Clientes
     description: Operações relacionadas aos clientes salvos pelo prestador.
   - name: Orçamentos
@@ -56,6 +58,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthenticatedUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/company:
+    get:
+      tags:
+        - Perfil profissional
+      summary: Consulta os dados profissionais
+      description: >
+        Retorna os dados profissionais ou empresariais pertencentes ao
+        prestador autenticado.
+      operationId: getCompany
+      security:
+        - Auth0Bearer: []
+      responses:
+        '200':
+          description: Dados profissionais encontrados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - Perfil profissional
+      summary: Salva os dados profissionais
+      description: >
+        Cria ou atualiza os dados profissionais ou empresariais pertencentes
+        ao prestador autenticado.
+      operationId: saveCompany
+      security:
+        - Auth0Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanySaveRequest'
+      responses:
+        '200':
+          description: Dados profissionais salvos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -232,7 +292,8 @@ paths:
       description: >
         Confirma um orçamento pertencente ao prestador autenticado, altera
         seu status para enviado, bloqueia novas edições e gera o token usado
-        no link público.
+        no link público. Exige um perfil profissional ativo e copia seus dados
+        para o orçamento, preservando o histórico.
       operationId: confirmQuote
       security:
         - Auth0Bearer: []
@@ -460,6 +521,65 @@ components:
           examples:
             - maria@example.com
 
+    CompanySaveRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: Nome profissional ou nome da empresa.
+        email:
+          type: string
+          format: email
+          maxLength: 320
+          description: E-mail comercial do prestador.
+        phone:
+          type: string
+          minLength: 8
+          maxLength: 30
+          description: Telefone comercial do prestador.
+        taxId:
+          type: string
+          maxLength: 20
+          description: CPF ou CNPJ opcional, com 11 ou 14 dígitos.
+        address:
+          $ref: '#/components/schemas/Address'
+
+    Company:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - email
+        - phone
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identificador dos dados profissionais.
+        name:
+          type: string
+          description: Nome profissional ou nome da empresa.
+        email:
+          type: string
+          format: email
+          description: E-mail comercial do prestador.
+        phone:
+          type: string
+          description: Telefone comercial do prestador.
+        taxId:
+          type: string
+          description: CPF ou CNPJ do prestador.
+        address:
+          $ref: '#/components/schemas/Address'
+
     ClientListResponse:
       type: object
       additionalProperties: false
@@ -655,6 +775,30 @@ components:
           type: string
           description: Telefone do cliente no momento da criação do orçamento.
 
+    QuoteProviderSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+          description: Nome profissional no momento da confirmação do orçamento.
+        email:
+          type: string
+          format: email
+          description: E-mail comercial no momento da confirmação do orçamento.
+        phone:
+          type: string
+          description: Telefone comercial no momento da confirmação do orçamento.
+        taxId:
+          type: string
+          description: CPF ou CNPJ no momento da confirmação do orçamento.
+        address:
+          $ref: '#/components/schemas/Address'
+
     Quote:
       type: object
       additionalProperties: false
@@ -732,6 +876,7 @@ components:
           type: string
           format: uuid
           description: Identificador do orçamento recusado que originou esta correção.
+
     QuoteResponseRequest:
       type: object
       additionalProperties: false
@@ -769,6 +914,8 @@ components:
         clientName:
           type: string
           description: Nome do cliente no momento da criação do orçamento.
+        provider:
+          $ref: '#/components/schemas/QuoteProviderSnapshot'
         description:
           type: string
           description: Descrição livre do orçamento.
