@@ -2,7 +2,7 @@ import { calculateItemsTotal } from '../utils/quote-pricing.js';
 
 const PRICING_MODES = ['ITEMIZED', 'FIXED_TOTAL'];
 const ITEM_FIELDS = ['description', 'quantity', 'unitPrice'];
-const QUANTITY_PATTERN = /^\d{1,9}(?:\.\d{1,3})?$/;
+const QUANTITY_PATTERN = /^\d{1,9}(?:\.\d)?$/;
 const MONEY_PATTERN = /^\d{1,10}(?:\.\d{1,2})?$/;
 const MONEY_FORMAT_MESSAGE = 'Informe um valor decimal válido com até duas casas.';
 
@@ -50,7 +50,7 @@ function validateItem(item, index, pricingMode, errors) {
 
   validatePositiveDecimal(item.quantity, prefix + '.quantity', errors, {
     pattern: QUANTITY_PATTERN,
-    formatMessage: 'Informe uma quantidade válida com até três casas decimais.',
+    formatMessage: 'Informe uma quantidade válida com até uma casa decimal.',
     positiveMessage: 'A quantidade deve ser maior que zero.',
   });
 

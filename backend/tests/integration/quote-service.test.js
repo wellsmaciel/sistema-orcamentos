@@ -755,12 +755,12 @@ describe('Serviço de orçamentos', () => {
     input.items = [
       {
         description: '  Cabo elétrico  ',
-        quantity: '  2.500  ',
+        quantity: '  2.5  ',
         unitPrice: '  19.99  ',
       },
       {
         description: '  Mão de obra  ',
-        quantity: '1.250',
+        quantity: '1.2',
         unitPrice: '8.00',
       },
     ];
@@ -774,12 +774,12 @@ describe('Serviço de orçamentos', () => {
     });
 
     expect(quote.pricingMode).toBe('ITEMIZED');
-    expect(quote.totalAmount).toBe('59.98');
+    expect(quote.totalAmount).toBe('59.58');
     expect(quote.status).toBe('DRAFT');
 
     expect(items).toHaveLength(2);
     expect(items.map((item) => item.description)).toEqual(['Cabo elétrico', 'Mão de obra']);
-    expect(items.map((item) => item.quantity)).toEqual(['2.500', '1.250']);
+    expect(items.map((item) => item.quantity)).toEqual(['2.500', '1.200']);
     expect(items.map((item) => item.unitPrice)).toEqual(['19.99', '8.00']);
     expect(items.map((item) => item.position)).toEqual([1, 2]);
   });
@@ -857,12 +857,12 @@ describe('Serviço de orçamentos', () => {
     input.items = [
       {
         description: '  Cabo elétrico  ',
-        quantity: '2.500',
+        quantity: '2.5',
         unitPrice: '19.99',
       },
       {
         description: 'Mão de obra',
-        quantity: '1.250',
+        quantity: '1.2',
         unitPrice: '8.00',
       },
     ];
@@ -881,7 +881,7 @@ describe('Serviço de orçamentos', () => {
     expect(result.quote.status).toBe('DRAFT');
     expect(result.quote.pricingMode).toBe('ITEMIZED');
     expect(result.quote.description).toBe('Serviço atualizado.');
-    expect(result.quote.totalAmount).toBe('59.98');
+    expect(result.quote.totalAmount).toBe('59.58');
     expect(result.quote.clientId).toBe(client.id);
 
     expect(items).toHaveLength(2);
@@ -1109,7 +1109,7 @@ describe('Serviço de orçamentos', () => {
     const input = buildQuoteInput(client.id);
     input.pricingMode = pricingMode;
     input.items = [
-      { description: 'Peça', quantity: '2.500' },
+      { description: 'Peça', quantity: '2.5' },
       { description: 'Instalação', quantity: '1' },
     ];
 
@@ -1252,7 +1252,7 @@ describe('Serviço de orçamentos', () => {
 
     const input = buildQuoteInput(client.id);
     input.items = [
-      { description: 'Item Z', quantity: '2.500' },
+      { description: 'Item Z', quantity: '2.5' },
       { description: 'Item A', quantity: '1' },
     ];
 
@@ -1320,7 +1320,7 @@ describe('Serviço de orçamentos', () => {
     input.items = [
       {
         description: 'Cabo elétrico',
-        quantity: '2.500',
+        quantity: '2.5',
         unitPrice: '19.99',
       },
     ];
@@ -1352,7 +1352,7 @@ describe('Serviço de orçamentos', () => {
     const input = buildQuoteInput(client.id);
     input.items = [
       { description: 'Instalação', quantity: '1' },
-      { description: 'Acabamento', quantity: '2.500' },
+      { description: 'Acabamento', quantity: '2.5' },
     ];
 
     const quote = await createQuote(user.id, input, {
@@ -1370,7 +1370,7 @@ describe('Serviço de orçamentos', () => {
     updateInput.items = [
       {
         description: 'Cabo elétrico',
-        quantity: '2.500',
+        quantity: '2.5',
         unitPrice: '19.99',
       },
     ];
@@ -1416,5 +1416,77 @@ describe('Serviço de orçamentos', () => {
     expect(correction.quote.items[0].description).toBe('Cabo elétrico');
     expect(correction.quote.items[0].quantity).toBe('2.500');
     expect(correction.quote.items[0].unitPrice).toBe('19.99');
+  });
+
+  test.each(['ITEMIZED', 'FIXED_TOTAL'])('precisão: deve rejeitar criação com duas casas no modo %s', async (pricingMode) => {
+    const user = await createUser('Prestador da Precisão');
+    const client = await createClient(user.id);
+    const input = buildQuoteInput(client.id);
+    input.pricingMode = pricingMode;
+    input.items[0].quantity = '1.25';
+
+    if (pricingMode === 'ITEMIZED') {
+      delete input.totalAmount;
+      input.items[0].unitPrice = '8.00';
+    }
+
+    await expect(createQuote(user.id, input, { transaction })).rejects.toThrow(RangeError);
+    expect(await Quote.count({ where: { userId: user.id }, transaction })).toBe(0);
+  });
+
+  test.each(['ITEMIZED', 'FIXED_TOTAL'])('precisão: deve rejeitar edição com duas casas e preservar o original no modo %s', async (pricingMode) => {
+    const user = await createUser('Prestador da Edição Precisa');
+    const client = await createClient(user.id);
+    const input = buildQuoteInput(client.id);
+    input.pricingMode = pricingMode;
+
+    if (pricingMode === 'ITEMIZED') {
+      delete input.totalAmount;
+      input.items[0].unitPrice = '8.00';
+    }
+
+    const quote = await createQuote(user.id, input, { transaction });
+    const originalItemId = quote.items[0].id;
+    const updateInput = structuredClone(input);
+    delete updateInput.clientId;
+    updateInput.items[0].quantity = '1.25';
+
+    await expect(updateQuote(user.id, quote.id, updateInput, { transaction })).rejects.toThrow(RangeError);
+    const storedItem = await QuoteItem.findByPk(originalItemId, { transaction });
+    expect(storedItem.quantity).toBe('1.000');
+    expect(await QuoteItem.count({ where: { quoteId: quote.id }, transaction })).toBe(1);
+  });
+
+  test('precisão: não deve arredondar um rascunho histórico para confirmá-lo', async () => {
+    const user = await createUser('Prestador do Histórico');
+    const client = await createClient(user.id);
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+
+    // Representa um registro salvo antes da nova regra, dentro da transação de teste.
+    await QuoteItem.update({ quantity: '1.250' }, { where: { quoteId: quote.id }, transaction });
+    const result = await confirmQuote(user.id, quote.id, { transaction });
+
+    expect(result.outcome).toBe('INVALID_ITEMS');
+    expect(result.details).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'items[0].quantity' })]));
+    await quote.reload({ transaction });
+    expect(quote.status).toBe('DRAFT');
+    expect(quote.publicToken).toBeNull();
+    expect((await QuoteItem.findOne({ where: { quoteId: quote.id }, transaction })).quantity).toBe('1.250');
+  });
+
+  test('precisão: não deve arredondar um original histórico ao criar uma correção', async () => {
+    const user = await createUser('Prestador da Correção Histórica');
+    const client = await createClient(user.id);
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+    const confirmed = await confirmQuote(user.id, quote.id, { transaction });
+    await respondToPublicQuote(confirmed.quote.publicToken, { decision: 'REJECTED', reason: 'Rever serviço.' }, { transaction });
+
+    await QuoteItem.update({ quantity: '1.250' }, { where: { quoteId: quote.id }, transaction });
+    const result = await createQuoteCorrection(user.id, quote.id, { transaction });
+
+    expect(result.outcome).toBe('INVALID_ITEMS');
+    expect(result.details).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'items[0].quantity' })]));
+    expect(await Quote.count({ where: { correctedFromId: quote.id }, transaction })).toBe(0);
+    expect((await QuoteItem.findOne({ where: { quoteId: quote.id }, transaction })).quantity).toBe('1.250');
   });
 });

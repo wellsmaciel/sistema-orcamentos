@@ -1,3 +1,5 @@
+// Preserva cálculos de registros históricos armazenados com três casas.
+// Novos cadastros e edições são limitados a uma casa pelo validador da API.
 const QUANTITY_PATTERN = /^\d{1,9}(?:\.\d{1,3})?$/;
 const MONEY_PATTERN = /^\d{1,10}(?:\.\d{1,2})?$/;
 const MAX_AMOUNT_CENTS = 999999999999n;

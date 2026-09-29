@@ -76,7 +76,8 @@ describe('Validação dos itens e da forma de cobrança', () => {
   test.each([
     ['descrição vazia', { description: '' }, 'description'],
     ['quantidade zero', { quantity: '0' }, 'quantity'],
-    ['quantidade com mais de três casas', { quantity: '1.2345' }, 'quantity'],
+    ['quantidade com duas casas', { quantity: '1.25' }, 'quantity'],
+    ['quantidade com três casas', { quantity: '1.255' }, 'quantity'],
     ['preço zero', { unitPrice: '0.00' }, 'unitPrice'],
     ['preço ausente', { unitPrice: undefined }, 'unitPrice'],
   ])('deve rejeitar %s', (_scenario, overrides, field) => {
@@ -139,9 +140,23 @@ describe('Validação dos itens e da forma de cobrança', () => {
 
   test('deve rejeitar total calculado que arredonde para zero', () => {
     const input = buildInput('ITEMIZED');
-    input.items[0].quantity = '0.001';
+    input.items[0].quantity = '0.1';
     input.items[0].unitPrice = '0.01';
 
     expectFieldError(input, 'totalAmount');
+  });
+
+  test.each(['ITEMIZED', 'FIXED_TOTAL'])('deve exigir uma casa decimal também no modo %s', (pricingMode) => {
+    const input = buildInput(pricingMode);
+    input.items[0].quantity = '2.55';
+
+    expectFieldError(input, 'items[0].quantity');
+  });
+
+  test.each(['1', '2.5', '0.1'])('deve aceitar a quantidade %s no novo limite', (quantity) => {
+    const input = buildInput();
+    input.items[0].quantity = quantity;
+
+    expect(validateQuoteItemsInput(input)).toEqual([]);
   });
 });

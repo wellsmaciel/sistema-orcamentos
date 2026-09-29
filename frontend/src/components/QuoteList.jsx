@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { requestQuotesPage } from '../services/quote-list.js';
+import { requestCompany } from '../services/company.js';
+import QuoteReview from './QuoteReview.jsx';
 
 const statusLabels = {
   DRAFT: 'Rascunho',
@@ -82,6 +84,10 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [confirmingQuoteId, setConfirmingQuoteId] = useState(null);
+  const [reviewQuoteId, setReviewQuoteId] = useState(null);
+  const [reviewCompany, setReviewCompany] = useState(null);
+  const [isLoadingReview, setIsLoadingReview] = useState(false);
+  const [reviewError, setReviewError] = useState('');
   const [copiedQuoteId, setCopiedQuoteId] = useState(null);
   const [creatingCorrectionQuoteId, setCreatingCorrectionQuoteId] = useState(null);
   const [query, setQuery] = useState({ page: 1 });
@@ -91,7 +97,7 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
     totalPages: 0,
   });
   const [filters, setFilters] = useState({ ...initialFilters });
-  const isBusy = isLoading || confirmingQuoteId !== null || creatingCorrectionQuoteId !== null;
+  const isBusy = isLoading || isLoadingReview || confirmingQuoteId !== null || creatingCorrectionQuoteId !== null;
   useEffect(() => {
     let ignoreResult = false;
 
@@ -117,6 +123,7 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
         }
 
         setQuotes(result.items);
+        setReviewQuoteId(null);
         setPagination({
           total: result.total,
           totalPages: result.totalPages,
@@ -173,19 +180,29 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
   function handleRefresh() {
     setRefreshIndex((currentIndex) => currentIndex + 1);
   }
-  async function handleConfirm(quote) {
-    const shouldConfirm = window.confirm('Depois de confirmar, este orçamento não poderá mais ser editado. Deseja continuar?');
-
-    if (!shouldConfirm) {
-      return;
+  async function handleReview(quote) {
+    try {
+      setIsLoadingReview(true);
+      setReviewError('');
+      setReviewQuoteId(null);
+      const company = await requestCompany(getAccessTokenSilently);
+      setReviewCompany(company);
+      setReviewQuoteId(quote.id);
+    } catch (requestError) {
+      setReviewCompany(null);
+      setReviewError(requestError.message);
+    } finally {
+      setIsLoadingReview(false);
     }
-
+  }
+  async function handleConfirm(quote) {
     try {
       setConfirmingQuoteId(quote.id);
       setErrorMessage('');
 
       await requestQuoteConfirmation(getAccessTokenSilently, quote.id);
 
+      setReviewQuoteId(null);
       setRefreshIndex((currentIndex) => currentIndex + 1);
     } catch (requestError) {
       setErrorMessage(requestError.message);
@@ -277,6 +294,8 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
 
       {errorMessage && <p role="alert">{errorMessage}</p>}
 
+      {reviewError && <p role="alert">{reviewError}</p>}
+
       {!isLoading && !errorMessage && quotes.length === 0 && <p>Nenhum orçamento encontrado com esses filtros.</p>}
 
       {!isLoading && !errorMessage && quotes.length > 0 && (
@@ -300,8 +319,20 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
                         </button>
                       )}
 
-                      <button type="button" onClick={() => handleConfirm(quote)} disabled={isBusy}>
-                        {isConfirming ? 'Confirmando...' : 'Confirmar orçamento'}
+                      <button type="button" onClick={() => handleReview(quote)} disabled={isBusy}>
+                        {isLoadingReview ? 'Carregando revisão...' : 'Revisar orçamento'}
+                      </button>
+                    </div>
+                  )}
+                  {quote.status === 'DRAFT' && reviewQuoteId === quote.id && (
+                    <div>
+                      <QuoteReview quote={quote} company={reviewCompany} />
+                      {!reviewCompany && <p role="alert">Cadastre seus dados profissionais antes de confirmar o orçamento.</p>}
+                      <button type="button" onClick={() => handleConfirm(quote)} disabled={isBusy || !quote.items?.length || !reviewCompany}>
+                        {isConfirming ? 'Confirmando...' : 'Confirmar e gerar link'}
+                      </button>
+                      <button type="button" onClick={() => setReviewQuoteId(null)} disabled={isBusy}>
+                        Voltar à lista
                       </button>
                     </div>
                   )}

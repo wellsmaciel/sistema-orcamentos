@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { buildQuoteRequest, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview } from '../utils/quote-form.js';
 
 const emptyFormData = {
   clientId: '',
   description: '',
+  pricingMode: 'FIXED_TOTAL',
   totalAmount: '',
   serviceDate: '',
   street: '',
@@ -15,14 +17,30 @@ const emptyFormData = {
   locationNotes: '',
 };
 
+function buildFormItem(item = {}) {
+  return {
+    formId: crypto.randomUUID(),
+    description: item.description ?? '',
+    quantity: formatQuoteQuantity(item.quantity ?? '1'),
+    unitPrice: item.unitPrice ?? '',
+  };
+}
+
 function buildInitialFormData(quote) {
   if (!quote) {
-    return { ...emptyFormData };
+    return {
+      ...emptyFormData,
+      items: [buildFormItem()],
+    };
   }
 
   return {
     clientId: quote.client.id,
     description: quote.description,
+    pricingMode: quote.pricingMode,
+    items: quote.items?.length
+      ? quote.items.map((item) => buildFormItem(item))
+      : [buildFormItem()],
     totalAmount: quote.totalAmount,
     serviceDate: quote.serviceDate,
     street: quote.serviceAddress.street,
@@ -52,6 +70,9 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEditing = Boolean(quote);
+  const isItemized = formData.pricingMode === 'ITEMIZED';
+  const pricingPreview = isItemized ? getItemsPricingPreview(formData.items) : null;
+  const hasLegacyQuantityPrecision = isEditing && (quote.items ?? []).some((item) => (formatQuoteQuantity(item.quantity).split(',')[1]?.length ?? 0) > 1);
 
   const selectedClient = isEditing ? quote.client : clients.find((client) => client.id === formData.clientId);
 
@@ -97,6 +118,37 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
     }));
   }
 
+  function handleItemChange(formId, event) {
+    const { name, value } = event.target;
+
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      items: currentFormData.items.map((item) => (item.formId === formId ? { ...item, [name]: value } : item)),
+    }));
+  }
+
+  function handleAddItem() {
+    const item = buildFormItem();
+
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      items: [...currentFormData.items, item],
+    }));
+  }
+
+  function handleRemoveItem(formId) {
+    setFormData((currentFormData) => {
+      if (currentFormData.items.length <= 1) {
+        return currentFormData;
+      }
+
+      return {
+        ...currentFormData,
+        items: currentFormData.items.filter((item) => item.formId !== formId),
+      };
+    });
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -105,27 +157,8 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
       setSubmitError('');
       setSavedQuote(null);
 
+      const requestBody = buildQuoteRequest(formData, { isEditing });
       const accessToken = await getAccessTokenSilently();
-
-      const requestBody = {
-        description: formData.description,
-        totalAmount: formData.totalAmount,
-        serviceDate: formData.serviceDate,
-        serviceAddress: {
-          street: formData.street,
-          number: formData.number,
-          complement: formData.complement,
-          postalCode: formData.postalCode,
-          district: formData.district,
-          city: formData.city,
-          state: formData.state,
-        },
-        locationNotes: formData.locationNotes,
-      };
-
-      if (!isEditing) {
-        requestBody.clientId = formData.clientId;
-      }
 
       const endpoint = isEditing ? `${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes/${quote.id}` : `${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes`;
 
@@ -149,7 +182,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
       setSavedQuote(responseBody);
 
       if (!isEditing) {
-        setFormData({ ...emptyFormData });
+        setFormData(buildInitialFormData(null));
       }
 
       if (onSaved) {
@@ -160,6 +193,15 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (isEditing && quote.status !== 'DRAFT') {
+    return (
+      <section>
+        <h2>Editar orçamento</h2>
+        <p role="alert">Somente orçamentos em rascunho podem ter seu conteúdo alterado.</p>
+      </section>
+    );
   }
 
   if (!isEditing && clients.length === 0) {
@@ -175,107 +217,205 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
     <section>
       <h2>{isEditing ? 'Editar orçamento' : 'Novo orçamento'}</h2>
 
+      {hasLegacyQuantityPrecision && <p role="alert">Este rascunho contém quantidades antigas com mais de uma casa decimal. Revise-as antes de salvar; nenhum valor foi arredondado automaticamente.</p>}
+
       <form onSubmit={handleSubmit}>
-        {isEditing ? (
-          <div>
-            <p>
-              <strong>Cliente:</strong> {selectedClient.name}
-            </p>
-            <p>
-              <strong>E-mail:</strong> {selectedClient.email}
-            </p>
-            <p>
-              <strong>Telefone:</strong> {selectedClient.phone}
-            </p>
-            <p>O cliente não pode ser alterado depois da criação do orçamento.</p>
-          </div>
-        ) : (
-          <>
+        <fieldset className="quote-form-fields" disabled={isSubmitting}>
+          <legend className="visually-hidden">Dados e itens do orçamento</legend>
+          {isEditing ? (
             <div>
-              <label htmlFor="quote-client">Cliente</label>
+              <p>
+                <strong>Cliente:</strong> {selectedClient.name}
+              </p>
+              <p>
+                <strong>E-mail:</strong> {selectedClient.email}
+              </p>
+              <p>
+                <strong>Telefone:</strong> {selectedClient.phone}
+              </p>
+              <p>O cliente não pode ser alterado depois da criação do orçamento.</p>
+            </div>
+          ) : (
+            <>
+              <div>
+                <label htmlFor="quote-client">Cliente</label>
 
-              <select id="quote-client" value={formData.clientId} onChange={handleClientChange} required>
-                <option value="">Selecione um cliente</option>
+                <select id="quote-client" value={formData.clientId} onChange={handleClientChange} required>
+                  <option value="">Selecione um cliente</option>
 
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                  </option>
-                ))}
-              </select>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedClient && (
+                <div>
+                  <p>
+                    <strong>E-mail:</strong> {selectedClient.email}
+                  </p>
+                  <p>
+                    <strong>Telefone:</strong> {selectedClient.phone}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+
+          <div>
+            <label htmlFor="quote-pricing-mode">Forma de cobrança</label>
+            <select id="quote-pricing-mode" name="pricingMode" value={formData.pricingMode} onChange={handleChange} aria-describedby="quote-pricing-help" required>
+              <option value="FIXED_TOTAL">Valor global</option>
+              <option value="ITEMIZED">Preço por item</option>
+            </select>
+            <p id="quote-pricing-help">
+              {isItemized
+                ? 'Informe o preço de cada item. O sistema calculará os subtotais e o total do orçamento.'
+                : 'Descreva os itens e suas quantidades, sem preços individuais. Informe um valor global para o serviço.'}
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="quote-description">Descrição geral do serviço</label>
+            <textarea id="quote-description" name="description" value={formData.description} onChange={handleChange} maxLength={10000} required />
+          </div>
+
+          <fieldset className="quote-items">
+            <legend>Itens do orçamento</legend>
+            <p id="quote-items-help">Inclua pelo menos um item. A quantidade aceita até uma casa decimal, por exemplo, 2,5. Use vírgula ou ponto, sem separadores de milhares.</p>
+
+            {formData.items.map((item, index) => (
+              <fieldset className="quote-item" key={item.formId}>
+                <legend>Item {index + 1}</legend>
+                <div>
+                  <label htmlFor={`quote-item-${item.formId}-description`}>Descrição do item</label>
+                  <input id={`quote-item-${item.formId}-description`} name="description" value={item.description} onChange={(event) => handleItemChange(item.formId, event)} maxLength={500} required />
+                </div>
+
+                <div className="quote-item-values">
+                  <div>
+                    <label htmlFor={`quote-item-${item.formId}-quantity`}>Quantidade</label>
+                    <input
+                      id={`quote-item-${item.formId}-quantity`}
+                      name="quantity"
+                      type="text"
+                      inputMode="decimal"
+                      value={item.quantity}
+                      onChange={(event) => handleItemChange(item.formId, event)}
+                      pattern="[0-9]{1,9}([.,][0-9])?"
+                      maxLength={11}
+                      title="Informe uma quantidade maior que zero, com até uma casa decimal e sem separadores de milhares."
+                      aria-describedby="quote-items-help"
+                      required
+                    />
+                  </div>
+
+                  {isItemized && (
+                    <div>
+                      <label htmlFor={`quote-item-${item.formId}-unit-price`}>Preço unitário (R$)</label>
+                      <input
+                        id={`quote-item-${item.formId}-unit-price`}
+                        name="unitPrice"
+                        type="text"
+                        inputMode="decimal"
+                        value={item.unitPrice}
+                        onChange={(event) => handleItemChange(item.formId, event)}
+                        pattern="[0-9]{1,10}([.,][0-9]{1,2})?"
+                        maxLength={13}
+                        title="Informe um preço maior que zero, com até duas casas decimais e sem separadores de milhares."
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {isItemized && <p><strong>Subtotal:</strong> {formatQuoteMoney(pricingPreview.subtotals[index])}</p>}
+
+                <button type="button" onClick={() => handleRemoveItem(item.formId)} disabled={formData.items.length === 1} aria-label={`Remover item ${index + 1}`}>
+                  Remover item
+                </button>
+              </fieldset>
+            ))}
+
+            <button type="button" onClick={handleAddItem}>Adicionar item</button>
+          </fieldset>
+
+          {isItemized ? (
+            <div>
+              <p><strong>Total calculado (prévia):</strong> {formatQuoteMoney(pricingPreview.totalAmount)}</p>
+              <p>{pricingPreview.totalAmount === null
+                ? 'Preencha quantidades e preços válidos para calcular um total positivo.'
+                : 'O backend recalculará e validará os valores ao salvar. Cada subtotal é arredondado para centavos antes da soma.'}</p>
+            </div>
+          ) : (
+            <div>
+              <label htmlFor="quote-total-amount">Valor global do orçamento (R$)</label>
+              <input
+                id="quote-total-amount"
+                name="totalAmount"
+                type="text"
+                inputMode="decimal"
+                value={formData.totalAmount}
+                onChange={handleChange}
+                pattern="[0-9]{1,10}([.,][0-9]{1,2})?"
+                maxLength={13}
+                title="Informe um valor maior que zero, com até duas casas decimais e sem separadores de milhares."
+                required
+              />
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="quote-service-date">Data do serviço</label>
+            <input id="quote-service-date" name="serviceDate" type="date" value={formData.serviceDate} onChange={handleChange} min={getCurrentDate()} required />
+          </div>
+
+          <fieldset>
+            <legend>Endereço do serviço</legend>
+
+            <div>
+              <label htmlFor="quote-street">Rua</label>
+              <input id="quote-street" name="street" value={formData.street} onChange={handleChange} maxLength={200} required />
             </div>
 
-            {selectedClient && (
-              <div>
-                <p>
-                  <strong>E-mail:</strong> {selectedClient.email}
-                </p>
-                <p>
-                  <strong>Telefone:</strong> {selectedClient.phone}
-                </p>
-              </div>
-            )}
-          </>
-        )}
+            <div>
+              <label htmlFor="quote-number">Número</label>
+              <input id="quote-number" name="number" value={formData.number} onChange={handleChange} maxLength={30} required />
+            </div>
 
-        <div>
-          <label htmlFor="quote-description">Descrição</label>
-          <textarea id="quote-description" name="description" value={formData.description} onChange={handleChange} maxLength={10000} required />
-        </div>
+            <div>
+              <label htmlFor="quote-complement">Complemento</label>
+              <input id="quote-complement" name="complement" value={formData.complement} onChange={handleChange} maxLength={150} />
+            </div>
 
-        <div>
-          <label htmlFor="quote-total-amount">Valor total</label>
-          <input id="quote-total-amount" name="totalAmount" type="number" value={formData.totalAmount} onChange={handleChange} min="0.01" step="0.01" required />
-        </div>
+            <div>
+              <label htmlFor="quote-postal-code">CEP</label>
+              <input id="quote-postal-code" name="postalCode" value={formData.postalCode} onChange={handleChange} maxLength={20} required />
+            </div>
 
-        <div>
-          <label htmlFor="quote-service-date">Data do serviço</label>
-          <input id="quote-service-date" name="serviceDate" type="date" value={formData.serviceDate} onChange={handleChange} min={getCurrentDate()} required />
-        </div>
+            <div>
+              <label htmlFor="quote-district">Bairro</label>
+              <input id="quote-district" name="district" value={formData.district} onChange={handleChange} maxLength={100} required />
+            </div>
 
-        <fieldset>
-          <legend>Endereço do serviço</legend>
+            <div>
+              <label htmlFor="quote-city">Cidade</label>
+              <input id="quote-city" name="city" value={formData.city} onChange={handleChange} maxLength={100} required />
+            </div>
 
-          <div>
-            <label htmlFor="quote-street">Rua</label>
-            <input id="quote-street" name="street" value={formData.street} onChange={handleChange} maxLength={200} required />
-          </div>
+            <div>
+              <label htmlFor="quote-state">Estado</label>
+              <input id="quote-state" name="state" value={formData.state} onChange={handleChange} maxLength={100} required />
+            </div>
+          </fieldset>
 
           <div>
-            <label htmlFor="quote-number">Número</label>
-            <input id="quote-number" name="number" value={formData.number} onChange={handleChange} maxLength={30} required />
-          </div>
-
-          <div>
-            <label htmlFor="quote-complement">Complemento</label>
-            <input id="quote-complement" name="complement" value={formData.complement} onChange={handleChange} maxLength={150} />
-          </div>
-
-          <div>
-            <label htmlFor="quote-postal-code">CEP</label>
-            <input id="quote-postal-code" name="postalCode" value={formData.postalCode} onChange={handleChange} maxLength={20} required />
-          </div>
-
-          <div>
-            <label htmlFor="quote-district">Bairro</label>
-            <input id="quote-district" name="district" value={formData.district} onChange={handleChange} maxLength={100} required />
-          </div>
-
-          <div>
-            <label htmlFor="quote-city">Cidade</label>
-            <input id="quote-city" name="city" value={formData.city} onChange={handleChange} maxLength={100} required />
-          </div>
-
-          <div>
-            <label htmlFor="quote-state">Estado</label>
-            <input id="quote-state" name="state" value={formData.state} onChange={handleChange} maxLength={100} required />
+            <label htmlFor="quote-location-notes">Observações do local</label>
+            <textarea id="quote-location-notes" name="locationNotes" value={formData.locationNotes} onChange={handleChange} maxLength={2000} />
           </div>
         </fieldset>
-
-        <div>
-          <label htmlFor="quote-location-notes">Observações do local</label>
-          <textarea id="quote-location-notes" name="locationNotes" value={formData.locationNotes} onChange={handleChange} maxLength={2000} />
-        </div>
 
         <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Salvar rascunho'}
@@ -290,8 +430,19 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
               <strong>Status:</strong> {savedQuote.status}
             </p>
             <p>
-              <strong>Valor:</strong> R$ {savedQuote.totalAmount}
+              <strong>Forma de cobrança:</strong> {savedQuote.pricingMode === 'ITEMIZED' ? 'Preço por item' : 'Valor global'}
             </p>
+            <ul>
+              {savedQuote.items.map((item) => (
+                <li key={item.id}>
+                  {item.description} — quantidade: {formatQuoteQuantity(item.quantity)}
+                  {savedQuote.pricingMode === 'ITEMIZED' && (
+                    <> — preço unitário: {formatQuoteMoney(item.unitPrice)} — subtotal: {formatQuoteMoney(item.subtotal)}</>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p><strong>Valor:</strong> {formatQuoteMoney(savedQuote.totalAmount)}</p>
           </div>
         )}
       </form>

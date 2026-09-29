@@ -44,6 +44,15 @@ jobs:
       - name: Verificar o código
         run: npm run lint
 
+      - name: Testes de unidade do frontend
+        run: npm run test:unit
+
+      - name: Preparar o navegador dos testes de aceite
+        run: npx playwright install --with-deps chromium
+
+      - name: Testes de aceite da interface
+        run: npm run test:acceptance
+
       - name: Construir o frontend
         run: npm run build
 

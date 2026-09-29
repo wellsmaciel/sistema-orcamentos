@@ -6,6 +6,7 @@ import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import QuoteItem from '../models/quote-item.js';
 import { calculateItemsTotal } from '../utils/quote-pricing.js';
+import { normalizeStoredQuantity } from '../utils/quote-quantity.js';
 import { validateQuoteItemsInput } from '../validators/quote-items.js';
 
 const PUBLIC_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
@@ -227,7 +228,7 @@ async function confirmQuote(userId, quoteId, { transaction } = {}) {
       pricingMode: quote.pricingMode,
       items: items.map((item) => ({
         description: item.description,
-        quantity: item.quantity,
+        quantity: normalizeStoredQuantity(item.quantity),
         unitPrice: item.unitPrice,
       })),
     };
@@ -398,7 +399,7 @@ async function createQuoteCorrection(userId, quoteId, { transaction } = {}) {
       pricingMode: originalQuote.pricingMode,
       items: originalItems.map((item) => ({
         description: item.description,
-        quantity: item.quantity,
+        quantity: normalizeStoredQuantity(item.quantity),
         unitPrice: item.unitPrice,
       })),
     };

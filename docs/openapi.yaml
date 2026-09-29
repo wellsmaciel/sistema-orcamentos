@@ -1108,11 +1108,11 @@ components:
           pattern: '\S'
         quantity:
           type: string
-          pattern: '^(?!0+(?:\.0+)?$)\d{1,9}(?:\.\d{1,3})?$'
-          description: Quantidade positiva, inteira ou fracionada, enviada como texto com até três casas e separador ponto.
+          pattern: '^(?!0+(?:\.0+)?$)\d{1,9}(?:\.\d)?$'
+          description: Quantidade positiva, inteira ou fracionada, enviada como texto com até uma casa decimal e separador ponto.
           examples:
             - '2'
-            - '2.500'
+            - '2.5'
         unitPrice:
           type:
             - string
@@ -1170,9 +1170,10 @@ components:
           type: string
         quantity:
           type: string
-          pattern: '^\d{1,9}\.\d{3}$'
+          pattern: '^\d{1,9}(?:\.\d{1,3})?$'
+          description: Quantidade sem zeros decimais desnecessários. Novos cadastros aceitam até uma casa decimal; registros antigos podem preservar até três casas, sem arredondamento.
           examples:
-            - '2.500'
+            - '2.5'
         unitPrice:
           type:
             - string

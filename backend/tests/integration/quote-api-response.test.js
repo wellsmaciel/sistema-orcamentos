@@ -69,7 +69,7 @@ function buildInput(pricingMode = 'ITEMIZED') {
     clientId: CLIENT_ID,
     description: quote.description,
     pricingMode,
-    items: [{ description: 'Cabo elétrico', quantity: '2.500' }],
+    items: [{ description: 'Cabo elétrico', quantity: '2.5' }],
     serviceDate: quote.serviceDate,
     serviceAddress: {
       street: quote.serviceStreet,
@@ -95,7 +95,7 @@ function expectItems(body, pricingMode = 'ITEMIZED') {
   expect(body.items).toEqual([{
     id: ITEM_ID,
     description: 'Cabo elétrico',
-    quantity: '2.500',
+    quantity: '2.5',
     unitPrice: pricingMode === 'ITEMIZED' ? '19.99' : null,
     subtotal: pricingMode === 'ITEMIZED' ? '49.98' : null,
     position: 1,
@@ -105,6 +105,29 @@ function expectItems(body, pricingMode = 'ITEMIZED') {
 describe('Contrato JSON de orçamento e itens', () => {
   beforeEach(() => {
     jest.resetAllMocks();
+  });
+
+  test.each(['ITEMIZED', 'FIXED_TOTAL'])('POST deve rejeitar quantidade com duas casas no modo %s', async (pricingMode) => {
+    const input = buildInput(pricingMode);
+    input.items[0].quantity = '2.55';
+
+    const response = await request(app).post('/api/v1/quotes').send(input);
+
+    expect(response.status).toBe(400);
+    expect(response.body.details).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'items[0].quantity' })]));
+    expect(services.createQuote).not.toHaveBeenCalled();
+  });
+
+  test.each(['ITEMIZED', 'FIXED_TOTAL'])('PUT deve rejeitar quantidade com duas casas no modo %s', async (pricingMode) => {
+    const input = buildInput(pricingMode);
+    delete input.clientId;
+    input.items[0].quantity = '2.55';
+
+    const response = await request(app).put(`/api/v1/quotes/${QUOTE_ID}`).send(input);
+
+    expect(response.status).toBe(400);
+    expect(response.body.details).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'items[0].quantity' })]));
+    expect(services.updateQuote).not.toHaveBeenCalled();
   });
 
   test.each(['ITEMIZED', 'FIXED_TOTAL'])('POST deve devolver os itens no modo %s', async (pricingMode) => {

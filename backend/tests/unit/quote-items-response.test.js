@@ -20,7 +20,7 @@ describe('Serialização dos itens do orçamento', () => {
       {
         id: '550e8400-e29b-41d4-a716-446655440001',
         description: 'Cabo elétrico',
-        quantity: '2.500',
+        quantity: '2.5',
         unitPrice: '19.99',
         subtotal: '49.98',
         position: 1,
@@ -33,7 +33,7 @@ describe('Serialização dos itens do orçamento', () => {
 
     expect(items[0].unitPrice).toBeNull();
     expect(items[0].subtotal).toBeNull();
-    expect(items[0].quantity).toBe('2.500');
+    expect(items[0].quantity).toBe('2.5');
     expect(items[0]).not.toHaveProperty('quoteId');
     expect(items[0]).not.toHaveProperty('created_at');
     expect(items[0]).not.toHaveProperty('updated_at');
@@ -59,6 +59,13 @@ describe('Serialização dos itens do orçamento', () => {
     });
 
     expect(items[0].subtotal).toBe('0.00');
+  });
+
+  test('deve preservar a quantidade e o subtotal de registros históricos, sem arredondar a quantidade', () => {
+    const items = serializeQuoteItems({ pricingMode: 'ITEMIZED', items: [buildItem({ quantity: '1.250', unitPrice: '8.00' })] });
+
+    expect(items[0].quantity).toBe('1.25');
+    expect(items[0].subtotal).toBe('10.00');
   });
 
   test('deve retornar lista vazia para registros globais históricos sem itens', () => {

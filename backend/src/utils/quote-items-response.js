@@ -1,4 +1,5 @@
 import { calculateItemSubtotal } from './quote-pricing.js';
+import { normalizeStoredQuantity } from './quote-quantity.js';
 
 function serializeQuoteItems(quote) {
   if (!Array.isArray(quote.items)) {
@@ -16,7 +17,7 @@ function serializeQuoteItems(quote) {
     .map((item) => ({
       id: item.id,
       description: item.description,
-      quantity: item.quantity,
+      quantity: normalizeStoredQuantity(item.quantity),
       unitPrice: itemized ? item.unitPrice : null,
       subtotal: itemized ? calculateItemSubtotal(item.quantity, item.unitPrice) : null,
       position: item.position,
