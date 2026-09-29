@@ -6,6 +6,7 @@ import {
   respondToPublicQuote as respondToPublicQuoteService,
   updateQuote as updateQuoteService,
   createQuoteCorrection as createQuoteCorrectionService,
+  listQuotesPage as listQuotesPageService,
 } from '../services/quote.js';
 
 function serializeQuote(quote) {
@@ -276,4 +277,40 @@ async function createQuoteCorrection(request, response, next) {
     return next(error);
   }
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection };
+async function listQuotesPage(request, response, next) {
+  try {
+    const result = await listQuotesPageService(request.authenticatedUser.id, request.quoteListOptions);
+
+    const items = result.items.map((quote) => {
+      const serializedQuote = serializeQuote(quote);
+
+      const originalQuote = result.relatedQuotes.find((candidate) => candidate.id === quote.correctedFromId);
+
+      const correction = result.relatedQuotes.find((candidate) => candidate.correctedFromId === quote.id);
+
+      if (originalQuote) {
+        serializedQuote.originalQuoteNumber = originalQuote.quoteNumber;
+      }
+
+      if (correction) {
+        serializedQuote.correction = {
+          id: correction.id,
+          quoteNumber: correction.quoteNumber,
+        };
+      }
+
+      return serializedQuote;
+    });
+
+    return response.status(200).json({
+      items,
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
+      totalPages: result.totalPages,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage };

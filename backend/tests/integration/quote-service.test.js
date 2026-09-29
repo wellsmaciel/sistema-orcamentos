@@ -4,7 +4,7 @@ import sequelize from '../../src/config/database.js';
 import Client from '../../src/models/client.js';
 import User from '../../src/models/user.js';
 import Company from '../../src/models/company.js';
-import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote, respondToPublicQuote, createQuoteCorrection } from '../../src/services/quote.js';
+import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage } from '../../src/services/quote.js';
 
 describe('Serviço de orçamentos', () => {
   let transaction;
@@ -593,5 +593,142 @@ describe('Serviço de orçamentos', () => {
     expect(result).toEqual({
       outcome: 'NOT_FOUND',
     });
+  });
+  test('deve combinar filtros de cliente, situação e data sem acessar outra conta', async () => {
+    const user = await createUser('Prestador dos Filtros');
+    const otherUser = await createUser('Outro Prestador');
+    const client = await createClient(user.id);
+    const otherClient = await createClient(otherUser.id);
+
+    const matchingQuote = await createQuote(
+      user.id,
+      {
+        ...buildQuoteInput(client.id),
+        serviceDate: '2026-10-15',
+      },
+      { transaction },
+    );
+
+    await matchingQuote.update({ status: 'ACCEPTED' }, { transaction });
+
+    const outsidePeriod = await createQuote(
+      user.id,
+      {
+        ...buildQuoteInput(client.id),
+        serviceDate: '2026-11-01',
+      },
+      { transaction },
+    );
+
+    await outsidePeriod.update({ status: 'ACCEPTED' }, { transaction });
+
+    await createQuote(
+      user.id,
+      {
+        ...buildQuoteInput(client.id),
+        serviceDate: '2026-10-15',
+      },
+      { transaction },
+    );
+
+    const otherQuote = await createQuote(
+      otherUser.id,
+      {
+        ...buildQuoteInput(otherClient.id),
+        serviceDate: '2026-10-15',
+      },
+      { transaction },
+    );
+
+    await otherQuote.update({ status: 'ACCEPTED' }, { transaction });
+
+    const result = await listQuotesPage(user.id, {
+      search: 'CLIENTE',
+      status: 'ACCEPTED',
+      serviceDateFrom: '2026-10-01',
+      serviceDateTo: '2026-10-31',
+      transaction,
+    });
+
+    expect(result.items.map((quote) => quote.id)).toEqual([matchingQuote.id]);
+    expect(result.total).toBe(1);
+
+    const noMatches = await listQuotesPage(user.id, {
+      search: 'Nome inexistente',
+      transaction,
+    });
+
+    expect(noMatches.items).toEqual([]);
+    expect(noMatches.total).toBe(0);
+  });
+
+  test('deve paginar orçamentos com os mais recentes primeiro', async () => {
+    const user = await createUser('Prestador da Paginação');
+    const client = await createClient(user.id);
+    const createdQuotes = [];
+
+    for (let index = 0; index < 3; index += 1) {
+      const quote = await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+
+      createdQuotes.push(quote);
+    }
+
+    const result = await listQuotesPage(user.id, {
+      page: 2,
+      pageSize: 2,
+      transaction,
+    });
+
+    expect(result.items.map((quote) => quote.id)).toEqual([createdQuotes[0].id]);
+    expect(result.total).toBe(3);
+    expect(result.page).toBe(2);
+    expect(result.pageSize).toBe(2);
+    expect(result.totalPages).toBe(2);
+  });
+  test('deve localizar os vínculos de correção fora do filtro atual', async () => {
+    const user = await createUser('Prestador das Correções');
+    const client = await createClient(user.id);
+
+    const originalQuote = await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+
+    await originalQuote.update({ status: 'REJECTED' }, { transaction });
+
+    const correctionResult = await createQuoteCorrection(user.id, originalQuote.id, { transaction });
+
+    const correction = correctionResult.quote;
+
+    const drafts = await listQuotesPage(user.id, {
+      status: 'DRAFT',
+      pageSize: 1,
+      transaction,
+    });
+
+    expect(drafts.items.map((quote) => quote.id)).toEqual([correction.id]);
+
+    expect(drafts.relatedQuotes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: originalQuote.id,
+          quoteNumber: originalQuote.quoteNumber,
+        }),
+      ]),
+    );
+
+    const rejected = await listQuotesPage(user.id, {
+      status: 'REJECTED',
+      pageSize: 1,
+      transaction,
+    });
+
+    expect(rejected.items.map((quote) => quote.id)).toEqual([originalQuote.id]);
+
+    expect(rejected.relatedQuotes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: correction.id,
+          correctedFromId: originalQuote.id,
+        }),
+      ]),
+    );
   });
 });

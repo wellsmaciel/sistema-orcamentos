@@ -90,4 +90,19 @@ describe('Rotas de orçamentos', () => {
       message: 'É necessário apresentar um token de acesso válido.',
     });
   });
+  test('GET /api/v1/quotes/search deve responder 401 sem token', async () => {
+    const response = await request(app).get('/api/v1/quotes/search').query({
+      search: 'Maria',
+      status: 'ACCEPTED',
+      serviceDateFrom: '2026-10-01',
+      serviceDateTo: '2026-10-31',
+      page: '1',
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({
+      code: 'UNAUTHORIZED',
+      message: 'É necessário apresentar um token de acesso válido.',
+    });
+  });
 });

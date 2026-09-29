@@ -636,6 +636,72 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/quotes/search:
+    get:
+      tags:
+        - Orçamentos
+      summary: Pesquisa orçamentos com filtros e paginação
+      description: >
+        Retorna somente os orçamentos do prestador autenticado.
+        Permite combinar nome do cliente, situação e intervalo da data
+        prevista do serviço. Os limites de data são inclusivos.
+        Retorna até 20 registros por página, do mais recente para o mais antigo.
+      operationId: listQuotesPage
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: search
+          in: query
+          description: Parte do nome preservado do cliente, sem distinguir maiúsculas e minúsculas.
+          schema:
+            type: string
+            maxLength: 150
+            default: ''
+        - name: status
+          in: query
+          description: Situação do orçamento. Quando omitido, considera todas.
+          schema:
+            type: string
+            enum:
+              - DRAFT
+              - SENT
+              - ACCEPTED
+              - REJECTED
+        - name: serviceDateFrom
+          in: query
+          description: Data inicial prevista para o serviço.
+          schema:
+            type: string
+            format: date
+        - name: serviceDateTo
+          in: query
+          description: Data final prevista para o serviço. Não pode ser anterior à inicial.
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          description: Número da página solicitada.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000000
+            default: 1
+      responses:
+        '200':
+          description: Resultado da pesquisa paginada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotePageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   securitySchemes:
     Auth0Bearer:
@@ -1116,6 +1182,24 @@ components:
           type: string
           format: uuid
           description: Identificador do orçamento recusado que originou esta correção.
+        originalQuoteNumber:
+          type: integer
+          minimum: 1
+          description: Número do orçamento original, quando este item é uma correção na busca paginada.
+        correction:
+          type: object
+          additionalProperties: false
+          description: Correção vinculada ao orçamento, mesmo quando estiver fora dos filtros ou da página atual.
+          required:
+            - id
+            - quoteNumber
+          properties:
+            id:
+              type: string
+              format: uuid
+            quoteNumber:
+              type: integer
+              minimum: 1
 
     QuoteResponseRequest:
       type: object
@@ -1192,6 +1276,37 @@ components:
           type: string
           maxLength: 2000
           description: Motivo informado pelo cliente em caso de recusa.
+
+    QuotePageResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+        - totalPages
+      properties:
+        items:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Quote'
+        total:
+          type: integer
+          minimum: 0
+          description: Total de orçamentos que correspondem aos filtros.
+        page:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        pageSize:
+          type: integer
+          const: 20
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Total de páginas. Retorna zero quando não há resultados.
 
     QuoteListResponse:
       type: object

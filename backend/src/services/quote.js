@@ -2,6 +2,7 @@ import Client from '../models/client.js';
 import Quote from '../models/quote.js';
 import Company from '../models/company.js';
 import { randomBytes } from 'node:crypto';
+import { Op } from 'sequelize';
 const PUBLIC_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 
 function normalizeOptionalString(value) {
@@ -292,4 +293,89 @@ async function createQuoteCorrection(userId, quoteId, { transaction } = {}) {
     quote: correction,
   };
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection };
+async function listQuotesPage(userId, { search = '', status, serviceDateFrom, serviceDateTo, page = 1, pageSize = 20, transaction } = {}) {
+  const where = {
+    userId,
+  };
+
+  const normalizedSearch = search.trim();
+
+  if (normalizedSearch) {
+    const escapedSearch = normalizedSearch.replace(/[\\%_]/g, '\\$&');
+
+    where.clientName = {
+      [Op.iLike]: `%${escapedSearch}%`,
+    };
+  }
+
+  if (status) {
+    where.status = status;
+  }
+
+  if (serviceDateFrom || serviceDateTo) {
+    where.serviceDate = {};
+
+    if (serviceDateFrom) {
+      where.serviceDate[Op.gte] = serviceDateFrom;
+    }
+
+    if (serviceDateTo) {
+      where.serviceDate[Op.lte] = serviceDateTo;
+    }
+  }
+
+  const { rows, count } = await Quote.findAndCountAll({
+    where,
+    order: [
+      ['created_at', 'DESC'],
+      ['quoteNumber', 'DESC'],
+    ],
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+    transaction,
+  });
+
+  let relatedQuotes = [];
+
+  if (rows.length > 0) {
+    const pageQuoteIds = rows.map((quote) => quote.id);
+
+    const originalQuoteIds = rows.map((quote) => quote.correctedFromId).filter(Boolean);
+
+    const relatedConditions = [
+      {
+        correctedFromId: {
+          [Op.in]: pageQuoteIds,
+        },
+      },
+    ];
+
+    if (originalQuoteIds.length > 0) {
+      relatedConditions.push({
+        id: {
+          [Op.in]: originalQuoteIds,
+        },
+      });
+    }
+
+    relatedQuotes = await Quote.findAll({
+      attributes: ['id', 'quoteNumber', 'correctedFromId'],
+      where: {
+        userId,
+        [Op.or]: relatedConditions,
+      },
+      transaction,
+      raw: true,
+    });
+  }
+
+  return {
+    items: rows,
+    relatedQuotes,
+    total: count,
+    page,
+    pageSize,
+    totalPages: Math.ceil(count / pageSize),
+  };
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage };
