@@ -6,6 +6,13 @@ function buildValidInput() {
   return {
     clientId: '550e8400-e29b-41d4-a716-446655440000',
     description: 'Execução do serviço descrito pelo prestador.',
+    pricingMode: 'FIXED_TOTAL',
+    items: [
+      {
+        description: 'Mão de obra',
+        quantity: '1',
+      },
+    ],
     totalAmount: '1500.50',
     serviceDate: '2026-10-15',
     serviceAddress: {
@@ -158,6 +165,35 @@ describe('Validação de orçamento', () => {
     expect(errors).toContainEqual({
       field: 'reason',
       message: 'O motivo deve ser informado somente em caso de recusa.',
+    });
+  });
+  describe('Validação do orçamento com itens', () => {
+    test('deve aceitar criação por item sem total informado', () => {
+      const input = buildValidInput();
+
+      input.pricingMode = 'ITEMIZED';
+      input.items[0].unitPrice = '1500.50';
+      delete input.totalAmount;
+
+      expect(validateQuoteInput(input, CURRENT_DATE)).toEqual([]);
+    });
+
+    test('deve aceitar edição por item sem trocar o cliente', () => {
+      const input = buildValidInput();
+
+      input.pricingMode = 'ITEMIZED';
+      input.items[0].unitPrice = '1500.50';
+      delete input.totalAmount;
+      delete input.clientId;
+
+      expect(validateQuoteUpdateInput(input, CURRENT_DATE)).toEqual([]);
+    });
+
+    test('deve exigir itens também no validador principal', () => {
+      const input = buildValidInput();
+      delete input.items;
+
+      expect(validateQuoteInput(input, CURRENT_DATE)).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'items' })]));
     });
   });
 });

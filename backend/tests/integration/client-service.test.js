@@ -268,6 +268,8 @@ describe('Serviço de clientes', () => {
       {
         clientId: client.id,
         description: 'Serviço de teste',
+        pricingMode: 'FIXED_TOTAL',
+        items: [{ description: 'Serviço de teste', quantity: '1' }],
         totalAmount: '100.00',
         serviceDate: '2026-12-31',
         serviceAddress: input.address,

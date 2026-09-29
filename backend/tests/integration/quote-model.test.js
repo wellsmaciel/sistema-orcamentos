@@ -76,6 +76,7 @@ describe('Modelo Quote', () => {
         serviceCity: client.city,
         serviceState: client.state,
         locationNotes: 'Entrar em contato antes da visita.',
+        pricingMode: 'FIXED_TOTAL',
       },
       {
         transaction,
@@ -96,5 +97,6 @@ describe('Modelo Quote', () => {
     expect(quote.respondedAt).toBeNull();
     expect(quote.rejectionReason).toBeNull();
     expect(quote.correctedFromId).toBeNull();
+    expect(quote.pricingMode).toBe('FIXED_TOTAL');
   });
 });

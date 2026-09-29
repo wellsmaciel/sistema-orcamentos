@@ -213,7 +213,10 @@ paths:
       description: >
         Cria um orçamento editável associado a um cliente do prestador
         autenticado. Os dados de contato do cliente e o endereço do serviço
-        são copiados para preservar o histórico do orçamento.
+        são copiados para preservar o histórico do orçamento. Exige ao menos
+        um item válido e um total positivo, mesmo em rascunho. No modo ITEMIZED,
+        o backend calcula e soma os subtotais arredondados; no modo FIXED_TOTAL,
+        o prestador informa o total, sem preços individuais.
       operationId: createQuoteDraft
       security:
         - Auth0Bearer: []
@@ -408,7 +411,10 @@ paths:
         Confirma um orçamento pertencente ao prestador autenticado, altera
         seu status para enviado, bloqueia novas edições e gera o token usado
         no link público. Exige um perfil profissional ativo e copia seus dados
-        para o orçamento, preservando o histórico.
+        para o orçamento, preservando o histórico. Confere os itens salvos e,
+        no modo ITEMIZED, a correspondência entre a soma dos subtotais e o total.
+        Dados de itens ou valores inconsistentes retornam 409 com o código
+        QUOTE_ITEMS_INVALID, sem confirmar o orçamento.
       operationId: confirmQuote
       security:
         - Auth0Bearer: []
@@ -518,8 +524,10 @@ paths:
       summary: Cria uma correção de um orçamento recusado
       description: >
         Cria um novo orçamento em rascunho copiando os dados de um orçamento
-        recusado pertencente ao prestador autenticado. O orçamento original
-        é preservado no histórico.
+        recusado pertencente ao prestador autenticado, inclusive a forma de
+        cobrança e os itens, que recebem novos identificadores. O orçamento
+        original é preservado no histórico. Itens ou valores inconsistentes
+        no original retornam 409 com o código QUOTE_ITEMS_INVALID.
       operationId: createQuoteCorrection
       security:
         - Auth0Bearer: []
@@ -922,7 +930,8 @@ components:
       additionalProperties: false
       required:
         - description
-        - totalAmount
+        - pricingMode
+        - items
         - serviceDate
         - serviceAddress
       properties:
@@ -930,11 +939,19 @@ components:
           type: string
           minLength: 1
           maxLength: 10000
-          description: Descrição livre dos serviços e valores do orçamento.
+          description: Descrição geral do serviço, independente das descrições dos itens.
+        pricingMode:
+          $ref: '#/components/schemas/QuotePricingMode'
+        items:
+          type: array
+          minItems: 1
+          description: Lista completa que substituirá os itens do rascunho, na ordem informada.
+          items:
+            $ref: '#/components/schemas/QuoteItemRequest'
         totalAmount:
           type: string
-          pattern: '^\d{1,10}(\.\d{1,2})?$'
-          description: Valor total informado manualmente, maior que zero.
+          pattern: '^(?!0+(?:\.0+)?$)\d{1,10}(?:\.\d{1,2})?$'
+          description: Obrigatório e positivo no modo FIXED_TOTAL; proibido no modo ITEMIZED.
           examples:
             - '1500.50'
         serviceDate:
@@ -949,6 +966,8 @@ components:
           type: string
           maxLength: 2000
           description: Observações opcionais sobre o local do serviço.
+      allOf:
+        - $ref: '#/components/schemas/QuotePricingRules'
 
     Client:
       type: object
@@ -1025,7 +1044,8 @@ components:
       required:
         - clientId
         - description
-        - totalAmount
+        - pricingMode
+        - items
         - serviceDate
         - serviceAddress
       properties:
@@ -1037,11 +1057,19 @@ components:
           type: string
           minLength: 1
           maxLength: 10000
-          description: Descrição livre dos serviços e valores do orçamento.
+          description: Descrição geral do serviço, independente das descrições dos itens.
+        pricingMode:
+          $ref: '#/components/schemas/QuotePricingMode'
+        items:
+          type: array
+          minItems: 1
+          description: Itens digitados manualmente, na ordem de preenchimento.
+          items:
+            $ref: '#/components/schemas/QuoteItemRequest'
         totalAmount:
           type: string
-          pattern: '^\d{1,10}(\.\d{1,2})?$'
-          description: Valor total informado manualmente, maior que zero.
+          pattern: '^(?!0+(?:\.0+)?$)\d{1,10}(?:\.\d{1,2})?$'
+          description: Obrigatório e positivo no modo FIXED_TOTAL; proibido no modo ITEMIZED.
           examples:
             - '1500.50'
         serviceDate:
@@ -1056,6 +1084,119 @@ components:
           type: string
           maxLength: 2000
           description: Observações opcionais sobre o local do serviço.
+      allOf:
+        - $ref: '#/components/schemas/QuotePricingRules'
+
+    QuotePricingMode:
+      type: string
+      enum:
+        - ITEMIZED
+        - FIXED_TOTAL
+      description: ITEMIZED calcula o total pelos itens; FIXED_TOTAL utiliza o total informado pelo prestador.
+
+    QuoteItemRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - description
+        - quantity
+      properties:
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+          pattern: '\S'
+        quantity:
+          type: string
+          pattern: '^(?!0+(?:\.0+)?$)\d{1,9}(?:\.\d{1,3})?$'
+          description: Quantidade positiva, inteira ou fracionada, enviada como texto com até três casas e separador ponto.
+          examples:
+            - '2'
+            - '2.500'
+        unitPrice:
+          type:
+            - string
+            - 'null'
+          pattern: '^(?!0+(?:\.0+)?$)\d{1,10}(?:\.\d{1,2})?$'
+          description: Positivo e obrigatório em ITEMIZED; deve ser omitido ou null em FIXED_TOTAL. Não enviar id, quoteId, position ou subtotal.
+          examples:
+            - '19.99'
+            - null
+
+    QuotePricingRules:
+      description: Restrições condicionais da cobrança. A soma dos subtotais deve ser positiva e caber em DECIMAL(12,2).
+      oneOf:
+        - properties:
+            pricingMode:
+              const: ITEMIZED
+            items:
+              items:
+                required:
+                  - unitPrice
+                properties:
+                  unitPrice:
+                    type: string
+                    pattern: '^(?!0+(?:\.0+)?$)\d{1,10}(?:\.\d{1,2})?$'
+          not:
+            required:
+              - totalAmount
+        - required:
+            - totalAmount
+          properties:
+            pricingMode:
+              const: FIXED_TOTAL
+            items:
+              items:
+                properties:
+                  unitPrice:
+                    type: 'null'
+
+    QuoteItem:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - description
+        - quantity
+        - unitPrice
+        - subtotal
+        - position
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        description:
+          type: string
+        quantity:
+          type: string
+          pattern: '^\d{1,9}\.\d{3}$'
+          examples:
+            - '2.500'
+        unitPrice:
+          type:
+            - string
+            - 'null'
+          pattern: '^\d{1,10}\.\d{2}$'
+          description: Preço unitário positivo em ITEMIZED; null em FIXED_TOTAL, nunca zero para representar ausência de preço.
+          examples:
+            - '19.99'
+            - null
+        subtotal:
+          type:
+            - string
+            - 'null'
+          pattern: '^\d{1,10}\.\d{2}$'
+          readOnly: true
+          description: Quantidade multiplicada pelo preço e arredondada para centavos, com empate para cima. Pode arredondar para zero. É calculado, não armazenado; null em FIXED_TOTAL.
+          examples:
+            - '49.98'
+            - null
+        position:
+          type: integer
+          minimum: 1
+          readOnly: true
+          description: Ordem do item no orçamento, iniciando em 1.
 
     QuoteClientSnapshot:
       type: object
@@ -1113,6 +1254,8 @@ components:
         - quoteNumber
         - client
         - description
+        - pricingMode
+        - items
         - totalAmount
         - serviceDate
         - serviceAddress
@@ -1134,6 +1277,13 @@ components:
         description:
           type: string
           description: Descrição livre do orçamento.
+        pricingMode:
+          $ref: '#/components/schemas/QuotePricingMode'
+        items:
+          type: array
+          description: Itens ordenados por position. Registros históricos sem itens podem retornar uma lista vazia.
+          items:
+            $ref: '#/components/schemas/QuoteItem'
         totalAmount:
           type: string
           description: Valor total preservado com duas casas decimais.
@@ -1225,6 +1375,8 @@ components:
         - quoteNumber
         - clientName
         - description
+        - pricingMode
+        - items
         - totalAmount
         - serviceDate
         - serviceAddress
@@ -1243,6 +1395,13 @@ components:
         description:
           type: string
           description: Descrição livre do orçamento.
+        pricingMode:
+          $ref: '#/components/schemas/QuotePricingMode'
+        items:
+          type: array
+          description: Itens ordenados por position, sem quoteId ou timestamps internos. Registros históricos sem itens podem retornar uma lista vazia.
+          items:
+            $ref: '#/components/schemas/QuoteItem'
         totalAmount:
           type: string
           description: Valor total preservado com duas casas decimais.

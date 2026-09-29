@@ -8,6 +8,7 @@ import {
   createQuoteCorrection as createQuoteCorrectionService,
   listQuotesPage as listQuotesPageService,
 } from '../services/quote.js';
+import { serializeQuoteItems } from '../utils/quote-items-response.js';
 
 function serializeQuote(quote) {
   const serviceAddress = {
@@ -33,6 +34,8 @@ function serializeQuote(quote) {
       phone: quote.clientPhone,
     },
     description: quote.description,
+    pricingMode: quote.pricingMode,
+    items: serializeQuoteItems(quote),
     totalAmount: quote.totalAmount,
     serviceDate: quote.serviceDate,
     serviceAddress,
@@ -81,6 +84,8 @@ function serializePublicQuote(quote) {
     quoteNumber: quote.quoteNumber,
     clientName: quote.clientName,
     description: quote.description,
+    pricingMode: quote.pricingMode,
+    items: serializeQuoteItems(quote),
     totalAmount: quote.totalAmount,
     serviceDate: quote.serviceDate,
     serviceAddress,
@@ -203,6 +208,13 @@ async function confirmQuote(request, response, next) {
         message: 'Cadastre seus dados profissionais antes de confirmar o orçamento.',
       });
     }
+    if (result.outcome === 'INVALID_ITEMS') {
+      return response.status(409).json({
+        code: 'QUOTE_ITEMS_INVALID',
+        message: 'Revise os itens e o valor do orçamento antes de confirmar.',
+        details: result.details,
+      });
+    }
     return response.status(200).json(serializeQuote(result.quote));
   } catch (error) {
     return next(error);
@@ -271,7 +283,13 @@ async function createQuoteCorrection(request, response, next) {
         message: 'Este orçamento já possui uma correção.',
       });
     }
-
+    if (result.outcome === 'INVALID_ITEMS') {
+      return response.status(409).json({
+        code: 'QUOTE_ITEMS_INVALID',
+        message: 'Os itens ou o valor do orçamento original são inválidos.',
+        details: result.details,
+      });
+    }
     return response.status(201).json(serializeQuote(result.quote));
   } catch (error) {
     return next(error);
