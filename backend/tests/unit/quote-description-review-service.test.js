@@ -70,6 +70,7 @@ describe('revisão da descrição com IA', () => {
     expect(params.system).toContain('não acrescente serviços, materiais, prazos, garantias');
     expect(params.system).toContain('preserve exatamente quantidades e abrangência');
     expect(params.system).toContain('sem omitir nenhuma informação da descrição');
+    expect(params.system).toContain('não escolha a ação do serviço pelo prestador');
     expect(params.messages).toEqual([{ role: 'user', content: buildReviewMessage(input) }]);
   });
 
