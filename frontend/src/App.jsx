@@ -23,6 +23,7 @@ function App() {
   const [isLoadingQuoteClients, setIsLoadingQuoteClients] = useState(false);
   const [quoteClientsError, setQuoteClientsError] = useState('');
   const [selectedClient, setSelectedClient] = useState(null);
+  const [reviewQuoteId, setReviewQuoteId] = useState(null);
 
   if (publicToken) {
     return <PublicQuote publicToken={publicToken} />;
@@ -56,6 +57,7 @@ function App() {
 
   async function handleNavigate(view) {
     setSelectedQuote(null);
+    setReviewQuoteId(null);
     setCurrentView(view);
     setSelectedClient(null);
     if (view !== 'new-quote') {
@@ -80,6 +82,11 @@ function App() {
   function handleEditQuote(quote) {
     setSelectedQuote(quote);
     setCurrentView('edit-quote');
+  }
+
+  function handleReviewNewQuote(quote) {
+    setReviewQuoteId(quote.id);
+    setCurrentView('quotes');
   }
 
   function handleQuoteUpdated() {
@@ -121,7 +128,7 @@ function App() {
         <>
           <p>Crie, compartilhe e acompanhe seus orçamentos em um só lugar.</p>
 
-          <button type="button" onClick={() => loginWithRedirect()}>
+          <button type="button" className="button-primary" onClick={() => loginWithRedirect()}>
             Entrar no sistema
           </button>
         </>
@@ -177,7 +184,7 @@ function App() {
                     </>
                   )}
 
-                  {!isLoadingQuoteClients && !quoteClientsError && clients.length > 0 && <QuoteForm clients={clients} getAccessTokenSilently={getAccessTokenSilently} />}
+                  {!isLoadingQuoteClients && !quoteClientsError && clients.length > 0 && <QuoteForm clients={clients} getAccessTokenSilently={getAccessTokenSilently} onReview={handleReviewNewQuote} />}
                 </section>
               )}
 
@@ -185,7 +192,7 @@ function App() {
                 <section>
                   <h2>Meus orçamentos</h2>
 
-                  <QuoteList getAccessTokenSilently={getAccessTokenSilently} onEdit={handleEditQuote} />
+                  <QuoteList getAccessTokenSilently={getAccessTokenSilently} onEdit={handleEditQuote} initialReviewQuoteId={reviewQuoteId} />
                 </section>
               )}
 

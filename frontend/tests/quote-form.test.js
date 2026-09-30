@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { buildDescriptionReviewRequest, buildQuoteRequest, calculateFormItemSubtotal, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, normalizeDecimalInput } from '../src/utils/quote-form.js';
+import { buildDescriptionReviewRequest, buildQuoteRequest, calculateFormItemSubtotal, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, isBlankFormItem, normalizeDecimalInput } from '../src/utils/quote-form.js';
 import { calculateItemSubtotal, calculateItemsTotal } from '../../backend/src/utils/quote-pricing.js';
 import { validateQuoteInput, validateQuoteUpdateInput } from '../../backend/src/validators/quote.js';
 import { validateQuoteDescriptionReviewInput } from '../../backend/src/validators/quote-description-review.js';
@@ -198,5 +198,38 @@ describe('Revisão da descrição com IA', () => {
     assert.deepEqual(Object.keys(body), ['description', 'items']);
     assert.deepEqual(body.items, [{ description: 'Cabo elétrico' }]);
     assert.doesNotMatch(JSON.stringify(body), /550e8400|Rua de Teste|19,99/);
+  });
+});
+
+describe('Linhas de item em branco', () => {
+  test('ignora linhas totalmente em branco ao salvar', () => {
+    const formData = buildFormData('ITEMIZED');
+    formData.items.push({ formId: 'linha-vazia', description: '  ', quantity: '1', unitPrice: '' });
+
+    const body = buildQuoteRequest(formData);
+
+    assert.equal(body.items.length, 1);
+    assert.deepEqual(validateQuoteInput(body, '2099-09-27'), []);
+  });
+
+  test('mantém o erro de uma linha parcialmente preenchida, com o número original', () => {
+    const formData = buildFormData('ITEMIZED');
+    formData.items.push({ formId: 'linha-vazia', description: '', quantity: '1', unitPrice: '' });
+    formData.items.push({ formId: 'linha-parcial', description: '', quantity: '3', unitPrice: '10' });
+
+    assert.throws(() => buildQuoteRequest(formData), /Item 3: informe uma descrição/);
+  });
+
+  test('exige ao menos um item preenchido', () => {
+    const formData = buildFormData();
+    formData.items = [{ formId: 'linha-vazia', description: '', quantity: '1', unitPrice: '' }];
+
+    assert.throws(() => buildQuoteRequest(formData), /Informe pelo menos um item/);
+  });
+
+  test('preço oculto no valor global não impede de ignorar a linha', () => {
+    assert.equal(isBlankFormItem({ description: '', quantity: '1', unitPrice: '19,99' }, 'FIXED_TOTAL'), true);
+    assert.equal(isBlankFormItem({ description: '', quantity: '1', unitPrice: '19,99' }, 'ITEMIZED'), false);
+    assert.equal(isBlankFormItem({ description: '', quantity: '2', unitPrice: '' }, 'FIXED_TOTAL'), false);
   });
 });

@@ -138,7 +138,7 @@ function ClientList({ getAccessTokenSilently, onEdit, onNewClient }) {
 
   return (
     <section>
-      <button type="button" onClick={onNewClient} disabled={controlsDisabled}>
+      <button type="button" className="button-primary" onClick={onNewClient} disabled={controlsDisabled}>
         Novo cliente
       </button>
 
@@ -188,7 +188,7 @@ function ClientList({ getAccessTokenSilently, onEdit, onNewClient }) {
                   Editar cliente
                 </button>
 
-                <button type="button" onClick={() => handleSelectAction(client, 'delete')} disabled={controlsDisabled}>
+                <button type="button" className="button-danger" onClick={() => handleSelectAction(client, 'delete')} disabled={controlsDisabled}>
                   Excluir cliente
                 </button>
 
@@ -210,7 +210,7 @@ function ClientList({ getAccessTokenSilently, onEdit, onNewClient }) {
 
                     {actionError && <p role="alert">{actionError}</p>}
 
-                    <button type="button" onClick={handleConfirmAction} disabled={isBusy}>
+                    <button type="button" className={pendingAction.type === 'delete' ? 'button-danger' : 'button-primary'} onClick={handleConfirmAction} disabled={isBusy}>
                       {isProcessing ? 'Processando...' : 'Confirmar'}
                     </button>
 

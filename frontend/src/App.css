@@ -15,6 +15,7 @@ main {
 
 .accessibility-controls button {
   min-height: 44px;
+  margin: 0;
   padding: 8px 12px;
 }
 
@@ -44,25 +45,61 @@ p {
   line-height: 1.5;
 }
 
+/* Padrão: ação secundária, com contorno azul. */
 button {
-  min-height: 48px;
-  padding: 10px 18px;
+  min-height: 44px;
+  margin: 4px 8px 4px 0;
+  padding: 8px 16px;
   border: 2px solid #1d4ed8;
-  border-radius: 12px;
-  color: #ffffff;
-  background-color: #1d4ed8;
+  border-radius: 10px;
+  color: #1d4ed8;
+  background-color: #ffffff;
   font-weight: 700;
   cursor: pointer;
 }
 
-button:hover {
-  border-color: #1e40af;
-  background-color: #1e40af;
+button:hover:not(:disabled) {
+  background-color: #eff6ff;
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.65;
+  opacity: 0.55;
+}
+
+/* Ação principal da tela: salvar, confirmar, aceitar. */
+.button-primary {
+  border-color: #15803d;
+  color: #ffffff;
+  background-color: #15803d;
+}
+
+.button-primary:hover:not(:disabled) {
+  border-color: #166534;
+  background-color: #166534;
+}
+
+/* Ação destrutiva: excluir, remover, recusar. */
+.button-danger {
+  border-color: #b91c1c;
+  color: #b91c1c;
+}
+
+.button-danger:hover:not(:disabled) {
+  background-color: #fef2f2;
+}
+
+a + button {
+  margin-left: 12px;
+}
+
+/* Em grades, o espaçamento vem do gap; no celular o botão ocupa a largura toda. */
+form > button,
+.quote-items > button,
+.quote-item > button,
+.description-review > button,
+.description-review-actions button {
+  margin: 0;
 }
 
 .dashboard-actions {
@@ -74,8 +111,16 @@ button:disabled {
 .dashboard-actions button {
   width: 100%;
   min-height: 64px;
+  margin: 0;
+  color: #ffffff;
+  background-color: #1d4ed8;
   font-size: 1.05rem;
   text-align: left;
+}
+
+.dashboard-actions button:hover:not(:disabled) {
+  border-color: #1e40af;
+  background-color: #1e40af;
 }
 
 section {
@@ -211,6 +256,23 @@ article p + p {
   margin-top: 8px;
 }
 
+/* Orçamento em revisão: borda grossa e selo para o usuário não se perder na lista. */
+.quote-card-reviewing {
+  border: 3px solid #1d4ed8;
+  box-shadow: 0 0 0 4px #dbeafe;
+}
+
+.review-badge {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: #ffffff;
+  background-color: #1d4ed8;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
 pre {
   max-width: 100%;
   overflow-x: auto;
@@ -224,10 +286,11 @@ pre {
 main > button:last-child {
   margin-top: 24px;
   border-color: #475569;
+  color: #ffffff;
   background-color: #475569;
 }
 
-main > button:last-child:hover {
+main > button:last-child:hover:not(:disabled) {
   border-color: #334155;
   background-color: #334155;
 }
@@ -247,5 +310,12 @@ main > button:last-child:hover {
 
   .quote-item-values {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  form > button,
+  .quote-items > button,
+  .quote-item > button,
+  .description-review > button {
+    justify-self: start;
   }
 }

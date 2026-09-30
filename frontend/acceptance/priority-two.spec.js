@@ -86,3 +86,30 @@ test('cliente pode ser editado', async ({ page }) => {
   expect(submittedBody.name).toBe('Cliente Atualizado');
   expect(submittedBody.address.city).toBe('São Paulo');
 });
+
+test('linha extra em branco é ignorada ao salvar o orçamento', async ({ page }) => {
+  let submittedBody;
+  await page.route('**/api/v1/quotes', (route) => {
+    submittedBody = route.request().postDataJSON();
+    return route.fulfill({
+      status: 201,
+      json: {
+        ...submittedBody, id: 'quote-new', status: 'DRAFT',
+        items: submittedBody.items.map((item, index) => ({ ...item, id: `item-${index}`, position: index + 1, unitPrice: null, subtotal: null })),
+      },
+    });
+  });
+
+  await page.goto('/acceptance/fixture.html?mode=quote-form');
+  await page.getByLabel('Cliente', { exact: true }).selectOption('client-1');
+  await page.getByLabel('Descrição geral do serviço').fill('Troca de escapamento');
+  await page.getByLabel('Descrição do item').fill('Escapamento');
+  await page.getByRole('button', { name: '+ Adicionar outro item' }).click();
+  await expect(page.getByLabel('Descrição do item')).toHaveCount(2);
+  await page.getByLabel('Valor global do orçamento (R$)').fill('750');
+  await page.getByLabel('Data do serviço').fill('2099-10-15');
+  await page.getByRole('button', { name: 'Salvar rascunho' }).click();
+
+  await expect(page.getByText('Orçamento criado com sucesso.')).toBeVisible();
+  expect(submittedBody.items).toEqual([{ description: 'Escapamento', quantity: '1' }]);
+});

@@ -40,7 +40,7 @@ test('novo orçamento começa no modo global, com uma linha e remoção da últi
   assert.match(markup, /<legend>Item 1<\/legend>/);
   assert.match(markup, /name="quantity"[^>]*value="1"/);
   assert.match(markup, /disabled="" aria-label="Remover item 1"/);
-  assert.match(markup, /Adicionar item/);
+  assert.match(markup, /\+ Adicionar outro item/);
   assert.match(markup, /name="totalAmount"/);
   assert.doesNotMatch(markup, /name="unitPrice"/);
 });
