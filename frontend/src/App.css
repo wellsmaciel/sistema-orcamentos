@@ -4,6 +4,20 @@ main {
   padding: 24px 0 48px;
 }
 
+.accessibility-controls {
+  width: min(calc(100% - 32px), 720px);
+  margin: 16px auto 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.accessibility-controls button {
+  min-height: 44px;
+  padding: 8px 12px;
+}
+
 h1,
 h2,
 h3 {
@@ -82,6 +96,64 @@ form {
   margin-top: 20px;
 }
 
+.quote-form-fields {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.quote-items,
+.quote-item {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+}
+
+.quote-items legend,
+.quote-item legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.quote-item-values {
+  display: grid;
+  gap: 16px;
+}
+
+.quote-review {
+  margin: 16px 0;
+}
+
+.quote-item-list {
+  list-style: decimal;
+  padding-left: 24px;
+}
+
+.quote-item-list li {
+  padding: 10px 0;
+}
+
+.quote-item-list span {
+  display: block;
+}
+
 label {
   display: grid;
   gap: 6px;
@@ -156,5 +228,9 @@ main > button:last-child:hover {
 
   .dashboard-actions button {
     min-height: 88px;
+  }
+
+  .quote-item-values {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

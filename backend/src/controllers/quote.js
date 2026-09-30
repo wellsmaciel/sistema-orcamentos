@@ -6,7 +6,9 @@ import {
   respondToPublicQuote as respondToPublicQuoteService,
   updateQuote as updateQuoteService,
   createQuoteCorrection as createQuoteCorrectionService,
+  listQuotesPage as listQuotesPageService,
 } from '../services/quote.js';
+import { serializeQuoteItems } from '../utils/quote-items-response.js';
 
 function serializeQuote(quote) {
   const serviceAddress = {
@@ -32,6 +34,8 @@ function serializeQuote(quote) {
       phone: quote.clientPhone,
     },
     description: quote.description,
+    pricingMode: quote.pricingMode,
+    items: serializeQuoteItems(quote),
     totalAmount: quote.totalAmount,
     serviceDate: quote.serviceDate,
     serviceAddress,
@@ -80,6 +84,8 @@ function serializePublicQuote(quote) {
     quoteNumber: quote.quoteNumber,
     clientName: quote.clientName,
     description: quote.description,
+    pricingMode: quote.pricingMode,
+    items: serializeQuoteItems(quote),
     totalAmount: quote.totalAmount,
     serviceDate: quote.serviceDate,
     serviceAddress,
@@ -202,6 +208,13 @@ async function confirmQuote(request, response, next) {
         message: 'Cadastre seus dados profissionais antes de confirmar o orçamento.',
       });
     }
+    if (result.outcome === 'INVALID_ITEMS') {
+      return response.status(409).json({
+        code: 'QUOTE_ITEMS_INVALID',
+        message: 'Revise os itens e o valor do orçamento antes de confirmar.',
+        details: result.details,
+      });
+    }
     return response.status(200).json(serializeQuote(result.quote));
   } catch (error) {
     return next(error);
@@ -270,10 +283,52 @@ async function createQuoteCorrection(request, response, next) {
         message: 'Este orçamento já possui uma correção.',
       });
     }
-
+    if (result.outcome === 'INVALID_ITEMS') {
+      return response.status(409).json({
+        code: 'QUOTE_ITEMS_INVALID',
+        message: 'Os itens ou o valor do orçamento original são inválidos.',
+        details: result.details,
+      });
+    }
     return response.status(201).json(serializeQuote(result.quote));
   } catch (error) {
     return next(error);
   }
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection };
+async function listQuotesPage(request, response, next) {
+  try {
+    const result = await listQuotesPageService(request.authenticatedUser.id, request.quoteListOptions);
+
+    const items = result.items.map((quote) => {
+      const serializedQuote = serializeQuote(quote);
+
+      const originalQuote = result.relatedQuotes.find((candidate) => candidate.id === quote.correctedFromId);
+
+      const correction = result.relatedQuotes.find((candidate) => candidate.correctedFromId === quote.id);
+
+      if (originalQuote) {
+        serializedQuote.originalQuoteNumber = originalQuote.quoteNumber;
+      }
+
+      if (correction) {
+        serializedQuote.correction = {
+          id: correction.id,
+          quoteNumber: correction.quoteNumber,
+        };
+      }
+
+      return serializedQuote;
+    });
+
+    return response.status(200).json({
+      items,
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
+      totalPages: result.totalPages,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage };

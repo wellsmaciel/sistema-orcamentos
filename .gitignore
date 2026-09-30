@@ -12,6 +12,8 @@ build/
 
 # Cobertura de testes
 coverage/
+playwright-report/
+test-results/
 
 # Logs
 *.log

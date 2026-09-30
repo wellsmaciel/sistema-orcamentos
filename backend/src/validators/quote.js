@@ -1,6 +1,7 @@
+import { validateQuoteItemsInput } from './quote-items.js';
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-const MONEY_PATTERN = /^\d{1,10}(?:\.\d{1,2})?$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function addError(errors, field, message) {
@@ -110,7 +111,7 @@ function validateQuoteInput(input, currentDate = getCurrentDate(), options = {})
     ];
   }
 
-  const allowedProperties = ['description', 'totalAmount', 'serviceDate', 'serviceAddress', 'locationNotes'];
+  const allowedProperties = ['description', 'pricingMode', 'items', 'totalAmount', 'serviceDate', 'serviceAddress', 'locationNotes'];
 
   if (requireClientId) {
     allowedProperties.unshift('clientId');
@@ -128,13 +129,7 @@ function validateQuoteInput(input, currentDate = getCurrentDate(), options = {})
 
   validateRequiredString(input.description, 'description', errors, 10000);
 
-  if (typeof input.totalAmount !== 'string' || input.totalAmount.trim().length === 0) {
-    addError(errors, 'totalAmount', 'Este campo é obrigatório.');
-  } else if (!MONEY_PATTERN.test(input.totalAmount.trim())) {
-    addError(errors, 'totalAmount', 'Informe um valor decimal válido com até duas casas.');
-  } else if (Number(input.totalAmount) <= 0) {
-    addError(errors, 'totalAmount', 'O valor total deve ser maior que zero.');
-  }
+  errors.push(...validateQuoteItemsInput(input));
 
   if (typeof input.serviceDate !== 'string' || input.serviceDate.trim().length === 0) {
     addError(errors, 'serviceDate', 'Este campo é obrigatório.');

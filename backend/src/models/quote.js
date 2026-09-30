@@ -1,6 +1,7 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
 import sequelize from '../config/database.js';
+import QuoteItem from './quote-item.js';
 
 class Quote extends Model {}
 
@@ -54,6 +55,15 @@ Quote.init(
     description: {
       type: DataTypes.TEXT,
       allowNull: false,
+    },
+
+    pricingMode: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      field: 'pricing_mode',
+      validate: {
+        isIn: [['ITEMIZED', 'FIXED_TOTAL']],
+      },
     },
 
     totalAmount: {
@@ -225,5 +235,17 @@ Quote.init(
     updatedAt: 'updated_at',
   },
 );
+Quote.hasMany(QuoteItem, {
+  as: 'items',
+  foreignKey: 'quoteId',
+  onUpdate: 'CASCADE',
+  onDelete: 'CASCADE',
+});
 
+QuoteItem.belongsTo(Quote, {
+  as: 'quote',
+  foreignKey: 'quoteId',
+  onUpdate: 'CASCADE',
+  onDelete: 'CASCADE',
+});
 export default Quote;

@@ -43,3 +43,41 @@ textarea:focus-visible {
 #root {
   min-height: 100vh;
 }
+
+:root[data-text-size='125'] {
+  font-size: 125%;
+}
+
+:root[data-text-size='150'] {
+  font-size: 150%;
+}
+
+:root[data-contrast='high'] {
+  color: #ffffff;
+  background: #000000;
+}
+
+:root[data-contrast='high'] :is(section, article, fieldset, pre, input, select, textarea) {
+  color: #ffffff;
+  background: #000000;
+  border-color: #ffffff;
+}
+
+:root[data-contrast='high'] :is(h1, h2, h3, h4, h5, h6, label) {
+  color: #ffffff;
+}
+
+:root[data-contrast='high'] a {
+  color: #ffff00;
+}
+
+:root[data-contrast='high'] button {
+  color: #000000;
+  background: #ffff00;
+  border-color: #ffff00;
+}
+
+:root[data-contrast='high'] button:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import QuoteItems from './QuoteItems.jsx';
 
 const statusLabels = {
   SENT: 'Aguardando resposta',
@@ -206,6 +207,8 @@ function PublicQuote({ publicToken }) {
           <h2>Descrição</h2>
           <p>{quote.description}</p>
         </section>
+
+        <QuoteItems quote={quote} />
 
         <section>
           <h2>Endereço do serviço</h2>

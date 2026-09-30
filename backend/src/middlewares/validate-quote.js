@@ -1,4 +1,5 @@
 import { validateQuoteId, validateQuoteInput, validateQuoteUpdateInput, validateQuoteResponseInput } from '../validators/quote.js';
+import { validateQuoteListInput } from '../validators/quote-list.js';
 function validateQuote(request, response, next) {
   const details = validateQuoteInput(request.body);
 
@@ -51,4 +52,28 @@ function validateQuoteResponse(request, response, next) {
 
   return next();
 }
-export { validateQuote, validateQuoteUpdate, validateQuoteIdParameter, validateQuoteResponse };
+function validateQuoteListQuery(request, response, next) {
+  const details = validateQuoteListInput(request.query);
+
+  if (details.length > 0) {
+    return response.status(400).json({
+      code: 'VALIDATION_ERROR',
+      message: 'Os dados informados são inválidos.',
+      details,
+    });
+  }
+
+  const { page = '1', search = '', status = '', serviceDateFrom = '', serviceDateTo = '' } = request.query;
+
+  request.quoteListOptions = {
+    page: Number(page),
+    pageSize: 20,
+    search: search.trim(),
+    status: status || undefined,
+    serviceDateFrom: serviceDateFrom || undefined,
+    serviceDateTo: serviceDateTo || undefined,
+  };
+
+  return next();
+}
+export { validateQuote, validateQuoteUpdate, validateQuoteIdParameter, validateQuoteResponse, validateQuoteListQuery };

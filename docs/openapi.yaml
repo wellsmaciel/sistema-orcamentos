@@ -213,7 +213,10 @@ paths:
       description: >
         Cria um orçamento editável associado a um cliente do prestador
         autenticado. Os dados de contato do cliente e o endereço do serviço
-        são copiados para preservar o histórico do orçamento.
+        são copiados para preservar o histórico do orçamento. Exige ao menos
+        um item válido e um total positivo, mesmo em rascunho. No modo ITEMIZED,
+        o backend calcula e soma os subtotais arredondados; no modo FIXED_TOTAL,
+        o prestador informa o total, sem preços individuais.
       operationId: createQuoteDraft
       security:
         - Auth0Bearer: []
@@ -230,6 +233,121 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Quote'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/clients/{clientId}:
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        description: Identificador do cliente.
+        schema:
+          type: string
+          format: uuid
+
+    put:
+      tags:
+        - Clientes
+      summary: Atualiza um cliente
+      description: >
+        Atualiza o cadastro de um cliente pertencente ao prestador autenticado.
+        Exige todos os campos obrigatórios do cadastro. Preserva o estado ativo
+        ou inativo e os dados já copiados para orçamentos anteriores.
+      operationId: updateClient
+      security:
+        - Auth0Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientCreateRequest'
+      responses:
+        '200':
+          description: Cliente atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Clientes
+      summary: Exclui um cliente sem orçamentos
+      description: >
+        Exclui um cliente pertencente ao prestador autenticado somente quando
+        não existe nenhum orçamento vinculado, incluindo rascunhos.
+        Clientes com orçamentos devem ser inativados para preservar o histórico.
+      operationId: deleteClient
+      security:
+        - Auth0Bearer: []
+      responses:
+        '204':
+          description: Cliente excluído. Resposta sem corpo.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: >
+            O cliente possui orçamentos vinculados.
+            Código de erro CLIENT_HAS_QUOTES.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/clients/{clientId}/deactivate:
+    post:
+      tags:
+        - Clientes
+      summary: Inativa um cliente
+      description: >
+        Inativa um cliente pertencente ao prestador autenticado, preservando
+        seu cadastro e os orçamentos vinculados. Clientes inativos deixam de
+        aparecer na lista de ativos e não podem ser usados em novos orçamentos.
+        Repetir a operação mantém o cliente inativo.
+      operationId: deactivateClient
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Identificador do cliente.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Cliente inativado. O campo active retorna false.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -293,7 +411,10 @@ paths:
         Confirma um orçamento pertencente ao prestador autenticado, altera
         seu status para enviado, bloqueia novas edições e gera o token usado
         no link público. Exige um perfil profissional ativo e copia seus dados
-        para o orçamento, preservando o histórico.
+        para o orçamento, preservando o histórico. Confere os itens salvos e,
+        no modo ITEMIZED, a correspondência entre a soma dos subtotais e o total.
+        Dados de itens ou valores inconsistentes retornam 409 com o código
+        QUOTE_ITEMS_INVALID, sem confirmar o orçamento.
       operationId: confirmQuote
       security:
         - Auth0Bearer: []
@@ -403,8 +524,10 @@ paths:
       summary: Cria uma correção de um orçamento recusado
       description: >
         Cria um novo orçamento em rascunho copiando os dados de um orçamento
-        recusado pertencente ao prestador autenticado. O orçamento original
-        é preservado no histórico.
+        recusado pertencente ao prestador autenticado, inclusive a forma de
+        cobrança e os itens, que recebem novos identificadores. O orçamento
+        original é preservado no histórico. Itens ou valores inconsistentes
+        no original retornam 409 com o código QUOTE_ITEMS_INVALID.
       operationId: createQuoteCorrection
       security:
         - Auth0Bearer: []
@@ -433,6 +556,158 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/clients/search:
+    get:
+      tags:
+        - Clientes
+      summary: Pesquisa clientes com paginação
+      description: >
+        Pesquisa clientes do prestador autenticado pelo nome, sem distinguir
+        maiúsculas e minúsculas. Filtra clientes ativos ou inativos e retorna
+        até 20 registros por página, em ordem alfabética.
+      operationId: listClientsPage
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: search
+          in: query
+          description: Parte do nome do cliente. Espaços nas extremidades são removidos.
+          schema:
+            type: string
+            maxLength: 150
+            default: ''
+        - name: active
+          in: query
+          description: true para clientes ativos ou false para inativos.
+          schema:
+            type: boolean
+            default: true
+        - name: page
+          in: query
+          description: Número da página solicitada.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000000
+            default: 1
+      responses:
+        '200':
+          description: Resultado da pesquisa paginada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientPageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/clients/{clientId}/reactivate:
+    post:
+      tags:
+        - Clientes
+      summary: Reativa um cliente
+      description: >
+        Reativa um cliente pertencente ao prestador autenticado, preservando
+        seu cadastro e os orçamentos vinculados. O cliente volta a estar
+        disponível para novos orçamentos. Repetir a operação mantém o cliente ativo.
+      operationId: reactivateClient
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Identificador do cliente.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Cliente reativado. O campo active retorna true.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/quotes/search:
+    get:
+      tags:
+        - Orçamentos
+      summary: Pesquisa orçamentos com filtros e paginação
+      description: >
+        Retorna somente os orçamentos do prestador autenticado.
+        Permite combinar nome do cliente, situação e intervalo da data
+        prevista do serviço. Os limites de data são inclusivos.
+        Retorna até 20 registros por página, do mais recente para o mais antigo.
+      operationId: listQuotesPage
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: search
+          in: query
+          description: Parte do nome preservado do cliente, sem distinguir maiúsculas e minúsculas.
+          schema:
+            type: string
+            maxLength: 150
+            default: ''
+        - name: status
+          in: query
+          description: Situação do orçamento. Quando omitido, considera todas.
+          schema:
+            type: string
+            enum:
+              - DRAFT
+              - SENT
+              - ACCEPTED
+              - REJECTED
+        - name: serviceDateFrom
+          in: query
+          description: Data inicial prevista para o serviço.
+          schema:
+            type: string
+            format: date
+        - name: serviceDateTo
+          in: query
+          description: Data final prevista para o serviço. Não pode ser anterior à inicial.
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          description: Número da página solicitada.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000000
+            default: 1
+      responses:
+        '200':
+          description: Resultado da pesquisa paginada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotePageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalServerError'
 components:
@@ -580,6 +855,38 @@ components:
         address:
           $ref: '#/components/schemas/Address'
 
+    ClientPageResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+        - totalPages
+      properties:
+        items:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Client'
+        total:
+          type: integer
+          minimum: 0
+          description: Total de clientes que correspondem aos filtros.
+        page:
+          type: integer
+          minimum: 1
+          description: Página solicitada.
+        pageSize:
+          type: integer
+          const: 20
+          description: Quantidade máxima de clientes por página.
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Total de páginas. Retorna zero quando não há resultados.
+
     ClientListResponse:
       type: object
       additionalProperties: false
@@ -623,7 +930,8 @@ components:
       additionalProperties: false
       required:
         - description
-        - totalAmount
+        - pricingMode
+        - items
         - serviceDate
         - serviceAddress
       properties:
@@ -631,11 +939,19 @@ components:
           type: string
           minLength: 1
           maxLength: 10000
-          description: Descrição livre dos serviços e valores do orçamento.
+          description: Descrição geral do serviço, independente das descrições dos itens.
+        pricingMode:
+          $ref: '#/components/schemas/QuotePricingMode'
+        items:
+          type: array
+          minItems: 1
+          description: Lista completa que substituirá os itens do rascunho, na ordem informada.
+          items:
+            $ref: '#/components/schemas/QuoteItemRequest'
         totalAmount:
           type: string
-          pattern: '^\d{1,10}(\.\d{1,2})?$'
-          description: Valor total informado manualmente, maior que zero.
+          pattern: '^(?!0+(?:\.0+)?$)\d{1,10}(?:\.\d{1,2})?$'
+          description: Obrigatório e positivo no modo FIXED_TOTAL; proibido no modo ITEMIZED.
           examples:
             - '1500.50'
         serviceDate:
@@ -650,6 +966,8 @@ components:
           type: string
           maxLength: 2000
           description: Observações opcionais sobre o local do serviço.
+      allOf:
+        - $ref: '#/components/schemas/QuotePricingRules'
 
     Client:
       type: object
@@ -660,6 +978,7 @@ components:
         - email
         - phone
         - address
+        - active
       properties:
         id:
           type: string
@@ -678,6 +997,12 @@ components:
           description: Telefone para contato com o cliente.
         address:
           $ref: '#/components/schemas/Address'
+        active:
+          type: boolean
+          description: Indica se o cliente está disponível para novos orçamentos.
+          examples:
+            - true
+            - false
 
     Address:
       type: object
@@ -719,7 +1044,8 @@ components:
       required:
         - clientId
         - description
-        - totalAmount
+        - pricingMode
+        - items
         - serviceDate
         - serviceAddress
       properties:
@@ -731,11 +1057,19 @@ components:
           type: string
           minLength: 1
           maxLength: 10000
-          description: Descrição livre dos serviços e valores do orçamento.
+          description: Descrição geral do serviço, independente das descrições dos itens.
+        pricingMode:
+          $ref: '#/components/schemas/QuotePricingMode'
+        items:
+          type: array
+          minItems: 1
+          description: Itens digitados manualmente, na ordem de preenchimento.
+          items:
+            $ref: '#/components/schemas/QuoteItemRequest'
         totalAmount:
           type: string
-          pattern: '^\d{1,10}(\.\d{1,2})?$'
-          description: Valor total informado manualmente, maior que zero.
+          pattern: '^(?!0+(?:\.0+)?$)\d{1,10}(?:\.\d{1,2})?$'
+          description: Obrigatório e positivo no modo FIXED_TOTAL; proibido no modo ITEMIZED.
           examples:
             - '1500.50'
         serviceDate:
@@ -750,6 +1084,120 @@ components:
           type: string
           maxLength: 2000
           description: Observações opcionais sobre o local do serviço.
+      allOf:
+        - $ref: '#/components/schemas/QuotePricingRules'
+
+    QuotePricingMode:
+      type: string
+      enum:
+        - ITEMIZED
+        - FIXED_TOTAL
+      description: ITEMIZED calcula o total pelos itens; FIXED_TOTAL utiliza o total informado pelo prestador.
+
+    QuoteItemRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - description
+        - quantity
+      properties:
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+          pattern: '\S'
+        quantity:
+          type: string
+          pattern: '^(?!0+(?:\.0+)?$)\d{1,9}(?:\.\d)?$'
+          description: Quantidade positiva, inteira ou fracionada, enviada como texto com até uma casa decimal e separador ponto.
+          examples:
+            - '2'
+            - '2.5'
+        unitPrice:
+          type:
+            - string
+            - 'null'
+          pattern: '^(?!0+(?:\.0+)?$)\d{1,10}(?:\.\d{1,2})?$'
+          description: Positivo e obrigatório em ITEMIZED; deve ser omitido ou null em FIXED_TOTAL. Não enviar id, quoteId, position ou subtotal.
+          examples:
+            - '19.99'
+            - null
+
+    QuotePricingRules:
+      description: Restrições condicionais da cobrança. A soma dos subtotais deve ser positiva e caber em DECIMAL(12,2).
+      oneOf:
+        - properties:
+            pricingMode:
+              const: ITEMIZED
+            items:
+              items:
+                required:
+                  - unitPrice
+                properties:
+                  unitPrice:
+                    type: string
+                    pattern: '^(?!0+(?:\.0+)?$)\d{1,10}(?:\.\d{1,2})?$'
+          not:
+            required:
+              - totalAmount
+        - required:
+            - totalAmount
+          properties:
+            pricingMode:
+              const: FIXED_TOTAL
+            items:
+              items:
+                properties:
+                  unitPrice:
+                    type: 'null'
+
+    QuoteItem:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - description
+        - quantity
+        - unitPrice
+        - subtotal
+        - position
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        description:
+          type: string
+        quantity:
+          type: string
+          pattern: '^\d{1,9}(?:\.\d{1,3})?$'
+          description: Quantidade sem zeros decimais desnecessários. Novos cadastros aceitam até uma casa decimal; registros antigos podem preservar até três casas, sem arredondamento.
+          examples:
+            - '2.5'
+        unitPrice:
+          type:
+            - string
+            - 'null'
+          pattern: '^\d{1,10}\.\d{2}$'
+          description: Preço unitário positivo em ITEMIZED; null em FIXED_TOTAL, nunca zero para representar ausência de preço.
+          examples:
+            - '19.99'
+            - null
+        subtotal:
+          type:
+            - string
+            - 'null'
+          pattern: '^\d{1,10}\.\d{2}$'
+          readOnly: true
+          description: Quantidade multiplicada pelo preço e arredondada para centavos, com empate para cima. Pode arredondar para zero. É calculado, não armazenado; null em FIXED_TOTAL.
+          examples:
+            - '49.98'
+            - null
+        position:
+          type: integer
+          minimum: 1
+          readOnly: true
+          description: Ordem do item no orçamento, iniciando em 1.
 
     QuoteClientSnapshot:
       type: object
@@ -807,6 +1255,8 @@ components:
         - quoteNumber
         - client
         - description
+        - pricingMode
+        - items
         - totalAmount
         - serviceDate
         - serviceAddress
@@ -828,6 +1278,13 @@ components:
         description:
           type: string
           description: Descrição livre do orçamento.
+        pricingMode:
+          $ref: '#/components/schemas/QuotePricingMode'
+        items:
+          type: array
+          description: Itens ordenados por position. Registros históricos sem itens podem retornar uma lista vazia.
+          items:
+            $ref: '#/components/schemas/QuoteItem'
         totalAmount:
           type: string
           description: Valor total preservado com duas casas decimais.
@@ -876,6 +1333,24 @@ components:
           type: string
           format: uuid
           description: Identificador do orçamento recusado que originou esta correção.
+        originalQuoteNumber:
+          type: integer
+          minimum: 1
+          description: Número do orçamento original, quando este item é uma correção na busca paginada.
+        correction:
+          type: object
+          additionalProperties: false
+          description: Correção vinculada ao orçamento, mesmo quando estiver fora dos filtros ou da página atual.
+          required:
+            - id
+            - quoteNumber
+          properties:
+            id:
+              type: string
+              format: uuid
+            quoteNumber:
+              type: integer
+              minimum: 1
 
     QuoteResponseRequest:
       type: object
@@ -901,6 +1376,8 @@ components:
         - quoteNumber
         - clientName
         - description
+        - pricingMode
+        - items
         - totalAmount
         - serviceDate
         - serviceAddress
@@ -919,6 +1396,13 @@ components:
         description:
           type: string
           description: Descrição livre do orçamento.
+        pricingMode:
+          $ref: '#/components/schemas/QuotePricingMode'
+        items:
+          type: array
+          description: Itens ordenados por position, sem quoteId ou timestamps internos. Registros históricos sem itens podem retornar uma lista vazia.
+          items:
+            $ref: '#/components/schemas/QuoteItem'
         totalAmount:
           type: string
           description: Valor total preservado com duas casas decimais.
@@ -952,6 +1436,37 @@ components:
           type: string
           maxLength: 2000
           description: Motivo informado pelo cliente em caso de recusa.
+
+    QuotePageResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+        - totalPages
+      properties:
+        items:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Quote'
+        total:
+          type: integer
+          minimum: 0
+          description: Total de orçamentos que correspondem aos filtros.
+        page:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        pageSize:
+          type: integer
+          const: 20
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Total de páginas. Retorna zero quando não há resultados.
 
     QuoteListResponse:
       type: object

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { saveClient } from '../services/client.js';
 
 const initialFormData = {
   name: '',
@@ -13,8 +14,23 @@ const initialFormData = {
   state: '',
 };
 
-function ClientForm({ getAccessTokenSilently }) {
-  const [formData, setFormData] = useState(initialFormData);
+function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
+  const [formData, setFormData] = useState(() =>
+    client
+      ? {
+          name: client.name,
+          email: client.email,
+          phone: client.phone,
+          street: client.address.street,
+          number: client.address.number,
+          complement: client.address.complement ?? '',
+          postalCode: client.address.postalCode,
+          district: client.address.district,
+          city: client.address.city,
+          state: client.address.state,
+        }
+      : { ...initialFormData },
+  );
   const [createdClient, setCreatedClient] = useState(null);
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,15 +52,9 @@ function ClientForm({ getAccessTokenSilently }) {
       setSubmitError('');
       setCreatedClient(null);
 
-      const accessToken = await getAccessTokenSilently();
-
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/clients`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const savedClient = await saveClient(
+        getAccessTokenSilently,
+        {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
@@ -57,19 +67,17 @@ function ClientForm({ getAccessTokenSilently }) {
             city: formData.city,
             state: formData.state,
           },
-        }),
-      });
+        },
+        client?.id,
+      );
 
-      const responseBody = await response.json();
+      setCreatedClient(savedClient);
 
-      if (!response.ok) {
-        const detailsMessage = responseBody.details?.map((detail) => `${detail.field}: ${detail.message}`).join(' ');
-
-        throw new Error(detailsMessage ?? responseBody.message ?? 'Não foi possível cadastrar o cliente.');
+      if (!client) {
+        setFormData({ ...initialFormData });
       }
 
-      setCreatedClient(responseBody);
-      setFormData(initialFormData);
+      onSaved?.(savedClient);
     } catch (requestError) {
       setSubmitError(requestError.message);
     } finally {
@@ -79,7 +87,7 @@ function ClientForm({ getAccessTokenSilently }) {
 
   return (
     <section>
-      <h2>Novo cliente</h2>
+      <h2>{client ? 'Editar cliente' : 'Novo cliente'}</h2>
 
       <form onSubmit={handleSubmit}>
         <div>
@@ -136,12 +144,22 @@ function ClientForm({ getAccessTokenSilently }) {
         </fieldset>
 
         <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Salvando...' : 'Salvar cliente'}
+          {isSubmitting ? 'Salvando...' : client ? 'Salvar alterações' : 'Salvar cliente'}
         </button>
+
+        {client && (
+          <button type="button" onClick={onCancel} disabled={isSubmitting}>
+            Cancelar edição
+          </button>
+        )}
 
         {submitError && <p role="alert">{submitError}</p>}
 
-        {createdClient && <p>Cliente {createdClient.name} cadastrado com sucesso.</p>}
+        {createdClient && (
+          <p role="status">
+            Cliente {createdClient.name} {client ? 'atualizado' : 'cadastrado'} com sucesso.
+          </p>
+        )}
       </form>
     </section>
   );
