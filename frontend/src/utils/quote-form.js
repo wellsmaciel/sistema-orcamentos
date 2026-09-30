@@ -140,4 +140,23 @@ function buildQuoteRequest(formData, { isEditing = false } = {}) {
   return requestBody;
 }
 
-export { normalizeDecimalInput, formatQuoteQuantity, calculateFormItemSubtotal, getItemsPricingPreview, formatQuoteMoney, buildQuoteRequest };
+// Envia à revisão com IA apenas a descrição e os itens preenchidos, nunca dados do cliente.
+function buildDescriptionReviewRequest(formData) {
+  const items = (formData.items ?? [])
+    .filter((item) => typeof item.description === 'string' && item.description.trim())
+    .slice(0, 50)
+    .map((item) => {
+      const requestItem = { description: item.description.trim() };
+      const quantity = typeof item.quantity === 'string' ? item.quantity.trim() : '';
+
+      if (quantity) {
+        requestItem.quantity = quantity;
+      }
+
+      return requestItem;
+    });
+
+  return { description: formData.description.trim(), items };
+}
+
+export { normalizeDecimalInput, formatQuoteQuantity, calculateFormItemSubtotal, getItemsPricingPreview, formatQuoteMoney, buildQuoteRequest, buildDescriptionReviewRequest };

@@ -111,4 +111,10 @@ describe('Rotas de orçamentos', () => {
     expect(response.status).toBe(401);
     expect(response.body.code).toBe('UNAUTHORIZED');
   });
+  test('POST /api/v1/quotes/description-review deve responder 401 sem token', async () => {
+    const response = await request(app).post('/api/v1/quotes/description-review').send({ description: 'Instalação de câmeras' });
+
+    expect(response.status).toBe(401);
+    expect(response.body.code).toBe('UNAUTHORIZED');
+  });
 });

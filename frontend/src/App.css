@@ -141,6 +141,21 @@ form {
   margin: 16px 0;
 }
 
+.description-review {
+  display: grid;
+  gap: 12px;
+}
+
+.description-suggestion {
+  white-space: pre-wrap;
+}
+
+.description-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .quote-item-list {
   list-style: decimal;
   padding-left: 24px;

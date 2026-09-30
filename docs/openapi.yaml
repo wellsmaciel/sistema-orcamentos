@@ -482,6 +482,67 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/quotes/description-review:
+    post:
+      tags:
+        - Orçamentos
+      summary: Sugere uma revisão da descrição do orçamento com IA
+      description: >
+        Envia a descrição e os itens informados no formulário a um modelo de IA
+        (Claude, da Anthropic) e devolve um texto revisado. Nada é salvo: o prestador
+        decide se usa a sugestão. Aceita somente descrição e itens, para que dados do
+        cliente não sejam enviados ao serviço de IA. Cada prestador pode pedir até 10
+        revisões a cada 10 minutos. Requer a variável ANTHROPIC_API_KEY no backend.
+      operationId: reviewQuoteDescription
+      security:
+        - Auth0Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteDescriptionReviewRequest'
+      responses:
+        '200':
+          description: Texto revisado sugerido pela IA.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteDescriptionReviewResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: O modelo recusou revisar o texto (AI_REFUSED).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Limite de revisões do prestador atingido (AI_RATE_LIMITED).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: O serviço de IA devolveu uma resposta incompleta ou vazia (AI_INVALID_RESPONSE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: >
+            Revisão indisponível: chave não configurada (AI_NOT_CONFIGURED) ou falha
+            temporária do serviço de IA (AI_UNAVAILABLE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/public/quotes/{publicToken}:
     get:
       tags:
@@ -1565,6 +1626,46 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Quote'
+
+    QuoteDescriptionReviewRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+          description: Descrição geral do serviço, como está no formulário.
+        items:
+          type: array
+          maxItems: 50
+          description: Itens usados apenas como contexto para a revisão.
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - description
+            properties:
+              description:
+                type: string
+                minLength: 1
+                maxLength: 500
+              quantity:
+                type: string
+                maxLength: 20
+
+    QuoteDescriptionReviewResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - suggestion
+      properties:
+        suggestion:
+          type: string
+          maxLength: 10000
+          description: Descrição revisada sugerida pela IA.
 
     ErrorResponse:
       type: object

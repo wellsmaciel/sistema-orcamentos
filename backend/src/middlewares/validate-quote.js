@@ -1,5 +1,6 @@
 import { validateQuoteId, validateQuoteInput, validateQuoteUpdateInput, validateQuoteResponseInput } from '../validators/quote.js';
 import { validateQuoteListInput } from '../validators/quote-list.js';
+import { validateQuoteDescriptionReviewInput } from '../validators/quote-description-review.js';
 function validateQuote(request, response, next) {
   const details = validateQuoteInput(request.body);
 
@@ -76,4 +77,17 @@ function validateQuoteListQuery(request, response, next) {
 
   return next();
 }
-export { validateQuote, validateQuoteUpdate, validateQuoteIdParameter, validateQuoteResponse, validateQuoteListQuery };
+function validateQuoteDescriptionReview(request, response, next) {
+  const details = validateQuoteDescriptionReviewInput(request.body);
+
+  if (details.length > 0) {
+    return response.status(400).json({
+      code: 'VALIDATION_ERROR',
+      message: 'Os dados informados são inválidos.',
+      details,
+    });
+  }
+
+  return next();
+}
+export { validateQuote, validateQuoteUpdate, validateQuoteIdParameter, validateQuoteResponse, validateQuoteListQuery, validateQuoteDescriptionReview };

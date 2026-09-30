@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { buildQuoteRequest, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview } from '../utils/quote-form.js';
+import { requestQuoteDescriptionReview } from '../services/quote-description-review.js';
+import { buildDescriptionReviewRequest, buildQuoteRequest, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview } from '../utils/quote-form.js';
+
+const idleDescriptionReview = { status: 'idle', suggestion: '', message: '' };
 
 const emptyFormData = {
   clientId: '',
@@ -68,6 +71,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
   const [savedQuote, setSavedQuote] = useState(null);
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [descriptionReview, setDescriptionReview] = useState(idleDescriptionReview);
 
   const isEditing = Boolean(quote);
   const isItemized = formData.pricingMode === 'ITEMIZED';
@@ -149,6 +153,26 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
     });
   }
 
+  async function handleDescriptionReview() {
+    try {
+      setDescriptionReview({ ...idleDescriptionReview, status: 'loading' });
+
+      const suggestion = await requestQuoteDescriptionReview(getAccessTokenSilently, buildDescriptionReviewRequest(formData));
+
+      setDescriptionReview({ ...idleDescriptionReview, status: 'ready', suggestion });
+    } catch (reviewError) {
+      setDescriptionReview({ ...idleDescriptionReview, status: 'error', message: reviewError.message });
+    }
+  }
+
+  function handleApplyDescriptionSuggestion() {
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      description: descriptionReview.suggestion,
+    }));
+    setDescriptionReview({ ...idleDescriptionReview, status: 'applied', message: 'Sugestão aplicada. Confira o texto e salve o orçamento.' });
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -183,6 +207,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
 
       if (!isEditing) {
         setFormData(buildInitialFormData(null));
+        setDescriptionReview(idleDescriptionReview);
       }
 
       if (onSaved) {
@@ -280,6 +305,34 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
           <div>
             <label htmlFor="quote-description">Descrição geral do serviço</label>
             <textarea id="quote-description" name="description" value={formData.description} onChange={handleChange} maxLength={10000} required />
+          </div>
+
+          <div className="description-review">
+            <button
+              type="button"
+              onClick={handleDescriptionReview}
+              disabled={!formData.description.trim() || descriptionReview.status === 'loading'}
+              aria-describedby="quote-description-review-help"
+            >
+              {descriptionReview.status === 'loading' ? 'Revisando a descrição...' : 'Revisar descrição com IA'}
+            </button>
+            <p id="quote-description-review-help">
+              Somente a descrição e os itens são enviados a um serviço de IA (Anthropic) para sugerir um texto mais claro. Não inclua dados pessoais do cliente na descrição. O texto só muda se você usar a sugestão.
+            </p>
+
+            {descriptionReview.status === 'ready' && (
+              <article aria-labelledby="quote-description-suggestion-title">
+                <h3 id="quote-description-suggestion-title">Sugestão da IA</h3>
+                <p className="description-suggestion">{descriptionReview.suggestion}</p>
+                <div className="description-review-actions">
+                  <button type="button" onClick={handleApplyDescriptionSuggestion}>Usar sugestão</button>
+                  <button type="button" onClick={() => setDescriptionReview(idleDescriptionReview)}>Descartar</button>
+                </div>
+              </article>
+            )}
+
+            {descriptionReview.status === 'error' && <p role="alert">{descriptionReview.message}</p>}
+            {descriptionReview.status === 'applied' && <p role="status">{descriptionReview.message}</p>}
           </div>
 
           <fieldset className="quote-items">

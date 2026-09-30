@@ -109,3 +109,13 @@ test('preserva quantidade histórica significativa e pede revisão, sem arredond
   assert.match(markup, /value="1,25"/);
   assert.match(markup, /nenhum valor foi arredondado automaticamente/);
 });
+
+test('revisão com IA só fica disponível quando há descrição', () => {
+  const emptyMarkup = renderForm({ clients: [buildQuote().client] });
+  assert.match(emptyMarkup, /<button type="button" disabled=""[^>]*>Revisar descrição com IA<\/button>/);
+  assert.match(emptyMarkup, /Não inclua dados pessoais do cliente/);
+
+  const draftMarkup = renderForm({ quote: buildQuote() });
+  assert.match(draftMarkup, /<button type="button" aria-describedby="quote-description-review-help">Revisar descrição com IA<\/button>/);
+  assert.doesNotMatch(draftMarkup, /Sugestão da IA/);
+});
