@@ -1,13 +1,13 @@
-async function requestCompany(getAccessTokenSilently) {
-  const accessToken = await getAccessTokenSilently();
+import { fetchJsonWithTimeout, withTimeout } from './request.js';
 
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/company`, {
+async function requestCompany(getAccessTokenSilently) {
+  const accessToken = await withTimeout(getAccessTokenSilently());
+
+  const { response, responseBody } = await fetchJsonWithTimeout(`${import.meta.env.VITE_API_BASE_URL}/api/v1/company`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
-
-  const responseBody = await response.json();
 
   if (response.status === 404) {
     return null;

@@ -1,5 +1,9 @@
+import { fetchJsonWithTimeout, withTimeout } from './request.js';
+
 async function requestClientApi(getAccessTokenSilently, path, { method = 'GET', body } = {}) {
-  const accessToken = await getAccessTokenSilently();
+  const accessToken = method === 'GET'
+    ? await withTimeout(getAccessTokenSilently())
+    : await getAccessTokenSilently();
 
   const headers = {
     Authorization: `Bearer ${accessToken}`,
@@ -9,11 +13,24 @@ async function requestClientApi(getAccessTokenSilently, path, { method = 'GET', 
     headers['Content-Type'] = 'application/json';
   }
 
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
+  const requestOptions = {
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  };
+
+  if (method === 'GET') {
+    const { response, responseBody } = await fetchJsonWithTimeout(`${import.meta.env.VITE_API_BASE_URL}${path}`, requestOptions);
+    if (!response.ok) {
+      const detailsMessage = responseBody.details?.map((detail) => `${detail.field}: ${detail.message}`).join(' ');
+      const error = new Error(detailsMessage || responseBody.message || 'Não foi possível concluir a operação com o cliente.');
+      error.code = responseBody.code;
+      throw error;
+    }
+    return responseBody;
+  }
+
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, requestOptions);
 
   if (response.status === 204) {
     return null;

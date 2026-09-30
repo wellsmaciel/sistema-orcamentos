@@ -287,7 +287,7 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
         </button>
       </form>
       <button type="button" onClick={handleRefresh} disabled={isBusy}>
-        {isLoading ? 'Atualizando...' : 'Atualizar lista'}
+        {isLoading ? 'Atualizando...' : errorMessage ? 'Tentar novamente' : 'Atualizar lista'}
       </button>
 
       {isLoading && <p role="status">Carregando orçamentos...</p>}

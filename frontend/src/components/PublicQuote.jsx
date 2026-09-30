@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import QuoteItems from './QuoteItems.jsx';
+import { fetchJsonWithTimeout } from '../services/request.js';
 
 const statusLabels = {
   SENT: 'Aguardando resposta',
@@ -25,9 +26,7 @@ function formatQuoteNumber(value) {
 }
 
 async function requestPublicQuote(publicToken) {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/public/quotes/${publicToken}`);
-
-  const responseBody = await response.json();
+  const { response, responseBody } = await fetchJsonWithTimeout(`${import.meta.env.VITE_API_BASE_URL}/api/v1/public/quotes/${publicToken}`);
 
   if (!response.ok) {
     throw new Error(responseBody.message ?? 'Não foi possível consultar o orçamento.');
@@ -71,6 +70,7 @@ function PublicQuote({ publicToken }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responseError, setResponseError] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
+  const [refreshIndex, setRefreshIndex] = useState(0);
 
   useEffect(() => {
     let isCancelled = false;
@@ -97,7 +97,7 @@ function PublicQuote({ publicToken }) {
     return () => {
       isCancelled = true;
     };
-  }, [publicToken]);
+  }, [publicToken, refreshIndex]);
 
   async function handleSubmitResponse() {
     if (!pendingDecision) {
@@ -141,6 +141,10 @@ function PublicQuote({ publicToken }) {
       <main>
         <h1>Orçamento</h1>
         <p role="alert">{errorMessage}</p>
+        <button type="button" onClick={() => {
+          setIsLoading(true);
+          setRefreshIndex((index) => index + 1);
+        }}>Tentar novamente</button>
       </main>
     );
   }

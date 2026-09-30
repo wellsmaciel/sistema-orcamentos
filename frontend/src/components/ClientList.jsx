@@ -162,7 +162,7 @@ function ClientList({ getAccessTokenSilently, onEdit, onNewClient }) {
       </form>
 
       <button type="button" onClick={() => setRefreshIndex((index) => index + 1)} disabled={controlsDisabled}>
-        Atualizar lista
+        {isLoading ? 'Atualizando...' : listError ? 'Tentar novamente' : 'Atualizar lista'}
       </button>
 
       {isLoading && <p role="status">Carregando clientes...</p>}

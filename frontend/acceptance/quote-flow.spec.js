@@ -101,6 +101,40 @@ test('sem perfil profissional, a revisão impede a confirmação', async ({ page
   await expect(page.getByRole('button', { name: 'Confirmar e gerar link' })).toBeDisabled();
 });
 
+test('lista de orçamentos permite tentar novamente após falha de rede', async ({ page }) => {
+  const quote = buildQuote('FIXED_TOTAL');
+  let attempts = 0;
+
+  await page.route('**/api/v1/quotes/search?*', (route) => {
+    attempts += 1;
+    if (attempts === 1) return route.abort('failed');
+    return route.fulfill({ json: { items: [quote], total: 1, page: 1, pageSize: 20, totalPages: 1 } });
+  });
+
+  await page.goto('/acceptance/fixture.html');
+  await expect(page.getByRole('alert')).toContainText('Não foi possível conectar ao servidor');
+  await page.getByRole('button', { name: 'Tentar novamente' }).click();
+  await expect(page.getByText('Orçamento nº 000042')).toBeVisible();
+  expect(attempts).toBe(2);
+});
+
+test('orçamento público permite tentar novamente após falha de rede', async ({ page }) => {
+  const quote = { ...buildQuote('FIXED_TOTAL'), status: 'SENT' };
+  let attempts = 0;
+
+  await page.route('**/api/v1/public/quotes/test-public-token', (route) => {
+    attempts += 1;
+    if (attempts === 1) return route.abort('failed');
+    return route.fulfill({ json: quote });
+  });
+
+  await page.goto('/acceptance/fixture.html?mode=public');
+  await expect(page.getByRole('alert')).toContainText('Não foi possível conectar ao servidor');
+  await page.getByRole('button', { name: 'Tentar novamente' }).click();
+  await expect(page.getByRole('heading', { name: 'Itens do orçamento' })).toBeVisible();
+  expect(attempts).toBe(2);
+});
+
 test('tamanho do texto e alto contraste persistem na página pública', async ({ page }) => {
   const quote = { ...buildQuote('FIXED_TOTAL'), status: 'SENT' };
   await page.route('**/api/v1/public/quotes/test-public-token', (route) => route.fulfill({ json: quote }));

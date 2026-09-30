@@ -11,7 +11,10 @@ export default defineRailway(() => {
     healthcheck: "/health",
     preDeploy: "npm run db:migrate",
     replicas: { "sfo": 1 },
-    networking: { privateNetworkEndpoint: "backend" },
+    networking: {
+      privateNetworkEndpoint: "backend",
+      serviceDomains: { "backend-production-4ec1.up.railway.app": {} },
+    },
     env: { AUTH0_AUDIENCE: preserve(), AUTH0_DOMAIN: preserve(), CLIENT_ORIGIN_URL: preserve(), DB_HOST: preserve(), DB_NAME: preserve(), DB_PASSWORD: preserve(), DB_PORT: preserve(), DB_USER: preserve() },
   });
   const Frontend = service("Frontend", {
@@ -21,7 +24,10 @@ export default defineRailway(() => {
     healthcheck: "/",
     preDeploy: "npm run build",
     replicas: { "sfo": 1 },
-    networking: { privateNetworkEndpoint: "frontend" },
+    networking: {
+      privateNetworkEndpoint: "frontend",
+      serviceDomains: { "frontend-production-dd49.up.railway.app": {} },
+    },
     env: { VITE_API_BASE_URL: preserve(), VITE_AUTH0_AUDIENCE: preserve(), VITE_AUTH0_CLIENT_ID: preserve(), VITE_AUTH0_DOMAIN: preserve() },
   });
 
