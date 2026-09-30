@@ -8,7 +8,7 @@ const ITEM_ID = '550e8400-e29b-41d4-a716-446655440002';
 const PUBLIC_TOKEN = 'a'.repeat(64);
 
 const services = Object.fromEntries(
-  ['createQuote', 'listQuotes', 'listQuotesPage', 'updateQuote', 'confirmQuote', 'getPublicQuote', 'respondToPublicQuote', 'createQuoteCorrection'].map((name) => [name, jest.fn()]),
+  ['createQuote', 'listQuotes', 'listQuotesPage', 'updateQuote', 'confirmQuote', 'getPublicQuote', 'respondToPublicQuote', 'createQuoteCorrection', 'getQuoteHistory'].map((name) => [name, jest.fn()]),
 );
 
 // Testa rotas, validadores e JSON reais; autenticação e persistência são simuladas
@@ -228,5 +228,31 @@ describe('Contrato JSON de orçamento e itens', () => {
 
     expect(response.status).toBe(409);
     expect(response.body).toEqual(expect.objectContaining({ code: 'QUOTE_ITEMS_INVALID', details }));
+  });
+
+  test('GET histórico retorna eventos sem campos internos e trata orçamento inexistente', async () => {
+    services.getQuoteHistory.mockResolvedValueOnce([{
+      id: ITEM_ID,
+      eventType: 'REJECTED',
+      actorType: 'CLIENT',
+      details: { rejectionReason: 'Prazo inadequado.' },
+      created_at: new Date('2026-09-30T12:00:00Z'),
+    }]);
+
+    const response = await request(app).get(`/api/v1/quotes/${QUOTE_ID}/history`);
+    expect(response.status).toBe(200);
+    expect(response.body.items).toEqual([{
+      id: ITEM_ID,
+      type: 'REJECTED',
+      actor: 'CLIENT',
+      details: { rejectionReason: 'Prazo inadequado.' },
+      createdAt: '2026-09-30T12:00:00.000Z',
+    }]);
+    expect(services.getQuoteHistory).toHaveBeenCalledWith(USER_ID, QUOTE_ID);
+
+    services.getQuoteHistory.mockResolvedValueOnce(null);
+    const missingResponse = await request(app).get(`/api/v1/quotes/${QUOTE_ID}/history`);
+    expect(missingResponse.status).toBe(404);
+    expect(missingResponse.body.code).toBe('QUOTE_NOT_FOUND');
   });
 });

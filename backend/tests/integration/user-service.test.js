@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import sequelize from '../../src/config/database.js';
 import User from '../../src/models/user.js';
-import { provisionUser } from '../../src/services/user.js';
+import { findUserByAuth0Subject, provisionUser } from '../../src/services/user.js';
 
 describe('Serviço de provisionamento de usuário', () => {
   afterAll(async () => {
@@ -38,6 +38,7 @@ describe('Serviço de provisionamento de usuário', () => {
       expect(updatedUser.email).toBe('atualizado@example.com');
       expect(updatedUser.emailVerified).toBe(true);
       expect(numberOfUsers).toBe(1);
+      expect((await findUserByAuth0Subject(auth0Subject)).id).toBe(createdUser.id);
     } finally {
       await User.destroy({
         where: {

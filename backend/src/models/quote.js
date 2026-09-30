@@ -2,6 +2,7 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 
 import sequelize from '../config/database.js';
 import QuoteItem from './quote-item.js';
+import QuoteEvent from './quote-event.js';
 
 class Quote extends Model {}
 
@@ -247,5 +248,18 @@ QuoteItem.belongsTo(Quote, {
   foreignKey: 'quoteId',
   onUpdate: 'CASCADE',
   onDelete: 'CASCADE',
+});
+Quote.hasMany(QuoteEvent, {
+  as: 'events',
+  foreignKey: 'quoteId',
+  onUpdate: 'CASCADE',
+  onDelete: 'RESTRICT',
+});
+
+QuoteEvent.belongsTo(Quote, {
+  as: 'quote',
+  foreignKey: 'quoteId',
+  onUpdate: 'CASCADE',
+  onDelete: 'RESTRICT',
 });
 export default Quote;

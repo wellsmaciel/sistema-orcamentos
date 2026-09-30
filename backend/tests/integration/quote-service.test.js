@@ -4,7 +4,7 @@ import sequelize from '../../src/config/database.js';
 import Client from '../../src/models/client.js';
 import User from '../../src/models/user.js';
 import Company from '../../src/models/company.js';
-import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage } from '../../src/services/quote.js';
+import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory } from '../../src/services/quote.js';
 import { jest } from '@jest/globals';
 import Quote from '../../src/models/quote.js';
 import QuoteItem from '../../src/models/quote-item.js';
@@ -1488,5 +1488,49 @@ describe('Serviço de orçamentos', () => {
     expect(result.details).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'items[0].quantity' })]));
     expect(await Quote.count({ where: { correctedFromId: quote.id }, transaction })).toBe(0);
     expect((await QuoteItem.findOne({ where: { quoteId: quote.id }, transaction })).quantity).toBe('1.250');
+  });
+
+  test('registra alterações, resposta e correção em ordem, apenas para o dono', async () => {
+    const owner = await createUser('Prestador do Histórico de Eventos');
+    const otherUser = await createUser('Outro Prestador');
+    const client = await createClient(owner.id);
+    const quote = await createQuote(owner.id, buildQuoteInput(client.id), { transaction });
+
+    const updateInput = buildQuoteInput(client.id);
+    delete updateInput.clientId;
+    updateInput.description = 'Descrição revisada.';
+    updateInput.serviceDate = '2026-10-20';
+    updateInput.items.push({ description: 'Peça adicional', quantity: '2' });
+    await updateQuote(owner.id, quote.id, updateInput, { transaction });
+
+    const confirmed = await confirmQuote(owner.id, quote.id, { transaction });
+    await respondToPublicQuote(confirmed.quote.publicToken, {
+      decision: 'REJECTED', reason: 'Preciso rever o prazo.',
+    }, { transaction });
+    const duplicateResponse = await respondToPublicQuote(confirmed.quote.publicToken, {
+      decision: 'ACCEPTED',
+    }, { transaction });
+    const correction = await createQuoteCorrection(owner.id, quote.id, { transaction });
+
+    expect(duplicateResponse.outcome).toBe('NOT_RESPONDABLE');
+    expect(await getQuoteHistory(otherUser.id, quote.id, { transaction })).toBeNull();
+
+    const originalEvents = await getQuoteHistory(owner.id, quote.id, { transaction });
+    expect(originalEvents.map((event) => event.eventType)).toEqual([
+      'CREATED', 'UPDATED', 'CONFIRMED', 'REJECTED', 'CORRECTION_CREATED',
+    ]);
+    expect(originalEvents[0].details.after.items).toHaveLength(1);
+    expect(originalEvents[1].details.changes).toEqual(expect.arrayContaining([
+      expect.objectContaining({ field: 'description', before: 'Execução do serviço solicitado.', after: 'Descrição revisada.' }),
+      expect.objectContaining({ field: 'serviceDate', after: '2026-10-20' }),
+      expect.objectContaining({ field: 'items' }),
+    ]));
+    expect(originalEvents[3].details.rejectionReason).toBe('Preciso rever o prazo.');
+    expect(originalEvents[4].details.correctionQuoteId).toBe(correction.quote.id);
+
+    const correctionEvents = await getQuoteHistory(owner.id, correction.quote.id, { transaction });
+    expect(correctionEvents).toHaveLength(1);
+    expect(correctionEvents[0].eventType).toBe('CREATED_FROM_CORRECTION');
+    expect(correctionEvents[0].details.originalQuoteId).toBe(quote.id);
   });
 });

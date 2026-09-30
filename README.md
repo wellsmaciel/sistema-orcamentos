@@ -4,6 +4,8 @@ Aplicação web responsiva para criação, envio e acompanhamento de orçamentos
 
 O sistema permite cadastrar clientes, criar orçamentos, compartilhar um link para consulta e registrar a aceitação ou recusa pelo cliente. As correções preservam o histórico do orçamento anterior.
 
+O prestador pode consultar o histórico de eventos de cada orçamento: criação, alterações do rascunho, confirmação, resposta do cliente e criação de correção. O registro começa com a implantação dessa funcionalidade; alterações anteriores não podem ser reconstruídas.
+
 ## Estrutura do repositório
 
 sistema-orcamentos/

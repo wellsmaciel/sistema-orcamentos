@@ -445,6 +445,43 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/quotes/{quoteId}/history:
+    get:
+      tags:
+        - Orçamentos
+      summary: Consulta o histórico registrado de um orçamento
+      description: >
+        Retorna os eventos registrados desde a implantação do histórico, em ordem
+        cronológica. Exige autenticação e só permite consultar orçamentos do próprio
+        prestador. Não reconstrói alterações anteriores à implantação.
+      operationId: getQuoteHistory
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: quoteId
+          in: path
+          required: true
+          description: Identificador do orçamento.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Eventos registrados para o orçamento.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/public/quotes/{publicToken}:
     get:
       tags:
@@ -1351,6 +1388,56 @@ components:
             quoteNumber:
               type: integer
               minimum: 1
+
+    QuoteHistoryResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuoteHistoryEvent'
+
+    QuoteHistoryEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - type
+        - actor
+        - details
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - CREATED
+            - UPDATED
+            - CONFIRMED
+            - ACCEPTED
+            - REJECTED
+            - CORRECTION_CREATED
+            - CREATED_FROM_CORRECTION
+        actor:
+          type: string
+          enum:
+            - PROVIDER
+            - CLIENT
+        details:
+          type: object
+          description: >
+            Para criação e confirmação, contém after com os dados do orçamento.
+            Para edição, contém changes com os valores anteriores e posteriores.
+            Respostas e correções incluem o motivo ou a referência relacionada.
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
 
     QuoteResponseRequest:
       type: object

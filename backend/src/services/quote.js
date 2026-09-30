@@ -5,8 +5,10 @@ import { randomBytes } from 'node:crypto';
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import QuoteItem from '../models/quote-item.js';
+import QuoteEvent from '../models/quote-event.js';
 import { calculateItemsTotal } from '../utils/quote-pricing.js';
 import { normalizeStoredQuantity } from '../utils/quote-quantity.js';
+import { diffQuoteSnapshots, snapshotQuote } from '../utils/quote-history.js';
 import { validateQuoteItemsInput } from '../validators/quote-items.js';
 
 const PUBLIC_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
@@ -93,10 +95,19 @@ async function createQuote(userId, input, { transaction } = {}) {
       validate: true,
     });
 
-    return quote.reload({
+    const savedQuote = await quote.reload({
       include: buildQuoteItemsInclude(),
       transaction: writeTransaction,
     });
+
+    await QuoteEvent.create({
+      quoteId: quote.id,
+      eventType: 'CREATED',
+      actorType: 'PROVIDER',
+      details: { after: snapshotQuote(savedQuote) },
+    }, { transaction: writeTransaction });
+
+    return savedQuote;
   });
 }
 async function listQuotes(userId, { transaction } = {}) {
@@ -141,6 +152,12 @@ async function updateQuote(userId, quoteId, input, { transaction } = {}) {
     }
 
     const totalAmount = input.pricingMode === 'ITEMIZED' ? calculateItemsTotal(input.items) : normalizeAmount(input.totalAmount);
+    const previousItems = await QuoteItem.findAll({
+      where: { quoteId: quote.id },
+      order: [['position', 'ASC']],
+      transaction: writeTransaction,
+    });
+    const previousSnapshot = snapshotQuote(quote, previousItems);
 
     const { serviceAddress } = input;
 
@@ -184,12 +201,24 @@ async function updateQuote(userId, quoteId, input, { transaction } = {}) {
       validate: true,
     });
 
+    const savedQuote = await updatedQuote.reload({
+      include: buildQuoteItemsInclude(),
+      transaction: writeTransaction,
+    });
+    const changes = diffQuoteSnapshots(previousSnapshot, snapshotQuote(savedQuote));
+
+    if (changes.length > 0) {
+      await QuoteEvent.create({
+        quoteId: quote.id,
+        eventType: 'UPDATED',
+        actorType: 'PROVIDER',
+        details: { changes },
+      }, { transaction: writeTransaction });
+    }
+
     return {
       outcome: 'UPDATED',
-      quote: await updatedQuote.reload({
-        include: buildQuoteItemsInclude(),
-        transaction: writeTransaction,
-      }),
+      quote: savedQuote,
     };
   });
 }
@@ -291,12 +320,21 @@ async function confirmQuote(userId, quoteId, { transaction } = {}) {
       },
     );
 
+    const savedQuote = await confirmedQuote.reload({
+      include: buildQuoteItemsInclude(),
+      transaction: writeTransaction,
+    });
+
+    await QuoteEvent.create({
+      quoteId: quote.id,
+      eventType: 'CONFIRMED',
+      actorType: 'PROVIDER',
+      details: { after: snapshotQuote(savedQuote) },
+    }, { transaction: writeTransaction });
+
     return {
       outcome: 'CONFIRMED',
-      quote: await confirmedQuote.reload({
-        include: buildQuoteItemsInclude(),
-        transaction: writeTransaction,
-      }),
+      quote: savedQuote,
     };
   });
 }
@@ -315,39 +353,48 @@ async function getPublicQuote(publicToken, { transaction } = {}) {
   });
 }
 async function respondToPublicQuote(publicToken, input, { transaction } = {}) {
-  const quote = await getPublicQuote(publicToken, {
-    transaction,
-  });
-
-  if (!quote) {
-    return {
-      outcome: 'NOT_FOUND',
-    };
+  if (typeof publicToken !== 'string' || !PUBLIC_TOKEN_PATTERN.test(publicToken)) {
+    return { outcome: 'NOT_FOUND' };
   }
 
-  if (quote.status !== 'SENT') {
-    return {
-      outcome: 'NOT_RESPONDABLE',
-    };
-  }
+  return sequelize.transaction({ transaction }, async (writeTransaction) => {
+    const quote = await Quote.findOne({
+      where: { publicToken, status: ['SENT', 'ACCEPTED', 'REJECTED'] },
+      transaction: writeTransaction,
+      lock: writeTransaction.LOCK.UPDATE,
+    });
 
-  const rejectionReason = input.decision === 'REJECTED' ? normalizeOptionalString(input.reason) : null;
+    if (!quote) {
+      return { outcome: 'NOT_FOUND' };
+    }
 
-  const respondedQuote = await quote.update(
-    {
+    if (quote.status !== 'SENT') {
+      return { outcome: 'NOT_RESPONDABLE' };
+    }
+
+    const rejectionReason = input.decision === 'REJECTED' ? normalizeOptionalString(input.reason) : null;
+
+    const respondedQuote = await quote.update({
       status: input.decision,
       respondedAt: new Date(),
       rejectionReason,
-    },
-    {
-      transaction,
-    },
-  );
+    }, { transaction: writeTransaction });
 
-  return {
-    outcome: 'RESPONDED',
-    quote: respondedQuote,
-  };
+    await QuoteEvent.create({
+      quoteId: quote.id,
+      eventType: input.decision,
+      actorType: 'CLIENT',
+      details: rejectionReason ? { rejectionReason } : {},
+    }, { transaction: writeTransaction });
+
+    return {
+      outcome: 'RESPONDED',
+      quote: await respondedQuote.reload({
+        include: buildQuoteItemsInclude(),
+        transaction: writeTransaction,
+      }),
+    };
+  });
 }
 async function createQuoteCorrection(userId, quoteId, { transaction } = {}) {
   return sequelize.transaction({ transaction }, async (writeTransaction) => {
@@ -464,13 +511,47 @@ async function createQuoteCorrection(userId, quoteId, { transaction } = {}) {
       validate: true,
     });
 
+    const savedCorrection = await correction.reload({
+      include: buildQuoteItemsInclude(),
+      transaction: writeTransaction,
+    });
+
+    await QuoteEvent.bulkCreate([
+      {
+        quoteId: originalQuote.id,
+        eventType: 'CORRECTION_CREATED',
+        actorType: 'PROVIDER',
+        details: { correctionQuoteId: correction.id, correctionQuoteNumber: correction.quoteNumber },
+      },
+      {
+        quoteId: correction.id,
+        eventType: 'CREATED_FROM_CORRECTION',
+        actorType: 'PROVIDER',
+        details: { originalQuoteId: originalQuote.id, originalQuoteNumber: originalQuote.quoteNumber, after: snapshotQuote(savedCorrection) },
+      },
+    ], { transaction: writeTransaction });
+
     return {
       outcome: 'CORRECTION_CREATED',
-      quote: await correction.reload({
-        include: buildQuoteItemsInclude(),
-        transaction: writeTransaction,
-      }),
+      quote: savedCorrection,
     };
+  });
+}
+async function getQuoteHistory(userId, quoteId, { transaction } = {}) {
+  const quote = await Quote.findOne({
+    where: { id: quoteId, userId },
+    attributes: ['id'],
+    transaction,
+  });
+
+  if (!quote) {
+    return null;
+  }
+
+  return QuoteEvent.findAll({
+    where: { quoteId },
+    order: [['sequence', 'ASC']],
+    transaction,
   });
 }
 async function listQuotesPage(userId, { search = '', status, serviceDateFrom, serviceDateTo, page = 1, pageSize = 20, transaction } = {}) {
@@ -569,4 +650,4 @@ function buildQuoteItemsInclude() {
     },
   ];
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage };
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory };

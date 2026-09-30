@@ -6,7 +6,7 @@ import { validateAccessToken } from './middlewares/auth.js';
 import { loadAuthenticatedUser } from './middlewares/authenticated-user.js';
 import { createClient, listClients, listClientsPage, updateClient, deleteClient, deactivateClient, reactivateClient } from './controllers/client.js';
 import { validateClient, validateClientIdParameter, validateClientListQuery } from './middlewares/validate-client.js';
-import { confirmQuote, createQuote, listQuotes, updateQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage } from './controllers/quote.js';
+import { confirmQuote, createQuote, listQuotes, updateQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory } from './controllers/quote.js';
 import { validateQuote, validateQuoteIdParameter, validateQuoteUpdate, validateQuoteResponse, validateQuoteListQuery } from './middlewares/validate-quote.js';
 import { getCompany, saveCompany } from './controllers/company.js';
 import { validateCompany } from './middlewares/validate-company.js';
@@ -40,6 +40,7 @@ app.post('/api/v1/clients/:clientId/reactivate', validateAccessToken, loadAuthen
 app.post('/api/v1/quotes', validateAccessToken, loadAuthenticatedUser, validateQuote, createQuote);
 app.get('/api/v1/quotes', validateAccessToken, loadAuthenticatedUser, listQuotes);
 app.get('/api/v1/quotes/search', validateAccessToken, loadAuthenticatedUser, validateQuoteListQuery, listQuotesPage);
+app.get('/api/v1/quotes/:quoteId/history', validateAccessToken, loadAuthenticatedUser, validateQuoteIdParameter, getQuoteHistory);
 
 app.put('/api/v1/quotes/:quoteId', validateAccessToken, loadAuthenticatedUser, validateQuoteIdParameter, validateQuoteUpdate, updateQuote);
 app.post('/api/v1/quotes/:quoteId/confirm', validateAccessToken, loadAuthenticatedUser, validateQuoteIdParameter, confirmQuote);

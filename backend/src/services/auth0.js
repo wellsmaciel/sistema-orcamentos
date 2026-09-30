@@ -8,7 +8,7 @@ async function getUserInfo(accessToken) {
   });
 
   if (!response.ok) {
-    throw new Error('Não foi possível consultar o perfil no Auth0.');
+    throw new Error(`Não foi possível consultar o perfil no Auth0 (HTTP ${response.status}).`);
   }
 
   const profile = await response.json();

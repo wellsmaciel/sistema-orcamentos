@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { requestQuotesPage } from '../services/quote-list.js';
 import { requestCompany } from '../services/company.js';
 import QuoteReview from './QuoteReview.jsx';
+import QuoteHistory from './QuoteHistory.jsx';
 
 const statusLabels = {
   DRAFT: 'Rascunho',
@@ -388,6 +389,7 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
                       <strong>Motivo da recusa:</strong> {quote.rejectionReason}
                     </p>
                   )}
+                  <QuoteHistory key={refreshIndex} quoteId={quote.id} getAccessTokenSilently={getAccessTokenSilently} />
                 </article>
               </li>
             );

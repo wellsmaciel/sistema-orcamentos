@@ -7,6 +7,7 @@ import {
   updateQuote as updateQuoteService,
   createQuoteCorrection as createQuoteCorrectionService,
   listQuotesPage as listQuotesPageService,
+  getQuoteHistory as getQuoteHistoryService,
 } from '../services/quote.js';
 import { serializeQuoteItems } from '../utils/quote-items-response.js';
 
@@ -331,4 +332,28 @@ async function listQuotesPage(request, response, next) {
     return next(error);
   }
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage };
+async function getQuoteHistory(request, response, next) {
+  try {
+    const events = await getQuoteHistoryService(request.authenticatedUser.id, request.params.quoteId);
+
+    if (!events) {
+      return response.status(404).json({
+        code: 'QUOTE_NOT_FOUND',
+        message: 'Orçamento não encontrado.',
+      });
+    }
+
+    return response.status(200).json({
+      items: events.map((event) => ({
+        id: event.id,
+        type: event.eventType,
+        actor: event.actorType,
+        details: event.details,
+        createdAt: event.created_at,
+      })),
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory };

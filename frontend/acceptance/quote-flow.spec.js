@@ -149,3 +149,46 @@ test('tamanho do texto e alto contraste persistem na página pública', async ({
   await expect(page.locator('html')).toHaveAttribute('data-text-size', '150');
   await expect(page.locator('html')).toHaveAttribute('data-contrast', 'high');
 });
+
+test('prestador consulta alterações e resposta no histórico do orçamento', async ({ page }) => {
+  const quote = buildQuote('ITEMIZED');
+  await page.route('**/api/v1/quotes/search?*', (route) => route.fulfill({
+    json: { items: [quote], total: 1, page: 1, pageSize: 20, totalPages: 1 },
+  }));
+  await page.route('**/api/v1/quotes/quote-1/history', (route) => route.fulfill({
+    json: { items: [
+      {
+        id: 'event-1', type: 'UPDATED', actor: 'PROVIDER', createdAt: '2026-09-30T12:00:00.000Z',
+        details: { changes: [{ field: 'serviceDate', before: '2099-10-15', after: '2099-10-20' }] },
+      },
+      {
+        id: 'event-2', type: 'REJECTED', actor: 'CLIENT', createdAt: '2026-09-30T13:00:00.000Z',
+        details: { rejectionReason: 'Preciso rever o prazo.' },
+      },
+    ] },
+  }));
+
+  await page.goto('/acceptance/fixture.html');
+  await page.getByRole('button', { name: 'Ver histórico' }).click();
+
+  const history = page.getByRole('region', { name: 'Histórico do orçamento' });
+  await expect(history).toContainText('Rascunho alterado');
+  await expect(history).toContainText('15/10/2099');
+  await expect(history).toContainText('20/10/2099');
+  await expect(history).toContainText('Cliente recusou o orçamento');
+  await expect(history).toContainText('Preciso rever o prazo.');
+});
+
+test('orçamento anterior ao histórico informa que não há eventos recuperáveis', async ({ page }) => {
+  const quote = buildQuote('FIXED_TOTAL');
+  await page.route('**/api/v1/quotes/search?*', (route) => route.fulfill({
+    json: { items: [quote], total: 1, page: 1, pageSize: 20, totalPages: 1 },
+  }));
+  await page.route('**/api/v1/quotes/quote-1/history', (route) => route.fulfill({ json: { items: [] } }));
+
+  await page.goto('/acceptance/fixture.html');
+  await page.getByRole('button', { name: 'Ver histórico' }).click();
+  await expect(page.getByRole('region', { name: 'Histórico do orçamento' })).toContainText(
+    'Alterações anteriores à ativação do histórico não podem ser recuperadas.',
+  );
+});
