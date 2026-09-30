@@ -68,6 +68,8 @@ describe('revisão da descrição com IA', () => {
     expect(params).toMatchObject({ model: 'claude-haiku-4-5', max_tokens: 4096 });
     expect(params).not.toHaveProperty('output_config');
     expect(params.system).toContain('não acrescente serviços, materiais, prazos, garantias');
+    expect(params.system).toContain('preserve exatamente quantidades e abrangência');
+    expect(params.system).toContain('sem omitir nenhuma informação da descrição');
     expect(params.messages).toEqual([{ role: 'user', content: buildReviewMessage(input) }]);
   });
 
