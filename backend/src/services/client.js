@@ -2,6 +2,7 @@ import Client from '../models/client.js';
 import sequelize from '../config/database.js';
 import Quote from '../models/quote.js';
 import { Op } from 'sequelize';
+import { recordActivity, toChangedFields, withTransaction } from './activity-log.js';
 
 function normalizeOptionalString(value) {
   if (typeof value !== 'string') {
@@ -14,9 +15,13 @@ function normalizeOptionalString(value) {
 }
 
 async function createClient(userId, input, { transaction } = {}) {
+  if (!transaction) {
+    return withTransaction(null, (newTransaction) => createClient(userId, input, { transaction: newTransaction }));
+  }
+
   const { address } = input;
 
-  return Client.create(
+  const client = await Client.create(
     {
       userId,
       name: input.name.trim(),
@@ -34,6 +39,10 @@ async function createClient(userId, input, { transaction } = {}) {
       transaction,
     },
   );
+
+  await recordActivity({ userId, action: 'CLIENT_CREATED', entityType: 'CLIENT', entityId: client.id }, { transaction });
+
+  return client;
 }
 async function listClients(userId, { transaction } = {}) {
   return Client.findAll({
@@ -49,6 +58,10 @@ async function listClients(userId, { transaction } = {}) {
   });
 }
 async function updateClient(userId, clientId, input, { transaction } = {}) {
+  if (!transaction) {
+    return withTransaction(null, (newTransaction) => updateClient(userId, clientId, input, { transaction: newTransaction }));
+  }
+
   const client = await Client.findOne({
     where: {
       id: clientId,
@@ -65,23 +78,28 @@ async function updateClient(userId, clientId, input, { transaction } = {}) {
 
   const { address } = input;
 
-  const updatedClient = await client.update(
-    {
-      name: input.name.trim(),
-      email: input.email.trim().toLowerCase(),
-      phone: input.phone.trim(),
-      street: address.street.trim(),
-      number: address.number.trim(),
-      complement: normalizeOptionalString(address.complement),
-      postalCode: address.postalCode.trim(),
-      district: address.district.trim(),
-      city: address.city.trim(),
-      state: address.state.trim(),
-    },
-    {
-      transaction,
-    },
-  );
+  client.set({
+    name: input.name.trim(),
+    email: input.email.trim().toLowerCase(),
+    phone: input.phone.trim(),
+    street: address.street.trim(),
+    number: address.number.trim(),
+    complement: normalizeOptionalString(address.complement),
+    postalCode: address.postalCode.trim(),
+    district: address.district.trim(),
+    city: address.city.trim(),
+    state: address.state.trim(),
+  });
+
+  const changedFields = toChangedFields(client.changed());
+  const updatedClient = await client.save({ transaction });
+
+  if (changedFields.length > 0) {
+    await recordActivity(
+      { userId, action: 'CLIENT_UPDATED', entityType: 'CLIENT', entityId: client.id, details: { changedFields } },
+      { transaction },
+    );
+  }
 
   return {
     outcome: 'UPDATED',
@@ -130,11 +148,17 @@ async function deleteClient(userId, clientId, { transaction } = {}) {
     transaction,
   });
 
+  await recordActivity({ userId, action: 'CLIENT_DELETED', entityType: 'CLIENT', entityId: client.id }, { transaction });
+
   return {
     outcome: 'DELETED',
   };
 }
 async function deactivateClient(userId, clientId, { transaction } = {}) {
+  if (!transaction) {
+    return withTransaction(null, (newTransaction) => deactivateClient(userId, clientId, { transaction: newTransaction }));
+  }
+
   const client = await Client.findOne({
     where: {
       id: clientId,
@@ -149,6 +173,7 @@ async function deactivateClient(userId, clientId, { transaction } = {}) {
     };
   }
 
+  const wasActive = client.active;
   const deactivatedClient = await client.update(
     {
       active: false,
@@ -158,12 +183,20 @@ async function deactivateClient(userId, clientId, { transaction } = {}) {
     },
   );
 
+  if (wasActive) {
+    await recordActivity({ userId, action: 'CLIENT_DEACTIVATED', entityType: 'CLIENT', entityId: client.id }, { transaction });
+  }
+
   return {
     outcome: 'DEACTIVATED',
     client: deactivatedClient,
   };
 }
 async function reactivateClient(userId, clientId, { transaction } = {}) {
+  if (!transaction) {
+    return withTransaction(null, (newTransaction) => reactivateClient(userId, clientId, { transaction: newTransaction }));
+  }
+
   const client = await Client.findOne({
     where: {
       id: clientId,
@@ -178,6 +211,7 @@ async function reactivateClient(userId, clientId, { transaction } = {}) {
     };
   }
 
+  const wasInactive = !client.active;
   const reactivatedClient = await client.update(
     {
       active: true,
@@ -186,6 +220,10 @@ async function reactivateClient(userId, clientId, { transaction } = {}) {
       transaction,
     },
   );
+
+  if (wasInactive) {
+    await recordActivity({ userId, action: 'CLIENT_REACTIVATED', entityType: 'CLIENT', entityId: client.id }, { transaction });
+  }
 
   return {
     outcome: 'REACTIVATED',

@@ -6,6 +6,7 @@ import './App.css';
 import ClientForm from './components/ClientForm.jsx';
 import ClientList from './components/ClientList.jsx';
 import Dashboard from './components/Dashboard.jsx';
+import ActivityList from './components/ActivityList.jsx';
 import QuoteForm from './components/QuoteForm.jsx';
 import QuoteList from './components/QuoteList.jsx';
 import PublicQuote from './components/PublicQuote.jsx';
@@ -209,6 +210,8 @@ function App() {
                   {apiProfile && <pre>{JSON.stringify(apiProfile, null, 2)}</pre>}
 
                   {apiError && <p role="alert">{apiError}</p>}
+
+                  <ActivityList getAccessTokenSilently={getAccessTokenSilently} />
                 </section>
               )}
             </>

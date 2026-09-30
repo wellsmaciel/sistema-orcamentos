@@ -201,6 +201,14 @@ form {
   gap: 12px;
 }
 
+.activity-list {
+  padding-left: 24px;
+}
+
+.activity-list li {
+  padding: 6px 0;
+}
+
 .quote-item-list {
   list-style: decimal;
   padding-left: 24px;

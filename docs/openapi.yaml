@@ -22,8 +22,47 @@ tags:
     description: Operações relacionadas aos clientes salvos pelo prestador.
   - name: Orçamentos
     description: Operações relacionadas à criação e ao acompanhamento de orçamentos.
+  - name: Atividades
+    description: Registro das ações do prestador sobre clientes e perfil profissional.
 
 paths:
+  /api/v1/activities:
+    get:
+      tags:
+        - Atividades
+      summary: Lista as atividades do prestador autenticado
+      description: >
+        Retorna as ações registradas sobre clientes e perfil profissional, da mais recente
+        para a mais antiga, em páginas de 20. Guarda apenas os nomes dos campos alterados,
+        nunca os valores. O nome do cliente vem do cadastro atual e fica nulo depois da
+        exclusão. As ações sobre orçamentos ficam no histórico de cada orçamento.
+      operationId: listActivities
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: page
+          in: query
+          description: Número da página solicitada.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000000
+            default: 1
+      responses:
+        '200':
+          description: Página de atividades.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityPageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /health:
     get:
       tags:
@@ -1449,6 +1488,86 @@ components:
             quoteNumber:
               type: integer
               minimum: 1
+
+    ActivityPageResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - page
+        - pageSize
+        - totalPages
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        totalPages:
+          type: integer
+          minimum: 0
+
+    Activity:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - action
+        - entityType
+        - entityId
+        - entityName
+        - changedFields
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum:
+            - CLIENT_CREATED
+            - CLIENT_UPDATED
+            - CLIENT_DELETED
+            - CLIENT_DEACTIVATED
+            - CLIENT_REACTIVATED
+            - COMPANY_CREATED
+            - COMPANY_UPDATED
+        entityType:
+          type: string
+          enum:
+            - CLIENT
+            - COMPANY
+        entityId:
+          type: string
+          format: uuid
+        entityName:
+          type:
+            - string
+            - 'null'
+          description: Nome atual do cliente; nulo para o perfil profissional e para clientes excluídos.
+        changedFields:
+          type: array
+          description: Campos alterados, sem os valores. O endereço aparece agrupado como address.
+          items:
+            type: string
+            enum:
+              - name
+              - email
+              - phone
+              - address
+              - taxId
+        createdAt:
+          type: string
+          format: date-time
 
     QuoteHistoryResponse:
       type: object
