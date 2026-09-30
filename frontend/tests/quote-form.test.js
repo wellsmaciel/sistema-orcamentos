@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { buildQuoteRequest, calculateFormItemSubtotal, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, isBlankFormItem, normalizeDecimalInput } from '../src/utils/quote-form.js';
+import { buildDescriptionReviewRequest, buildQuoteRequest, calculateFormItemSubtotal, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, isBlankFormItem, normalizeDecimalInput } from '../src/utils/quote-form.js';
 import { calculateItemSubtotal, calculateItemsTotal } from '../../backend/src/utils/quote-pricing.js';
 import { validateQuoteInput, validateQuoteUpdateInput } from '../../backend/src/validators/quote.js';
+import { validateQuoteDescriptionReviewInput } from '../../backend/src/validators/quote-description-review.js';
 
 function buildFormData(pricingMode = 'FIXED_TOTAL') {
   return {
@@ -170,6 +171,33 @@ describe('Prévia monetária sem ponto flutuante', () => {
     assert.equal(formatQuoteQuantity('0.100'), '0,1');
     assert.equal(formatQuoteQuantity('1.250'), '1,25');
     assert.equal(formatQuoteQuantity('0.125'), '0,125');
+  });
+});
+
+describe('Revisão da descrição com IA', () => {
+  test('envia somente a descrição e os itens preenchidos, aceitos pelo backend', () => {
+    const formData = buildFormData('ITEMIZED');
+    formData.description = '  instalar 4 camera no predio  ';
+    formData.items.push({ formId: 'linha-vazia', description: '   ', quantity: '1', unitPrice: '' });
+
+    const body = buildDescriptionReviewRequest(formData);
+
+    assert.deepEqual(body, {
+      description: 'instalar 4 camera no predio',
+      items: [{ description: 'Cabo elétrico', quantity: '2,5' }],
+    });
+    assert.deepEqual(validateQuoteDescriptionReviewInput(body), []);
+  });
+
+  test('não inclui cliente, endereço, preços ou quantidade vazia', () => {
+    const formData = buildFormData('ITEMIZED');
+    formData.items[0].quantity = '';
+
+    const body = buildDescriptionReviewRequest(formData);
+
+    assert.deepEqual(Object.keys(body), ['description', 'items']);
+    assert.deepEqual(body.items, [{ description: 'Cabo elétrico' }]);
+    assert.doesNotMatch(JSON.stringify(body), /550e8400|Rua de Teste|19,99/);
   });
 });
 

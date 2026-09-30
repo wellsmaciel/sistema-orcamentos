@@ -6,6 +6,8 @@ O sistema permite cadastrar clientes, criar orçamentos, compartilhar um link pa
 
 O prestador pode consultar o histórico de eventos de cada orçamento: criação, alterações do rascunho, confirmação, resposta do cliente e criação de correção. O registro começa com a implantação dessa funcionalidade; alterações anteriores não podem ser reconstruídas.
 
+Ao criar ou editar um rascunho, o prestador pode pedir uma revisão da descrição com IA. A API envia somente a descrição e os itens ao modelo Claude, da Anthropic, e devolve uma sugestão; a descrição só muda se o prestador usar a sugestão. Dados do cliente não são enviados, e cada prestador pode pedir até 10 revisões a cada 10 minutos.
+
 ## Estrutura do repositório
 
 sistema-orcamentos/
@@ -48,6 +50,11 @@ sistema-orcamentos/
 - Acesso por Conta Google
 - OAuth e OpenID Connect
 - Tokens de acesso para proteção da API
+
+### Inteligência artificial
+
+- API do Claude (Anthropic), pelo SDK oficial `@anthropic-ai/sdk`
+- Modelo `claude-haiku-4-5`, o mais econômico da Anthropic, suficiente para revisar textos curtos
 
 ### Testes
 
@@ -145,6 +152,8 @@ As variáveis necessárias estão documentadas nos seguintes arquivos:
 - `frontend/.env.example`
 
 Os arquivos `.env` reais não devem ser enviados ao GitHub, pois podem conter credenciais e configurações privadas.
+
+A revisão da descrição com IA depende de `ANTHROPIC_API_KEY` no backend. Sem essa variável, a API responde que o recurso não está disponível e o restante do sistema funciona normalmente.
 
 No Railway, as configurações são cadastradas diretamente na aba `Variables` de cada serviço.
 

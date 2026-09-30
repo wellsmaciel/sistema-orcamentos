@@ -17,6 +17,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "express-oauth2-jwt-bearer": "^1.10.0",

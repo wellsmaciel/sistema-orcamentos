@@ -96,7 +96,9 @@ a + button {
 /* Em grades, o espaçamento vem do gap; no celular o botão ocupa a largura toda. */
 form > button,
 .quote-items > button,
-.quote-item > button {
+.quote-item > button,
+.description-review > button,
+.description-review-actions button {
   margin: 0;
 }
 
@@ -182,6 +184,21 @@ form {
 
 .quote-review {
   margin: 16px 0;
+}
+
+.description-review {
+  display: grid;
+  gap: 12px;
+}
+
+.description-suggestion {
+  white-space: pre-wrap;
+}
+
+.description-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .quote-item-list {
@@ -297,7 +314,8 @@ main > button:last-child:hover:not(:disabled) {
 
   form > button,
   .quote-items > button,
-  .quote-item > button {
+  .quote-item > button,
+  .description-review > button {
     justify-self: start;
   }
 }
