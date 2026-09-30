@@ -1,5 +1,7 @@
+import { fetchJsonWithTimeout, withTimeout } from './request.js';
+
 async function requestQuotesPage(getAccessTokenSilently, { search = '', status = '', serviceDateFrom = '', serviceDateTo = '', page = 1 } = {}) {
-  const accessToken = await getAccessTokenSilently();
+  const accessToken = await withTimeout(getAccessTokenSilently());
 
   const parameters = new URLSearchParams({
     page: String(page),
@@ -16,13 +18,11 @@ async function requestQuotesPage(getAccessTokenSilently, { search = '', status =
     }
   }
 
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes/search?${parameters.toString()}`, {
+  const { response, responseBody } = await fetchJsonWithTimeout(`${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes/search?${parameters.toString()}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
-
-  const responseBody = await response.json();
 
   if (!response.ok) {
     const detailsMessage = responseBody.details?.map((detail) => detail.message).join(' ');

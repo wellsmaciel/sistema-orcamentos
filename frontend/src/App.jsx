@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { requestClients } from './services/client.js';
+import { fetchJsonWithTimeout, withTimeout } from './services/request.js';
 import './App.css';
 import ClientForm from './components/ClientForm.jsx';
 import ClientList from './components/ClientList.jsx';
@@ -32,15 +33,13 @@ function App() {
       setIsLoadingProfile(true);
       setApiError('');
 
-      const accessToken = await getAccessTokenSilently();
+      const accessToken = await withTimeout(getAccessTokenSilently());
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/me`, {
+      const { response, responseBody } = await fetchJsonWithTimeout(`${import.meta.env.VITE_API_BASE_URL}/api/v1/me`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-
-      const responseBody = await response.json();
 
       if (!response.ok) {
         throw new Error(responseBody.message ?? 'Não foi possível consultar o perfil.');

@@ -16,6 +16,12 @@ npm install railway
 
 ## Common commands
 
+The production Backend and Frontend service domains are declared in `railway.ts`.
+Before applying this file to Railway, run `railway config plan` in the linked
+production environment and verify that both existing public domains and their
+target ports are retained. Do not apply a plan that replaces either domain or
+changes its target port.
+
 Create the configuration files:
 
 ```bash
