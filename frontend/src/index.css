@@ -71,6 +71,16 @@ textarea:focus-visible {
   color: #ffff00;
 }
 
+:root[data-contrast='high'] .quote-card-reviewing {
+  border-color: #ffff00;
+  box-shadow: none;
+}
+
+:root[data-contrast='high'] .review-badge {
+  color: #000000;
+  background: #ffff00;
+}
+
 :root[data-contrast='high'] button {
   color: #000000;
   background: #ffff00;

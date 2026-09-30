@@ -63,7 +63,7 @@ function getCurrentDate() {
   return `${year}-${month}-${day}`;
 }
 
-function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved }) {
+function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved, onReview }) {
   const [formData, setFormData] = useState(() => buildInitialFormData(quote));
   const [savedQuote, setSavedQuote] = useState(null);
   const [submitError, setSubmitError] = useState('');
@@ -333,7 +333,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
 
                 {isItemized && <p><strong>Subtotal:</strong> {formatQuoteMoney(pricingPreview.subtotals[index])}</p>}
 
-                <button type="button" onClick={() => handleRemoveItem(item.formId)} disabled={formData.items.length === 1} aria-label={`Remover item ${index + 1}`}>
+                <button type="button" className="button-danger" onClick={() => handleRemoveItem(item.formId)} disabled={formData.items.length === 1} aria-label={`Remover item ${index + 1}`}>
                   Remover item
                 </button>
               </fieldset>
@@ -417,7 +417,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
           </div>
         </fieldset>
 
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="button-primary" disabled={isSubmitting}>
           {isSubmitting ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Salvar rascunho'}
         </button>
 
@@ -444,6 +444,12 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
             </ul>
             <p><strong>Valor:</strong> {formatQuoteMoney(savedQuote.totalAmount)}</p>
           </div>
+        )}
+
+        {savedQuote && onReview && savedQuote.status === 'DRAFT' && (
+          <button type="button" className="button-primary" onClick={() => onReview(savedQuote)}>
+            Revisar e confirmar orçamento
+          </button>
         )}
       </form>
     </section>

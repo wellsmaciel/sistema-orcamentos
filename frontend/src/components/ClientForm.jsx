@@ -143,7 +143,7 @@ function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
           </div>
         </fieldset>
 
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="button-primary" disabled={isSubmitting}>
           {isSubmitting ? 'Salvando...' : client ? 'Salvar alterações' : 'Salvar cliente'}
         </button>
 
