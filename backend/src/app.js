@@ -12,6 +12,7 @@ import { reviewQuoteDescription } from './controllers/quote-description-review.j
 import { getCompany, saveCompany } from './controllers/company.js';
 import { validateCompany } from './middlewares/validate-company.js';
 import { requestLogger } from './middlewares/request-logger.js';
+import { listActivities } from './controllers/activity.js';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.post('/api/v1/public/quotes/:publicToken/respond', validateQuoteResponse, re
 app.get('/api/v1/me', validateAccessToken, loadAuthenticatedUser, getAuthenticatedUser);
 app.get('/api/v1/company', validateAccessToken, loadAuthenticatedUser, getCompany);
 app.put('/api/v1/company', validateAccessToken, loadAuthenticatedUser, validateCompany, saveCompany);
+app.get('/api/v1/activities', validateAccessToken, loadAuthenticatedUser, listActivities);
 app.post('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, validateClient, createClient);
 app.get('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, listClients);
 app.get('/api/v1/clients/search', validateAccessToken, loadAuthenticatedUser, validateClientListQuery, listClientsPage);

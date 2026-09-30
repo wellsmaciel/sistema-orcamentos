@@ -1,4 +1,5 @@
 import Company from '../models/company.js';
+import { recordActivity, toChangedFields, withTransaction } from './activity-log.js';
 
 function normalizeOptionalString(value) {
   if (typeof value !== 'string') {
@@ -40,6 +41,10 @@ async function getCompany(userId, { transaction } = {}) {
 }
 
 async function saveCompany(userId, input, { transaction } = {}) {
+  if (!transaction) {
+    return withTransaction(null, (newTransaction) => saveCompany(userId, input, { transaction: newTransaction }));
+  }
+
   const companyData = buildCompanyData(input);
 
   const existingCompany = await Company.findOne({
@@ -50,14 +55,25 @@ async function saveCompany(userId, input, { transaction } = {}) {
   });
 
   if (existingCompany) {
-    await existingCompany.update(companyData, {
+    existingCompany.set(companyData);
+
+    const changedFields = toChangedFields(existingCompany.changed()).filter((field) => field !== 'active');
+
+    await existingCompany.save({
       transaction,
     });
+
+    if (changedFields.length > 0) {
+      await recordActivity(
+        { userId, action: 'COMPANY_UPDATED', entityType: 'COMPANY', entityId: existingCompany.id, details: { changedFields } },
+        { transaction },
+      );
+    }
 
     return existingCompany;
   }
 
-  return Company.create(
+  const company = await Company.create(
     {
       ownerUserId: userId,
       ...companyData,
@@ -66,6 +82,10 @@ async function saveCompany(userId, input, { transaction } = {}) {
       transaction,
     },
   );
+
+  await recordActivity({ userId, action: 'COMPANY_CREATED', entityType: 'COMPANY', entityId: company.id }, { transaction });
+
+  return company;
 }
 
 export { getCompany, saveCompany };
