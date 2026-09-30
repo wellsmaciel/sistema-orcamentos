@@ -11,8 +11,11 @@ import { validateQuote, validateQuoteIdParameter, validateQuoteUpdate, validateQ
 import { reviewQuoteDescription } from './controllers/quote-description-review.js';
 import { getCompany, saveCompany } from './controllers/company.js';
 import { validateCompany } from './middlewares/validate-company.js';
+import { requestLogger } from './middlewares/request-logger.js';
 
 const app = express();
+
+app.use(requestLogger);
 
 app.use(
   cors({
@@ -48,7 +51,7 @@ app.put('/api/v1/quotes/:quoteId', validateAccessToken, loadAuthenticatedUser, v
 app.post('/api/v1/quotes/:quoteId/confirm', validateAccessToken, loadAuthenticatedUser, validateQuoteIdParameter, confirmQuote);
 app.post('/api/v1/quotes/:quoteId/corrections', validateAccessToken, loadAuthenticatedUser, validateQuoteIdParameter, createQuoteCorrection);
 
-app.use((error, _request, response, _next) => {
+app.use((error, request, response, _next) => {
   if (error instanceof InsufficientScopeError) {
     return response.status(403).json({
       code: 'FORBIDDEN',
@@ -63,7 +66,30 @@ app.use((error, _request, response, _next) => {
     });
   }
 
-  console.error(error);
+  // Erros do express.json(): o problema está no corpo enviado, não no servidor.
+  if (error?.type === 'entity.parse.failed') {
+    return response.status(400).json({
+      code: 'INVALID_JSON',
+      message: 'O corpo da requisição não é um JSON válido.',
+    });
+  }
+
+  if (error?.type === 'entity.too.large') {
+    return response.status(413).json({
+      code: 'PAYLOAD_TOO_LARGE',
+      message: 'O corpo da requisição é maior que o permitido.',
+    });
+  }
+
+  // O mesmo requestId do log da requisição permite ligar o erro à chamada que o causou.
+  console.error(JSON.stringify({
+    event: 'http_error',
+    timestamp: new Date().toISOString(),
+    requestId: request.requestId,
+    errorName: error?.name,
+    message: error?.message,
+    stack: error?.stack,
+  }));
 
   return response.status(500).json({
     code: 'INTERNAL_SERVER_ERROR',
