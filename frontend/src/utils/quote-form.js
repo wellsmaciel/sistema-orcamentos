@@ -85,16 +85,31 @@ function formatQuoteMoney(value) {
   return `R$ ${integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${decimalPart.padEnd(2, '0')}`;
 }
 
+// Linha sem nada digitado pelo usuário, por exemplo criada por engano com "Adicionar outro item".
+// Preço oculto no modo de valor global não conta, e a quantidade padrão 1 também não.
+function isBlankFormItem(item, pricingMode) {
+  const description = typeof item.description === 'string' ? item.description.trim() : '';
+  const quantity = typeof item.quantity === 'string' ? item.quantity.trim() : '';
+  const unitPrice = pricingMode === 'ITEMIZED' && typeof item.unitPrice === 'string' ? item.unitPrice.trim() : '';
+
+  return !description && !unitPrice && (quantity === '' || quantity === '1');
+}
+
 function buildQuoteRequest(formData, { isEditing = false } = {}) {
   if (!['ITEMIZED', 'FIXED_TOTAL'].includes(formData.pricingMode)) {
     throw new RangeError('Escolha uma forma de cobrança válida.');
   }
 
-  if (!Array.isArray(formData.items) || formData.items.length === 0) {
+  // Mantém o número original de cada linha para que as mensagens de erro apontem o item certo.
+  const filledItems = (Array.isArray(formData.items) ? formData.items : [])
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => !isBlankFormItem(item, formData.pricingMode));
+
+  if (filledItems.length === 0) {
     throw new RangeError('Informe pelo menos um item.');
   }
 
-  const items = formData.items.map((item, index) => {
+  const items = filledItems.map(({ item, index }) => {
     if (typeof item.description !== 'string' || !item.description.trim() || item.description.trim().length > 500) {
       throw new RangeError(`Item ${index + 1}: informe uma descrição com até 500 caracteres.`);
     }
@@ -140,4 +155,4 @@ function buildQuoteRequest(formData, { isEditing = false } = {}) {
   return requestBody;
 }
 
-export { normalizeDecimalInput, formatQuoteQuantity, calculateFormItemSubtotal, getItemsPricingPreview, formatQuoteMoney, buildQuoteRequest };
+export { normalizeDecimalInput, formatQuoteQuantity, calculateFormItemSubtotal, getItemsPricingPreview, formatQuoteMoney, buildQuoteRequest, isBlankFormItem };

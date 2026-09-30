@@ -198,7 +198,7 @@ function CompanyForm({ getAccessTokenSilently }) {
           </div>
         </fieldset>
 
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="button-primary" disabled={isSubmitting}>
           {isSubmitting ? 'Salvando...' : 'Salvar dados profissionais'}
         </button>
 

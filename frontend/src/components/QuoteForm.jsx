@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { buildQuoteRequest, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview } from '../utils/quote-form.js';
+import { buildQuoteRequest, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, isBlankFormItem } from '../utils/quote-form.js';
 
 const emptyFormData = {
   clientId: '',
@@ -63,7 +63,7 @@ function getCurrentDate() {
   return `${year}-${month}-${day}`;
 }
 
-function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved }) {
+function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved, onReview }) {
   const [formData, setFormData] = useState(() => buildInitialFormData(quote));
   const [savedQuote, setSavedQuote] = useState(null);
   const [submitError, setSubmitError] = useState('');
@@ -72,6 +72,13 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
   const isEditing = Boolean(quote);
   const isItemized = formData.pricingMode === 'ITEMIZED';
   const pricingPreview = isItemized ? getItemsPricingPreview(formData.items) : null;
+  // Linhas em branco são ignoradas ao salvar, então também não entram no total.
+  const previewTotalAmount = isItemized ? getItemsPricingPreview(formData.items.filter((item) => !isBlankFormItem(item, formData.pricingMode))).totalAmount : null;
+
+  // Com mais de uma linha, uma linha totalmente em branco não bloqueia o envio.
+  function isOptionalItem(item) {
+    return formData.items.length > 1 && isBlankFormItem(item, formData.pricingMode);
+  }
   const hasLegacyQuantityPrecision = isEditing && (quote.items ?? []).some((item) => (formatQuoteQuantity(item.quantity).split(',')[1]?.length ?? 0) > 1);
 
   const selectedClient = isEditing ? quote.client : clients.find((client) => client.id === formData.clientId);
@@ -285,13 +292,14 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
           <fieldset className="quote-items">
             <legend>Itens do orçamento</legend>
             <p id="quote-items-help">Inclua pelo menos um item. A quantidade aceita até uma casa decimal, por exemplo, 2,5. Use vírgula ou ponto, sem separadores de milhares.</p>
+            <p>Os itens preenchidos já fazem parte do orçamento. Use "Adicionar outro item" só para incluir mais uma linha; linhas deixadas em branco são ignoradas ao salvar.</p>
 
             {formData.items.map((item, index) => (
               <fieldset className="quote-item" key={item.formId}>
                 <legend>Item {index + 1}</legend>
                 <div>
                   <label htmlFor={`quote-item-${item.formId}-description`}>Descrição do item</label>
-                  <input id={`quote-item-${item.formId}-description`} name="description" value={item.description} onChange={(event) => handleItemChange(item.formId, event)} maxLength={500} required />
+                  <input id={`quote-item-${item.formId}-description`} name="description" value={item.description} onChange={(event) => handleItemChange(item.formId, event)} maxLength={500} required={!isOptionalItem(item)} />
                 </div>
 
                 <div className="quote-item-values">
@@ -308,7 +316,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
                       maxLength={11}
                       title="Informe uma quantidade maior que zero, com até uma casa decimal e sem separadores de milhares."
                       aria-describedby="quote-items-help"
-                      required
+                      required={!isOptionalItem(item)}
                     />
                   </div>
 
@@ -325,7 +333,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
                         pattern="[0-9]{1,10}([.,][0-9]{1,2})?"
                         maxLength={13}
                         title="Informe um preço maior que zero, com até duas casas decimais e sem separadores de milhares."
-                        required
+                        required={!isOptionalItem(item)}
                       />
                     </div>
                   )}
@@ -333,19 +341,19 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
 
                 {isItemized && <p><strong>Subtotal:</strong> {formatQuoteMoney(pricingPreview.subtotals[index])}</p>}
 
-                <button type="button" onClick={() => handleRemoveItem(item.formId)} disabled={formData.items.length === 1} aria-label={`Remover item ${index + 1}`}>
+                <button type="button" className="button-danger" onClick={() => handleRemoveItem(item.formId)} disabled={formData.items.length === 1} aria-label={`Remover item ${index + 1}`}>
                   Remover item
                 </button>
               </fieldset>
             ))}
 
-            <button type="button" onClick={handleAddItem}>Adicionar item</button>
+            <button type="button" onClick={handleAddItem}>+ Adicionar outro item</button>
           </fieldset>
 
           {isItemized ? (
             <div>
-              <p><strong>Total calculado (prévia):</strong> {formatQuoteMoney(pricingPreview.totalAmount)}</p>
-              <p>{pricingPreview.totalAmount === null
+              <p><strong>Total calculado (prévia):</strong> {formatQuoteMoney(previewTotalAmount)}</p>
+              <p>{previewTotalAmount === null
                 ? 'Preencha quantidades e preços válidos para calcular um total positivo.'
                 : 'O backend recalculará e validará os valores ao salvar. Cada subtotal é arredondado para centavos antes da soma.'}</p>
             </div>
@@ -417,7 +425,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
           </div>
         </fieldset>
 
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="button-primary" disabled={isSubmitting}>
           {isSubmitting ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Salvar rascunho'}
         </button>
 
@@ -444,6 +452,12 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
             </ul>
             <p><strong>Valor:</strong> {formatQuoteMoney(savedQuote.totalAmount)}</p>
           </div>
+        )}
+
+        {savedQuote && onReview && savedQuote.status === 'DRAFT' && (
+          <button type="button" className="button-primary" onClick={() => onReview(savedQuote)}>
+            Revisar e confirmar orçamento
+          </button>
         )}
       </form>
     </section>

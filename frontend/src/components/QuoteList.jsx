@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { requestQuotesPage } from '../services/quote-list.js';
 import { requestCompany } from '../services/company.js';
 import QuoteReview from './QuoteReview.jsx';
@@ -80,7 +80,9 @@ async function requestQuoteCorrection(getAccessTokenSilently, quoteId) {
   return responseBody;
 }
 
-function QuoteList({ getAccessTokenSilently, onEdit }) {
+function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null }) {
+  // Rascunho recém-criado cuja revisão deve abrir assim que a lista carregar.
+  const initialReviewRef = useRef(initialReviewQuoteId);
   const [quotes, setQuotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -149,6 +151,41 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
     };
   }, [getAccessTokenSilently, query, refreshIndex]);
 
+  const handleReview = useCallback(async (quote) => {
+    try {
+      setIsLoadingReview(true);
+      setReviewError('');
+      setReviewQuoteId(null);
+      const company = await requestCompany(getAccessTokenSilently);
+      setReviewCompany(company);
+      setReviewQuoteId(quote.id);
+    } catch (requestError) {
+      setReviewCompany(null);
+      setReviewError(requestError.message);
+    } finally {
+      setIsLoadingReview(false);
+    }
+  }, [getAccessTokenSilently]);
+
+  useEffect(() => {
+    if (!initialReviewRef.current || quotes.length === 0) {
+      return;
+    }
+
+    const initialReviewQuote = quotes.find((quote) => quote.id === initialReviewRef.current && quote.status === 'DRAFT');
+    initialReviewRef.current = null;
+
+    if (initialReviewQuote) {
+      handleReview(initialReviewQuote);
+    }
+  }, [quotes, handleReview]);
+
+  useEffect(() => {
+    if (reviewQuoteId) {
+      document.getElementById(`quote-${reviewQuoteId}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+  }, [reviewQuoteId]);
+
   function handleFilterChange(event) {
     const { name, value } = event.target;
 
@@ -180,21 +217,6 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
 
   function handleRefresh() {
     setRefreshIndex((currentIndex) => currentIndex + 1);
-  }
-  async function handleReview(quote) {
-    try {
-      setIsLoadingReview(true);
-      setReviewError('');
-      setReviewQuoteId(null);
-      const company = await requestCompany(getAccessTokenSilently);
-      setReviewCompany(company);
-      setReviewQuoteId(quote.id);
-    } catch (requestError) {
-      setReviewCompany(null);
-      setReviewError(requestError.message);
-    } finally {
-      setIsLoadingReview(false);
-    }
   }
   async function handleConfirm(quote) {
     try {
@@ -309,8 +331,9 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
 
             return (
               <li key={quote.id}>
-                <article>
+                <article id={`quote-${quote.id}`} className={reviewQuoteId === quote.id ? 'quote-card-reviewing' : undefined}>
                   <h3>Orçamento nº {formatQuoteNumber(quote.quoteNumber)}</h3>
+                  {reviewQuoteId === quote.id && <p className="review-badge">Em revisão</p>}
 
                   {quote.status === 'DRAFT' && (
                     <div>
@@ -329,7 +352,7 @@ function QuoteList({ getAccessTokenSilently, onEdit }) {
                     <div>
                       <QuoteReview quote={quote} company={reviewCompany} />
                       {!reviewCompany && <p role="alert">Cadastre seus dados profissionais antes de confirmar o orçamento.</p>}
-                      <button type="button" onClick={() => handleConfirm(quote)} disabled={isBusy || !quote.items?.length || !reviewCompany}>
+                      <button type="button" className="button-primary" onClick={() => handleConfirm(quote)} disabled={isBusy || !quote.items?.length || !reviewCompany}>
                         {isConfirming ? 'Confirmando...' : 'Confirmar e gerar link'}
                       </button>
                       <button type="button" onClick={() => setReviewQuoteId(null)} disabled={isBusy}>

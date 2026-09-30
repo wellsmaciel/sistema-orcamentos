@@ -251,11 +251,11 @@ function PublicQuote({ publicToken }) {
           <section aria-labelledby="quote-response-title">
             <h2 id="quote-response-title">Responder ao orçamento</h2>
 
-            <button type="button" onClick={() => setPendingDecision('ACCEPTED')}>
+            <button type="button" className="button-primary" onClick={() => setPendingDecision('ACCEPTED')}>
               Aceitar orçamento
             </button>
 
-            <button type="button" onClick={() => setPendingDecision('REJECTED')}>
+            <button type="button" className="button-danger" onClick={() => setPendingDecision('REJECTED')}>
               Recusar orçamento
             </button>
           </section>
@@ -266,7 +266,7 @@ function PublicQuote({ publicToken }) {
             <h2 id="accept-quote-title">Confirmar aceitação</h2>
             <p>Deseja aceitar este orçamento? Essa decisão não poderá ser alterada pelo link.</p>
 
-            <button type="button" onClick={handleSubmitResponse} disabled={isSubmitting}>
+            <button type="button" className="button-primary" onClick={handleSubmitResponse} disabled={isSubmitting}>
               {isSubmitting ? 'Confirmando...' : 'Confirmar aceitação'}
             </button>
 
@@ -284,7 +284,7 @@ function PublicQuote({ publicToken }) {
 
             <textarea id="rejection-reason" value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} maxLength={2000} />
 
-            <button type="button" onClick={handleSubmitResponse} disabled={isSubmitting}>
+            <button type="button" className="button-danger" onClick={handleSubmitResponse} disabled={isSubmitting}>
               {isSubmitting ? 'Enviando...' : 'Confirmar recusa'}
             </button>
 
