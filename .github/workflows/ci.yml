@@ -147,4 +147,4 @@ jobs:
           railway --version
 
       - name: Comparar a configuração com o Railway
-        run: railway config plan
+        run: railway config plan --detailed-exit-code
