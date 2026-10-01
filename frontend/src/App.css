@@ -93,6 +93,36 @@ a + button {
   margin-left: 12px;
 }
 
+/* Links que abrem o WhatsApp ou o e-mail, com a mesma aparência dos botões secundários. */
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 2px solid #1d4ed8;
+  border-radius: 10px;
+  color: #1d4ed8;
+  background-color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.button-link:hover {
+  background-color: #eff6ff;
+}
+
+.share-hint {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+}
+
 /* Em grades, o espaçamento vem do gap; no celular o botão ocupa a largura toda. */
 form > button,
 .quote-items > button,
