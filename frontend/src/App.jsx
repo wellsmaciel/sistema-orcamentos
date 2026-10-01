@@ -6,6 +6,7 @@ import './App.css';
 import ClientForm from './components/ClientForm.jsx';
 import ClientList from './components/ClientList.jsx';
 import Dashboard from './components/Dashboard.jsx';
+import ResponseNotifications from './components/ResponseNotifications.jsx';
 import ActivityList from './components/ActivityList.jsx';
 import QuoteForm from './components/QuoteForm.jsx';
 import QuoteList from './components/QuoteList.jsx';
@@ -140,7 +141,10 @@ function App() {
           </p>
 
           {currentView === 'home' ? (
-            <Dashboard onNavigate={handleNavigate} />
+            <>
+              <ResponseNotifications getAccessTokenSilently={getAccessTokenSilently} onOpenQuotes={() => handleNavigate('quotes')} />
+              <Dashboard onNavigate={handleNavigate} />
+            </>
           ) : (
             <>
               <button type="button" onClick={handleBack}>

@@ -24,8 +24,52 @@ tags:
     description: Operações relacionadas à criação e ao acompanhamento de orçamentos.
   - name: Atividades
     description: Registro das ações do prestador sobre clientes e perfil profissional.
+  - name: Avisos
+    description: Avisos ao prestador sobre respostas dos clientes aos orçamentos.
 
 paths:
+  /api/v1/notifications/responses:
+    get:
+      tags:
+        - Avisos
+      summary: Lista as respostas mais recentes dos clientes
+      description: >
+        Retorna as 5 respostas (aceite ou recusa) mais recentes aos orçamentos do prestador
+        autenticado e a quantidade de respostas recebidas desde a última vez em que ele as
+        marcou como vistas. Respostas anteriores à implantação do recurso não contam como novas.
+      operationId: listResponseNotifications
+      security:
+        - Auth0Bearer: []
+      responses:
+        '200':
+          description: Respostas recentes e quantidade de novas.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseNotificationsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/notifications/responses/read:
+    post:
+      tags:
+        - Avisos
+      summary: Marca as respostas dos clientes como vistas
+      operationId: markResponseNotificationsRead
+      security:
+        - Auth0Bearer: []
+      responses:
+        '204':
+          description: Respostas marcadas como vistas.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/activities:
     get:
       tags:
@@ -1488,6 +1532,58 @@ components:
             quoteNumber:
               type: integer
               minimum: 1
+
+    ResponseNotificationsResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - unreadCount
+        - items
+      properties:
+        unreadCount:
+          type: integer
+          minimum: 0
+          description: Respostas recebidas desde a última vez em que foram marcadas como vistas.
+        items:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/ResponseNotification'
+
+    ResponseNotification:
+      type: object
+      additionalProperties: false
+      required:
+        - quoteId
+        - quoteNumber
+        - clientName
+        - decision
+        - rejectionReason
+        - respondedAt
+        - unread
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+        quoteNumber:
+          type: integer
+          minimum: 1
+        clientName:
+          type: string
+        decision:
+          type: string
+          enum:
+            - ACCEPTED
+            - REJECTED
+        rejectionReason:
+          type:
+            - string
+            - 'null'
+        respondedAt:
+          type: string
+          format: date-time
+        unread:
+          type: boolean
 
     ActivityPageResponse:
       type: object

@@ -201,6 +201,37 @@ form {
   gap: 12px;
 }
 
+/* Avisos de resposta: destaque azul enquanto houver respostas novas. */
+.response-notifications.has-unread {
+  border: 3px solid #1d4ed8;
+}
+
+.notification-badge,
+.notification-new {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: #ffffff;
+  background-color: #1d4ed8;
+  font-size: 0.875rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.notification-new {
+  margin-left: 0;
+}
+
+.response-notification-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.response-notification-list li {
+  padding: 6px 0;
+}
+
 .activity-list {
   padding-left: 24px;
 }

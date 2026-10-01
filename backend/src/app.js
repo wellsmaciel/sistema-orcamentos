@@ -13,6 +13,7 @@ import { getCompany, saveCompany } from './controllers/company.js';
 import { validateCompany } from './middlewares/validate-company.js';
 import { requestLogger } from './middlewares/request-logger.js';
 import { listActivities } from './controllers/activity.js';
+import { listResponseNotifications, markResponseNotificationsRead } from './controllers/response-notification.js';
 
 const app = express();
 
@@ -36,6 +37,8 @@ app.get('/api/v1/me', validateAccessToken, loadAuthenticatedUser, getAuthenticat
 app.get('/api/v1/company', validateAccessToken, loadAuthenticatedUser, getCompany);
 app.put('/api/v1/company', validateAccessToken, loadAuthenticatedUser, validateCompany, saveCompany);
 app.get('/api/v1/activities', validateAccessToken, loadAuthenticatedUser, listActivities);
+app.get('/api/v1/notifications/responses', validateAccessToken, loadAuthenticatedUser, listResponseNotifications);
+app.post('/api/v1/notifications/responses/read', validateAccessToken, loadAuthenticatedUser, markResponseNotificationsRead);
 app.post('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, validateClient, createClient);
 app.get('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, listClients);
 app.get('/api/v1/clients/search', validateAccessToken, loadAuthenticatedUser, validateClientListQuery, listClientsPage);

@@ -45,6 +45,12 @@ User.init(
       allowNull: false,
       defaultValue: true,
     },
+
+    responseNotificationsSeenAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'response_notifications_seen_at',
+    },
   },
   {
     sequelize,
