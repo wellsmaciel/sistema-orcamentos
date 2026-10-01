@@ -1,3 +1,5 @@
+import { PHONE_EXAMPLE, normalizeBrazilianPhone } from '../utils/phone.js';
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validateRequiredString(value, field, errors, options = {}) {
@@ -90,9 +92,15 @@ function validateClientInput(input) {
   }
 
   validateRequiredString(input.phone, 'phone', errors, {
-    minLength: 8,
     maxLength: 30,
   });
+
+  if (typeof input.phone === 'string' && input.phone.trim().length > 0 && input.phone.trim().length <= 30 && !normalizeBrazilianPhone(input.phone)) {
+    errors.push({
+      field: 'phone',
+      message: `Informe o telefone com DDD, por exemplo ${PHONE_EXAMPLE}.`,
+    });
+  }
 
   const address = input.address;
 

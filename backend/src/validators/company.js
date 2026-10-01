@@ -1,3 +1,5 @@
+import { PHONE_EXAMPLE, normalizeBrazilianPhone } from '../utils/phone.js';
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TAX_ID_PATTERN = /^(?:\d{11}|\d{14})$/;
 
@@ -116,9 +118,12 @@ function validateCompanyInput(input) {
   }
 
   validateRequiredString(input.phone, 'phone', errors, {
-    minLength: 8,
     maxLength: 30,
   });
+
+  if (typeof input.phone === 'string' && input.phone.trim().length > 0 && input.phone.trim().length <= 30 && !normalizeBrazilianPhone(input.phone)) {
+    addError(errors, 'phone', `Informe o telefone com DDD, por exemplo ${PHONE_EXAMPLE}.`);
+  }
 
   validateOptionalString(input.taxId, 'taxId', errors, 20);
 

@@ -113,3 +113,45 @@ test('linha extra em branco é ignorada ao salvar o orçamento', async ({ page }
   await expect(page.getByText('Orçamento criado com sucesso.')).toBeVisible();
   expect(submittedBody.items).toEqual([{ description: 'Escapamento', quantity: '1' }]);
 });
+
+test('telefone do cliente é padronizado e validado antes de salvar', async ({ page }) => {
+  let submittedBody;
+  await page.route('**/api/v1/clients/client-1', (route) => {
+    submittedBody = route.request().postDataJSON();
+    return route.fulfill({ json: { ...submittedBody, id: 'client-1' } });
+  });
+
+  await page.goto('/acceptance/fixture.html?mode=client-edit');
+  const phone = page.getByLabel('Telefone', { exact: true });
+
+  await phone.fill('9999-8888');
+  await page.getByRole('button', { name: 'Salvar alterações' }).click();
+  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD, por exemplo (21) 99999-8888.');
+  expect(submittedBody).toBeUndefined();
+
+  await phone.fill('+55 21 999998888');
+  await phone.blur();
+  await expect(phone).toHaveValue('(21) 99999-8888');
+  await page.getByRole('button', { name: 'Salvar alterações' }).click();
+
+  await expect(page.getByText('Cliente Cliente Exemplo atualizado com sucesso.')).toBeVisible();
+  expect(submittedBody.phone).toBe('(21) 99999-8888');
+});
+
+test('telefone comercial sem DDD não é enviado', async ({ page }) => {
+  let saveRequests = 0;
+  await page.route('**/api/v1/company', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: { name: 'Empresa Original', email: 'empresa@example.com', phone: '1133334444' } });
+    }
+    saveRequests += 1;
+    return route.fulfill({ json: route.request().postDataJSON() });
+  });
+
+  await page.goto('/acceptance/fixture.html?mode=company');
+  await page.getByLabel('Telefone comercial').fill('3333-4444');
+  await page.getByRole('button', { name: 'Salvar dados profissionais' }).click();
+
+  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD, por exemplo (21) 99999-8888.');
+  expect(saveRequests).toBe(0);
+});

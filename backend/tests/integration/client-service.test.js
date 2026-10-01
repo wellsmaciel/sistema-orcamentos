@@ -199,7 +199,7 @@ describe('Serviço de clientes', () => {
     expect(client.userId).toBe(user.id);
     expect(client.name).toBe('Cliente Atualizado');
     expect(client.email).toBe('atualizado@example.com');
-    expect(client.phone).toBe('11988887777');
+    expect(client.phone).toBe('(11) 98888-7777');
     expect(client.street).toBe('Rua Nova');
     expect(client.number).toBe('200');
     expect(client.complement).toBeNull();

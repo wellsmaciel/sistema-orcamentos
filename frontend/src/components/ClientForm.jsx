@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { saveClient } from '../services/client.js';
+import { PHONE_ERROR_MESSAGE, normalizeBrazilianPhone } from '../utils/phone.js';
+import PhoneField from './PhoneField.jsx';
 
 const initialFormData = {
   name: '',
@@ -46,6 +48,11 @@ function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (!normalizeBrazilianPhone(formData.phone)) {
+      setSubmitError(PHONE_ERROR_MESSAGE);
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -100,10 +107,7 @@ function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
           <input id="client-email" name="email" type="email" value={formData.email} onChange={handleChange} maxLength={320} required />
         </div>
 
-        <div>
-          <label htmlFor="client-phone">Telefone</label>
-          <input id="client-phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} minLength={8} maxLength={30} required />
-        </div>
+        <PhoneField id="client-phone" label="Telefone" value={formData.phone} onChange={handleChange} hint="Também é usado para enviar o orçamento pelo WhatsApp." />
         <fieldset>
           <legend>Endereço principal</legend>
 

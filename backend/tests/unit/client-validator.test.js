@@ -59,3 +59,19 @@ describe('Validação do cadastro de cliente', () => {
     });
   });
 });
+
+describe('telefone do cliente', () => {
+  test('aceita telefone com DDD em vários formatos', () => {
+    for (const phone of ['(21) 99999-8888', '+55 21 99999-8888', '(11) 3333-4444']) {
+      expect(validateClientInput({ ...validClient, phone })).toEqual([]);
+    }
+  });
+
+  test('rejeita telefone sem DDD ou com dígitos a mais, com exemplo do formato', () => {
+    for (const phone of ['99999-8888', '21-999999-99999']) {
+      expect(validateClientInput({ ...validClient, phone })).toEqual([
+        { field: 'phone', message: 'Informe o telefone com DDD, por exemplo (21) 99999-8888.' },
+      ]);
+    }
+  });
+});

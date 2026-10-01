@@ -98,3 +98,16 @@ describe('Validação dos dados profissionais', () => {
     });
   });
 });
+
+describe('telefone comercial', () => {
+  test('rejeita telefone sem DDD, com exemplo do formato', () => {
+    expect(validateCompanyInput({ ...buildValidInput(), phone: '3333-4444' })).toEqual([
+      { field: 'phone', message: 'Informe o telefone com DDD, por exemplo (21) 99999-8888.' },
+    ]);
+  });
+
+  test('aceita fixo ou celular com DDD', () => {
+    expect(validateCompanyInput({ ...buildValidInput(), phone: '(11) 3333-4444' })).toEqual([]);
+    expect(validateCompanyInput({ ...buildValidInput(), phone: '21999998888' })).toEqual([]);
+  });
+});
