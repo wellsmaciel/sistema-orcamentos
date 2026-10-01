@@ -10,6 +10,20 @@ describe('GET /api/v1/activities', () => {
   });
 });
 
+describe('Avisos de resposta', () => {
+  test('GET /api/v1/notifications/responses deve responder 401 sem token', async () => {
+    const response = await request(app).get('/api/v1/notifications/responses');
+
+    expect(response.status).toBe(401);
+  });
+
+  test('POST /api/v1/notifications/responses/read deve responder 401 sem token', async () => {
+    const response = await request(app).post('/api/v1/notifications/responses/read');
+
+    expect(response.status).toBe(401);
+  });
+});
+
 describe('GET /api/v1/me', () => {
   test('deve responder 401 quando o token não for informado', async () => {
     const response = await request(app).get('/api/v1/me');

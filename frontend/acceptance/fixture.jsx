@@ -6,6 +6,7 @@ import QuoteForm from '../src/components/QuoteForm.jsx';
 import CompanyForm from '../src/components/CompanyForm.jsx';
 import ClientForm from '../src/components/ClientForm.jsx';
 import ActivityList from '../src/components/ActivityList.jsx';
+import ResponseNotifications from '../src/components/ResponseNotifications.jsx';
 import '../src/index.css';
 import '../src/App.css';
 
@@ -34,6 +35,9 @@ if (mode === 'quote-form') content = <QuoteForm clients={[client]} getAccessToke
 if (mode === 'company') content = <CompanyForm getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'client-edit') content = <ClientForm client={client} getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'activities') content = <ActivityList getAccessTokenSilently={getAccessTokenSilently} />;
+if (mode === 'notifications') {
+  content = <ResponseNotifications getAccessTokenSilently={getAccessTokenSilently} onOpenQuotes={() => { document.body.dataset.openedQuotes = 'true'; }} />;
+}
 
 createRoot(document.getElementById('root')).render(
   <>

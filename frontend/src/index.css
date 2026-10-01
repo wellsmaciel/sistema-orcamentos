@@ -76,6 +76,11 @@ textarea:focus-visible {
   box-shadow: none;
 }
 
+:root[data-contrast='high'] .response-notifications.has-unread {
+  border-color: #ffff00;
+}
+
+:root[data-contrast='high'] :is(.notification-badge, .notification-new),
 :root[data-contrast='high'] .review-badge {
   color: #000000;
   background: #ffff00;
