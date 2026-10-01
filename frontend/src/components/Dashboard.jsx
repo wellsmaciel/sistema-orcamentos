@@ -17,6 +17,10 @@ function Dashboard({ onNavigate }) {
           Clientes
         </button>
 
+        <button type="button" onClick={() => onNavigate('management')}>
+          Gestão
+        </button>
+
         <button type="button" onClick={() => onNavigate('company')}>
           Perfil profissional
         </button>

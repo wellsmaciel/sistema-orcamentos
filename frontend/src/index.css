@@ -71,6 +71,15 @@ textarea:focus-visible {
   color: #ffff00;
 }
 
+:root[data-contrast='high'] .status-bar-track {
+  background: #000000;
+  outline: 1px solid #ffffff;
+}
+
+:root[data-contrast='high'] .status-bar-fill {
+  background: #ffff00;
+}
+
 :root[data-contrast='high'] .button-link {
   color: #000000;
   background: #ffff00;

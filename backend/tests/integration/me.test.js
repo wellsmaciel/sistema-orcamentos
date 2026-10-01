@@ -24,6 +24,14 @@ describe('Avisos de resposta', () => {
   });
 });
 
+describe('GET /api/v1/management/summary', () => {
+  test('deve responder 401 sem token', async () => {
+    const response = await request(app).get('/api/v1/management/summary');
+
+    expect(response.status).toBe(401);
+  });
+});
+
 describe('GET /api/v1/me', () => {
   test('deve responder 401 quando o token não for informado', async () => {
     const response = await request(app).get('/api/v1/me');

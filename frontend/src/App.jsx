@@ -8,6 +8,7 @@ import ClientList from './components/ClientList.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import ResponseNotifications from './components/ResponseNotifications.jsx';
 import ActivityList from './components/ActivityList.jsx';
+import ManagementView from './components/ManagementView.jsx';
 import QuoteForm from './components/QuoteForm.jsx';
 import QuoteList from './components/QuoteList.jsx';
 import PublicQuote from './components/PublicQuote.jsx';
@@ -152,6 +153,8 @@ function App() {
               </button>
 
               {currentView === 'company' && <CompanyForm getAccessTokenSilently={getAccessTokenSilently} />}
+
+              {currentView === 'management' && <ManagementView getAccessTokenSilently={getAccessTokenSilently} onOpenQuotes={() => handleNavigate('quotes')} />}
 
               {currentView === 'clients' && (
                 <section>
