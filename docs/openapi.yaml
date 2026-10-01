@@ -26,8 +26,50 @@ tags:
     description: Registro das ações do prestador sobre clientes e perfil profissional.
   - name: Avisos
     description: Avisos ao prestador sobre respostas dos clientes aos orçamentos.
+  - name: Gestão
+    description: Indicadores dos orçamentos do prestador autenticado.
 
 paths:
+  /api/v1/management/summary:
+    get:
+      tags:
+        - Gestão
+      summary: Resume os orçamentos do prestador no período
+      description: >
+        Conta os orçamentos criados no período por situação e calcula a taxa de aceite,
+        o valor aceito, o valor em aberto e o tempo médio de resposta dos clientes. Lista os
+        5 orçamentos que aguardam resposta há mais tempo (independentemente do período) e os
+        5 clientes com maior valor aceito no período. Os períodos seguem o horário de Brasília.
+      operationId: getManagementSummary
+      security:
+        - Auth0Bearer: []
+      parameters:
+        - name: period
+          in: query
+          description: Mês atual, últimos 3 meses (incluindo o atual), ano atual ou todo o período.
+          schema:
+            type: string
+            enum:
+              - month
+              - quarter
+              - year
+              - all
+            default: month
+      responses:
+        '200':
+          description: Indicadores do período.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManagementSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/notifications/responses:
     get:
       tags:
@@ -1536,6 +1578,70 @@ components:
             quoteNumber:
               type: integer
               minimum: 1
+
+    ManagementSummary:
+      type: object
+      additionalProperties: false
+      required: [period, periodStart, totalQuotes, statusCounts, acceptanceRate, acceptedAmount, openAmount, averageResponseHours, awaitingResponse, topClients]
+      properties:
+        period:
+          type: string
+          enum: [month, quarter, year, all]
+        periodStart:
+          type: [string, 'null']
+          format: date-time
+        totalQuotes:
+          type: integer
+          minimum: 0
+        statusCounts:
+          type: object
+          additionalProperties: false
+          required: [DRAFT, SENT, ACCEPTED, REJECTED]
+          properties:
+            DRAFT: { type: integer, minimum: 0 }
+            SENT: { type: integer, minimum: 0 }
+            ACCEPTED: { type: integer, minimum: 0 }
+            REJECTED: { type: integer, minimum: 0 }
+        acceptanceRate:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+          description: Aceitos divididos por aceitos mais recusados; nulo sem respostas.
+        acceptedAmount:
+          type: string
+          examples: ['1500.50']
+        openAmount:
+          type: string
+          description: Soma dos orçamentos que aguardam resposta.
+        averageResponseHours:
+          type: [number, 'null']
+          description: Tempo médio entre o envio e a resposta do cliente, em horas.
+        awaitingResponse:
+          type: array
+          maxItems: 5
+          items:
+            type: object
+            additionalProperties: false
+            required: [quoteId, quoteNumber, clientName, totalAmount, sentAt, daysWaiting]
+            properties:
+              quoteId: { type: string, format: uuid }
+              quoteNumber: { type: integer, minimum: 1 }
+              clientName: { type: string }
+              totalAmount: { type: string }
+              sentAt: { type: string, format: date-time }
+              daysWaiting: { type: integer, minimum: 0 }
+        topClients:
+          type: array
+          maxItems: 5
+          items:
+            type: object
+            additionalProperties: false
+            required: [clientId, clientName, acceptedCount, acceptedAmount]
+            properties:
+              clientId: { type: string, format: uuid }
+              clientName: { type: string }
+              acceptedCount: { type: integer, minimum: 1 }
+              acceptedAmount: { type: string }
 
     ResponseNotificationsResponse:
       type: object

@@ -262,6 +262,70 @@ form {
   padding: 6px 0;
 }
 
+/* Área de gestão: cartões de indicadores e barras por situação. */
+.management-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.management-cards li {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+}
+
+.management-cards strong {
+  font-size: 1.35rem;
+}
+
+.status-bars,
+.management-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.management-list li,
+.status-bars li {
+  padding: 6px 0;
+}
+
+.status-bar-track {
+  display: block;
+  height: 12px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background-color: #e5e7eb;
+}
+
+.status-bar-fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 999px;
+}
+
+.status-draft {
+  background-color: #64748b;
+}
+
+.status-sent {
+  background-color: #1d4ed8;
+}
+
+.status-accepted {
+  background-color: #15803d;
+}
+
+.status-rejected {
+  background-color: #b91c1c;
+}
+
 .activity-list {
   padding-left: 24px;
 }
