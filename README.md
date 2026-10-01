@@ -8,14 +8,31 @@ O prestador pode consultar o histórico de eventos de cada orçamento: criação
 
 Ao criar ou editar um rascunho, o prestador pode pedir uma revisão da descrição com IA. A API envia somente a descrição e os itens ao modelo Claude, da Anthropic, e devolve uma sugestão; a descrição só muda se o prestador usar a sugestão. Dados do cliente não são enviados, e cada prestador pode pedir até 10 revisões a cada 10 minutos.
 
+## Funcionalidades
+
+- Cadastro completo de clientes: criação, consulta e busca, edição, exclusão, inativação e reativação.
+- Orçamento e itens na mesma tela, com preço por item (total calculado) ou valor global (total informado).
+- Revisão completa antes de confirmar, link público para o cliente aceitar ou recusar, motivo da recusa e correção vinculada ao orçamento anterior.
+- Histórico de eventos de cada orçamento.
+- Revisão da descrição com IA.
+- Envio do link pelo WhatsApp ou por e-mail do próprio prestador, com mensagem pronta; o app não envia mensagens sozinho.
+- Aviso na tela inicial quando um cliente aceita ou recusa um orçamento.
+- Área de gestão com indicadores do período: orçamentos por situação, taxa de aceite, valores aceito e em aberto, tempo médio de resposta, orçamentos aguardando resposta e principais clientes.
+- Registro das ações do prestador sobre clientes e perfil profissional.
+- Minha conta: dados do usuário, forma de acesso e troca de senha para contas de e-mail e senha.
+- Telefones brasileiros validados e padronizados no formato "(21) 99999-8888".
+- Interface mobile first: menu em blocos no celular e barra de navegação, listas em duas colunas e formulários em duas colunas a partir de 1024 px.
+- Acessibilidade: ajuste do tamanho do texto e modo de alto contraste.
+
 ## Estrutura do repositório
 
 sistema-orcamentos/
 
 - `frontend/` — Aplicação web
 - `backend/` — API e regras de negócio
-- `docs/` — Documentação técnica e diagramas
-- `.github/` — Workflows de integração contínua
+- `docs/` — Documentação técnica (especificação OpenAPI da API)
+- `.github/` — Workflow de integração contínua
+- `.railway/` — Infraestrutura como código do Railway
 - `.gitignore`
 - `README.md`
 
@@ -58,16 +75,19 @@ sistema-orcamentos/
 
 ### Testes
 
-- Jest para testes de unidade
-- Jest e Supertest para testes de integração
-- Testes manuais de aceite no ambiente publicado
+- Jest para testes de unidade e de integração do backend, com PostgreSQL real no CI
+- Supertest para testes das rotas da API
+- `node:test` para testes de unidade do frontend, incluindo testes de contrato com as validações do backend
+- Playwright para testes automatizados de aceite da interface, no navegador, com as respostas da API simuladas
+- Testes manuais no ambiente publicado depois de cada publicação
 
 ### Controle de versão e automação
 
 - Git
-- GitHub
+- GitHub, com a branch `main` protegida: toda mudança entra por pull request e só depois que os três jobs do CI passam
 - GitHub Actions
 - Railway para publicação contínua
+- Infraestrutura como código com `railway/iac` e o CLI do Railway
 
 ## Instalação
 
@@ -139,10 +159,25 @@ Na pasta `frontend`:
 
 ```bash
 npm run lint
+npm run test:unit
+npm run test:acceptance
 npm run build
 ```
 
-As verificações também são executadas automaticamente pelo GitHub Actions.
+Localmente, os testes de aceite usam o Google Chrome instalado no computador. No CI, o GitHub Actions instala o Chromium do Playwright.
+
+As verificações também são executadas automaticamente pelo GitHub Actions em três jobs:
+
+- **Frontend - lint e build:** lint, testes de unidade, testes de aceite com Playwright e build.
+- **Backend - migrations e testes:** migrations em um PostgreSQL de teste e testes de unidade e integração.
+- **Infraestrutura - plano do Railway:** compara `.railway/railway.ts` com o ambiente de produção (`railway config plan --detailed-exit-code`) e falha se houver diferença. O job nunca aplica mudanças.
+
+## Logs e auditoria
+
+- **Requisições:** a API escreve uma linha JSON por requisição na saída padrão, coletada pelo Railway, com método, padrão da rota, status, duração, identificador da requisição e identificador do usuário. O endereço real não é registrado, para que tokens de links públicos e dados pessoais não cheguem aos logs. Cada resposta traz o cabeçalho `X-Request-Id`, também presente nos logs de erro.
+- **Ações dos usuários:** criação, edição, exclusão, inativação e reativação de clientes e alterações do perfil profissional ficam em `activity_logs`, com os nomes dos campos alterados e nunca os valores.
+- **Orçamentos:** cada orçamento tem seu histórico de eventos em `quote_events`.
+- **IA:** cada revisão registra o modelo, os tokens usados e a duração, sem o texto do prestador.
 
 ## Variáveis de ambiente
 
@@ -155,7 +190,9 @@ Os arquivos `.env` reais não devem ser enviados ao GitHub, pois podem conter cr
 
 A revisão da descrição com IA depende de `ANTHROPIC_API_KEY` no backend. Sem essa variável, a API responde que o recurso não está disponível e o restante do sistema funciona normalmente.
 
-No Railway, as configurações são cadastradas diretamente na aba `Variables` de cada serviço.
+No Railway, os valores são cadastrados na aba `Variables` de cada serviço. Os nomes das variáveis também estão declarados em `.railway/railway.ts` com `preserve()`, que mantém o valor do Railway sem escrevê-lo no código.
+
+O job de infraestrutura do CI usa o secret `RAILWAY_TOKEN` do GitHub, um token de projeto do ambiente de produção.
 
 ## Publicação
 
@@ -170,9 +207,23 @@ O frontend e o backend são publicados como serviços separados. O Railway monit
 
 As migrations do banco são executadas automaticamente antes da inicialização de uma nova versão do backend.
 
-## Decisões pendentes
+### Infraestrutura como código
 
-- Serviço de envio de e-mails
-- Serviço de armazenamento de imagens
-- Ferramenta de infraestrutura como código
+Os serviços, o banco de dados, os domínios, as etapas de build e pre-deploy e os nomes das variáveis estão descritos em `.railway/railway.ts`. O CI compara esse arquivo com a produção a cada pull request e a cada push na `main`. Como o Railway só publica depois que todos os jobs passam, uma diferença entre o arquivo e a produção bloqueia a publicação.
+
+Regra de trabalho: toda mudança feita no painel do Railway deve ser refletida no `.railway/railway.ts` no mesmo pull request.
+
+Para aplicar uma mudança do arquivo na produção, de forma manual e revisada:
+
+```bash
+railway config plan
+railway config apply
+```
+
+## Decisões pendentes e próximos passos
+
+- Serviço de envio automático de e-mails (depende de domínio próprio)
+- Serviço de armazenamento de imagens, para o logo da empresa
 - Domínio próprio
+- Empresa com administrador, colaboradores e permissões (planejado)
+- Tema claro e escuro
