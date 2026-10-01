@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { requestQuotesPage } from '../services/quote-list.js';
 import { requestCompany } from '../services/company.js';
+import { buildEmailShareUrl, buildWhatsAppShareUrl } from '../utils/quote-share.js';
 import QuoteReview from './QuoteReview.jsx';
 import QuoteHistory from './QuoteHistory.jsx';
 
@@ -369,6 +370,25 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
                       <button type="button" onClick={() => handleCopyLink(quote)}>
                         {copiedQuoteId === quote.id ? 'Link copiado' : 'Copiar link'}
                       </button>
+
+                      {quote.status === 'SENT' && (
+                        <div className="share-actions">
+                          {buildWhatsAppShareUrl(quote, buildPublicQuoteUrl(quote.publicToken)) && (
+                            <a className="button-link" href={buildWhatsAppShareUrl(quote, buildPublicQuoteUrl(quote.publicToken))} target="_blank" rel="noreferrer">
+                              Enviar pelo WhatsApp
+                            </a>
+                          )}
+                          <a className="button-link" href={buildEmailShareUrl(quote, buildPublicQuoteUrl(quote.publicToken))}>
+                            Enviar por e-mail
+                          </a>
+                        </div>
+                      )}
+
+                      {quote.status === 'SENT' && !buildWhatsAppShareUrl(quote, buildPublicQuoteUrl(quote.publicToken)) && (
+                        <p className="share-hint">
+                          O telefone deste orçamento não está num formato válido para o WhatsApp. Use &quot;Copiar link&quot; ou &quot;Enviar por e-mail&quot;.
+                        </p>
+                      )}
                     </div>
                   )}
                   {quote.status === 'REJECTED' && !existingCorrection && onEdit && (

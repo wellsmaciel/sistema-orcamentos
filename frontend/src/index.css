@@ -71,6 +71,12 @@ textarea:focus-visible {
   color: #ffff00;
 }
 
+:root[data-contrast='high'] .button-link {
+  color: #000000;
+  background: #ffff00;
+  border-color: #ffff00;
+}
+
 :root[data-contrast='high'] .quote-card-reviewing {
   border-color: #ffff00;
   box-shadow: none;
