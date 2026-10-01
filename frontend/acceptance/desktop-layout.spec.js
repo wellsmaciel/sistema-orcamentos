@@ -64,3 +64,24 @@ test.describe('celular', () => {
     expect(second.y).toBeGreaterThan(first.y + first.height - 1);
   });
 });
+
+test('no desktop, a tela inicial não repete o menu da barra; no celular, os blocos continuam', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/acceptance/fixture.html?mode=layout&view=home');
+  await expect(page.getByRole('navigation', { name: 'Navegação principal' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Menu principal' })).toBeHidden();
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await expect(page.getByRole('navigation', { name: 'Navegação principal' })).toBeHidden();
+  await expect(page.getByRole('navigation', { name: 'Menu principal' })).toBeVisible();
+});
+
+test('em 1024 px (tablet deitado), a barra de navegação cabe numa linha', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.goto('/acceptance/fixture.html?mode=layout&view=home');
+
+  const buttons = page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('button');
+  await expect(buttons).toHaveCount(8);
+  const tops = await buttons.evaluateAll((elements) => elements.map((element) => Math.round(element.getBoundingClientRect().top)));
+  expect(new Set(tops).size).toBe(1);
+});

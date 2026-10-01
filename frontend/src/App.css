@@ -506,15 +506,19 @@ main > button:last-child:hover:not(:disabled) {
   .top-nav ul {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
     gap: 4px;
     margin: 0;
   }
 
+  /* Espaçamento menor para os 8 itens caberem numa linha a partir de 1024 px (iPad mini deitado). */
   .top-nav button {
     margin: 0;
+    padding: 8px 10px;
     border-color: transparent;
     background-color: transparent;
+    white-space: nowrap;
   }
 
   .top-nav button.top-nav-active {
@@ -523,11 +527,17 @@ main > button:last-child:hover:not(:disabled) {
     background-color: #1d4ed8;
   }
 
+  /* "Sair" fica no fim da barra, separado das seções por uma linha discreta. */
   .top-nav-logout {
-    margin-left: auto;
+    margin-left: 8px;
+    padding-left: 8px;
+    border-left: 1px solid #cbd5e1;
   }
 
-  .back-to-menu {
+  /* A barra do topo substitui o menu em blocos e o botão de sair da tela inicial. */
+  .back-to-menu,
+  .dashboard-menu,
+  .home-logout {
     display: none;
   }
 
@@ -558,5 +568,12 @@ main > button:last-child:hover:not(:disabled) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px 24px;
+  }
+}
+
+/* Tablets deitados e notebooks pequenos: fonte um pouco menor na barra para sobrar espaço. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .top-nav button {
+    font-size: 0.95rem;
   }
 }

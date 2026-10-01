@@ -1,6 +1,6 @@
 function Dashboard({ onNavigate }) {
   return (
-    <section aria-labelledby="dashboard-title">
+    <section className="dashboard-menu" aria-labelledby="dashboard-title">
       <h2 id="dashboard-title">O que você deseja fazer?</h2>
       <p>Escolha uma opção para continuar.</p>
 

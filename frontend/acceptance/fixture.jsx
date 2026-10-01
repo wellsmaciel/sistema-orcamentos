@@ -9,6 +9,7 @@ import ActivityList from '../src/components/ActivityList.jsx';
 import ManagementView from '../src/components/ManagementView.jsx';
 import AccountView from '../src/components/AccountView.jsx';
 import TopNav from '../src/components/TopNav.jsx';
+import Dashboard from '../src/components/Dashboard.jsx';
 import ResponseNotifications from '../src/components/ResponseNotifications.jsx';
 import '../src/index.css';
 import '../src/App.css';
@@ -54,6 +55,7 @@ if (mode === 'layout') {
   content = (
     <main>
       <TopNav currentView={view} onNavigate={navigate} onLogout={() => { document.body.dataset.loggedOut = 'true'; }} />
+      {view === 'home' && <Dashboard onNavigate={navigate} />}
       {view === 'quotes' && <QuoteList getAccessTokenSilently={getAccessTokenSilently} />}
       {view === 'new-quote' && <QuoteForm clients={[client]} getAccessTokenSilently={getAccessTokenSilently} />}
     </main>

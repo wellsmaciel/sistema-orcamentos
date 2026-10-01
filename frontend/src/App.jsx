@@ -196,6 +196,7 @@ function App() {
           {currentView === 'home' && (
             <button
               type="button"
+              className="home-logout"
               onClick={handleLogout}
             >
               Sair da conta

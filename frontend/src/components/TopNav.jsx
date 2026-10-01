@@ -4,7 +4,7 @@ const NAV_ITEMS = [
   { view: 'new-quote', label: 'Novo orçamento' },
   { view: 'clients', label: 'Clientes' },
   { view: 'management', label: 'Gestão' },
-  { view: 'company', label: 'Perfil profissional' },
+  { view: 'company', label: 'Perfil' },
   { view: 'account', label: 'Minha conta' },
 ];
 
