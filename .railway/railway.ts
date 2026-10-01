@@ -15,7 +15,7 @@ export default defineRailway(() => {
       privateNetworkEndpoint: "backend",
       serviceDomains: { "backend-production-4ec1.up.railway.app": {} },
     },
-    env: { AUTH0_AUDIENCE: preserve(), AUTH0_DOMAIN: preserve(), CLIENT_ORIGIN_URL: preserve(), DB_HOST: preserve(), DB_NAME: preserve(), DB_PASSWORD: preserve(), DB_PORT: preserve(), DB_USER: preserve() },
+    env: { ANTHROPIC_API_KEY: preserve(), AUTH0_AUDIENCE: preserve(), AUTH0_DOMAIN: preserve(), CLIENT_ORIGIN_URL: preserve(), DB_HOST: preserve(), DB_NAME: preserve(), DB_PASSWORD: preserve(), DB_PORT: preserve(), DB_USER: preserve() },
   });
   const Frontend = service("Frontend", {
     source: github("wellsmaciel/sistema-orcamentos", { checkSuites: true, rootDirectory: "/frontend" }),
