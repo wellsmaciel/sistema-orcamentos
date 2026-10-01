@@ -326,6 +326,26 @@ form {
   background-color: #b91c1c;
 }
 
+/* Minha conta: dados em pares de rótulo e valor. */
+.account-details {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.account-details dt {
+  font-weight: 700;
+}
+
+.account-details dd {
+  margin: 2px 0 0;
+}
+
+.account-logout {
+  display: block;
+  margin-top: 24px;
+}
+
 .activity-list {
   padding-left: 24px;
 }

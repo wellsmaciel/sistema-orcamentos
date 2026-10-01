@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { requestClients } from './services/client.js';
-import { fetchJsonWithTimeout, withTimeout } from './services/request.js';
 import './App.css';
 import ClientForm from './components/ClientForm.jsx';
 import ClientList from './components/ClientList.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import ResponseNotifications from './components/ResponseNotifications.jsx';
-import ActivityList from './components/ActivityList.jsx';
+import AccountView from './components/AccountView.jsx';
 import ManagementView from './components/ManagementView.jsx';
 import QuoteForm from './components/QuoteForm.jsx';
 import QuoteList from './components/QuoteList.jsx';
@@ -17,9 +16,6 @@ import CompanyForm from './components/CompanyForm.jsx';
 function App() {
   const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
   const publicToken = new URLSearchParams(window.location.search).get('quote');
-  const [apiProfile, setApiProfile] = useState(null);
-  const [apiError, setApiError] = useState('');
-  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [clients, setClients] = useState([]);
   const [currentView, setCurrentView] = useState('home');
   const [selectedQuote, setSelectedQuote] = useState(null);
@@ -32,30 +28,12 @@ function App() {
     return <PublicQuote publicToken={publicToken} />;
   }
 
-  async function handleLoadProfile() {
-    try {
-      setIsLoadingProfile(true);
-      setApiError('');
-
-      const accessToken = await withTimeout(getAccessTokenSilently());
-
-      const { response, responseBody } = await fetchJsonWithTimeout(`${import.meta.env.VITE_API_BASE_URL}/api/v1/me`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(responseBody.message ?? 'Não foi possível consultar o perfil.');
-      }
-
-      setApiProfile(responseBody);
-    } catch (requestError) {
-      setApiProfile(null);
-      setApiError(requestError.message);
-    } finally {
-      setIsLoadingProfile(false);
-    }
+  function handleLogout() {
+    logout({
+      logoutParams: {
+        returnTo: window.location.origin,
+      },
+    });
   }
 
   async function handleNavigate(view) {
@@ -207,19 +185,7 @@ function App() {
               {currentView === 'edit-quote' && selectedQuote && <QuoteForm quote={selectedQuote} getAccessTokenSilently={getAccessTokenSilently} onSaved={handleQuoteUpdated} />}
 
               {currentView === 'account' && (
-                <section>
-                  <h2>Minha conta</h2>
-
-                  <button type="button" onClick={handleLoadProfile} disabled={isLoadingProfile}>
-                    {isLoadingProfile ? 'Consultando...' : 'Consultar meus dados'}
-                  </button>
-
-                  {apiProfile && <pre>{JSON.stringify(apiProfile, null, 2)}</pre>}
-
-                  {apiError && <p role="alert">{apiError}</p>}
-
-                  <ActivityList getAccessTokenSilently={getAccessTokenSilently} />
-                </section>
+                <AccountView getAccessTokenSilently={getAccessTokenSilently} auth0User={user} onLogout={handleLogout} />
               )}
             </>
           )}
@@ -227,13 +193,7 @@ function App() {
           {currentView === 'home' && (
             <button
               type="button"
-              onClick={() =>
-                logout({
-                  logoutParams: {
-                    returnTo: window.location.origin,
-                  },
-                })
-              }
+              onClick={handleLogout}
             >
               Sair da conta
             </button>

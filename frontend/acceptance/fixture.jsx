@@ -7,6 +7,7 @@ import CompanyForm from '../src/components/CompanyForm.jsx';
 import ClientForm from '../src/components/ClientForm.jsx';
 import ActivityList from '../src/components/ActivityList.jsx';
 import ManagementView from '../src/components/ManagementView.jsx';
+import AccountView from '../src/components/AccountView.jsx';
 import ResponseNotifications from '../src/components/ResponseNotifications.jsx';
 import '../src/index.css';
 import '../src/App.css';
@@ -37,6 +38,10 @@ if (mode === 'company') content = <CompanyForm getAccessTokenSilently={getAccess
 if (mode === 'client-edit') content = <ClientForm client={client} getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'activities') content = <ActivityList getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'management') content = <ManagementView getAccessTokenSilently={getAccessTokenSilently} />;
+if (mode === 'account') {
+  const auth0User = { sub: parameters.get('login') === 'google' ? 'google-oauth2|123' : 'auth0|123', email: 'prestador@example.com' };
+  content = <AccountView getAccessTokenSilently={getAccessTokenSilently} auth0User={auth0User} onLogout={() => { document.body.dataset.loggedOut = 'true'; }} />;
+}
 if (mode === 'notifications') {
   content = <ResponseNotifications getAccessTokenSilently={getAccessTokenSilently} onOpenQuotes={() => { document.body.dataset.openedQuotes = 'true'; }} />;
 }
