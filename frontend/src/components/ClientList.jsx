@@ -177,9 +177,9 @@ function ClientList({ getAccessTokenSilently, onEdit, onNewClient }) {
 
           {pageData.items.length === 0 && <p>Nenhum cliente encontrado com esses filtros.</p>}
 
-          <ul>
+          <ul className="card-grid">
             {pageData.items.map((client) => (
-              <li key={client.id}>
+              <li key={client.id} className="client-card">
                 <strong>{client.name}</strong>
                 <p>{client.email}</p>
                 <p>{client.active ? 'Ativo' : 'Inativo'}</p>

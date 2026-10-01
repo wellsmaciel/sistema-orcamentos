@@ -323,7 +323,7 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
       {!isLoading && !errorMessage && quotes.length === 0 && <p>Nenhum orçamento encontrado com esses filtros.</p>}
 
       {!isLoading && !errorMessage && quotes.length > 0 && (
-        <ul>
+        <ul className="card-grid">
           {quotes.map((quote) => {
             const isConfirming = confirmingQuoteId === quote.id;
             const isCreatingCorrection = creatingCorrectionQuoteId === quote.id;

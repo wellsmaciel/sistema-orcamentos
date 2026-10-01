@@ -5,6 +5,7 @@ import './App.css';
 import ClientForm from './components/ClientForm.jsx';
 import ClientList from './components/ClientList.jsx';
 import Dashboard from './components/Dashboard.jsx';
+import TopNav from './components/TopNav.jsx';
 import ResponseNotifications from './components/ResponseNotifications.jsx';
 import AccountView from './components/AccountView.jsx';
 import ManagementView from './components/ManagementView.jsx';
@@ -115,6 +116,8 @@ function App() {
         </>
       ) : (
         <>
+          <TopNav currentView={currentView} onNavigate={handleNavigate} onLogout={handleLogout} />
+
           <p>
             Você entrou como <strong>{user?.name ?? user?.email}</strong>.
           </p>
@@ -126,7 +129,7 @@ function App() {
             </>
           ) : (
             <>
-              <button type="button" onClick={handleBack}>
+              <button type="button" className={currentView === 'edit-quote' || currentView === 'new-client' || currentView === 'edit-client' ? undefined : 'back-to-menu'} onClick={handleBack}>
                 {currentView === 'edit-quote' ? 'Voltar aos orçamentos' : currentView === 'new-client' || currentView === 'edit-client' ? 'Voltar aos clientes' : 'Voltar ao menu'}
               </button>
 
@@ -193,6 +196,7 @@ function App() {
           {currentView === 'home' && (
             <button
               type="button"
+              className="home-logout"
               onClick={handleLogout}
             >
               Sair da conta
