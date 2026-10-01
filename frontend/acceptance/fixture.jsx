@@ -8,6 +8,7 @@ import ClientForm from '../src/components/ClientForm.jsx';
 import ActivityList from '../src/components/ActivityList.jsx';
 import ManagementView from '../src/components/ManagementView.jsx';
 import AccountView from '../src/components/AccountView.jsx';
+import TopNav from '../src/components/TopNav.jsx';
 import ResponseNotifications from '../src/components/ResponseNotifications.jsx';
 import '../src/index.css';
 import '../src/App.css';
@@ -44,6 +45,19 @@ if (mode === 'account') {
 }
 if (mode === 'notifications') {
   content = <ResponseNotifications getAccessTokenSilently={getAccessTokenSilently} onOpenQuotes={() => { document.body.dataset.openedQuotes = 'true'; }} />;
+}
+
+// Modos com a barra de navegação, imitando a estrutura do App: ?mode=layout&view=quotes|new-quote|clients
+if (mode === 'layout') {
+  const view = parameters.get('view') ?? 'quotes';
+  const navigate = (target) => { document.body.dataset.navigatedTo = target; };
+  content = (
+    <main>
+      <TopNav currentView={view} onNavigate={navigate} onLogout={() => { document.body.dataset.loggedOut = 'true'; }} />
+      {view === 'quotes' && <QuoteList getAccessTokenSilently={getAccessTokenSilently} />}
+      {view === 'new-quote' && <QuoteForm clients={[client]} getAccessTokenSilently={getAccessTokenSilently} />}
+    </main>
+  );
 }
 
 createRoot(document.getElementById('root')).render(

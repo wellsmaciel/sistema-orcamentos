@@ -472,3 +472,91 @@ main > button:last-child:hover:not(:disabled) {
     justify-self: start;
   }
 }
+
+/* Navegação fixa: só aparece em telas grandes; no celular o menu inicial continua sendo o caminho. */
+.top-nav {
+  display: none;
+}
+
+.client-card {
+  padding: 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background-color: #ffffff;
+}
+
+/* Telas grandes: mobile first, não mobile only. */
+@media (min-width: 1024px) {
+  main,
+  .accessibility-controls {
+    width: min(calc(100% - 64px), 1100px);
+  }
+
+  .top-nav {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin: 0 0 16px;
+    padding: 8px 0;
+    border-bottom: 1px solid #cbd5e1;
+    background-color: #f3f4f6;
+  }
+
+  .top-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+  }
+
+  .top-nav button {
+    margin: 0;
+    border-color: transparent;
+    background-color: transparent;
+  }
+
+  .top-nav button.top-nav-active {
+    border-color: #1d4ed8;
+    color: #ffffff;
+    background-color: #1d4ed8;
+  }
+
+  .top-nav-logout {
+    margin-left: auto;
+  }
+
+  .back-to-menu {
+    display: none;
+  }
+
+  .dashboard-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  /* Formulário de orçamento: campos curtos lado a lado; textos longos, itens e endereço na largura toda. */
+  .quote-form-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+
+  .quote-form-fields > fieldset,
+  .quote-form-fields > .description-review,
+  .quote-form-fields > div:has(> textarea),
+  .quote-form-fields > p {
+    grid-column: 1 / -1;
+  }
+
+  /* Endereços e intervalos de datas em duas colunas. */
+  form fieldset:not(.quote-form-fields, .quote-items, .quote-item) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 24px;
+  }
+}

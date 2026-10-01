@@ -111,3 +111,23 @@ textarea:focus-visible {
   background: #ffffff;
   border-color: #ffffff;
 }
+
+:root[data-contrast='high'] .top-nav {
+  background: #000000;
+  border-color: #ffffff;
+}
+
+/* No alto contraste todos os botões ficam amarelos: a página atual ganha um contorno branco. */
+:root[data-contrast='high'] .top-nav button.top-nav-active {
+  border-color: #ffff00;
+  color: #000000;
+  background: #ffff00;
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+:root[data-contrast='high'] .client-card {
+  color: #ffffff;
+  background: #000000;
+  border-color: #ffffff;
+}
