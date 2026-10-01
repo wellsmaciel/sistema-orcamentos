@@ -111,3 +111,40 @@ jobs:
 
       - name: Executar os testes
         run: npm test
+
+  infrastructure:
+    name: Infraestrutura - plano do Railway
+    runs-on: ubuntu-latest
+
+    # Somente leitura: compara .railway/railway.ts com o ambiente de produção e nunca aplica mudanças.
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+
+      - name: Preparar o Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Conferir o token do Railway
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::Cadastre o secret RAILWAY_TOKEN (token de projeto do ambiente production)."
+            exit 1
+          fi
+
+      - name: Instalar o SDK de infraestrutura
+        run: npm ci
+
+      - name: Instalar o CLI do Railway
+        run: |
+          npm install --global @railway/cli
+          railway --version
+
+      - name: Comparar a configuração com o Railway
+        run: railway config plan
