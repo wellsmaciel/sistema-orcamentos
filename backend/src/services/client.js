@@ -2,6 +2,7 @@ import Client from '../models/client.js';
 import sequelize from '../config/database.js';
 import Quote from '../models/quote.js';
 import { Op } from 'sequelize';
+import { standardizeBrazilianPhone } from '../utils/phone.js';
 import { recordActivity, toChangedFields, withTransaction } from './activity-log.js';
 
 function normalizeOptionalString(value) {
@@ -26,7 +27,7 @@ async function createClient(userId, input, { transaction } = {}) {
       userId,
       name: input.name.trim(),
       email: input.email.trim().toLowerCase(),
-      phone: input.phone.trim(),
+      phone: standardizeBrazilianPhone(input.phone),
       street: address.street.trim(),
       number: address.number.trim(),
       complement: normalizeOptionalString(address.complement),
@@ -81,7 +82,7 @@ async function updateClient(userId, clientId, input, { transaction } = {}) {
   client.set({
     name: input.name.trim(),
     email: input.email.trim().toLowerCase(),
-    phone: input.phone.trim(),
+    phone: standardizeBrazilianPhone(input.phone),
     street: address.street.trim(),
     number: address.number.trim(),
     complement: normalizeOptionalString(address.complement),

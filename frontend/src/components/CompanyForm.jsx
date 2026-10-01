@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { requestCompany, saveCompany } from '../services/company.js';
+import { PHONE_ERROR_MESSAGE, normalizeBrazilianPhone } from '../utils/phone.js';
+import PhoneField from './PhoneField.jsx';
 
 const initialFormData = {
   name: '',
@@ -89,6 +91,12 @@ function CompanyForm({ getAccessTokenSilently }) {
   async function handleSubmit(event) {
     event.preventDefault();
 
+    if (!normalizeBrazilianPhone(formData.phone)) {
+      setSubmitError(PHONE_ERROR_MESSAGE);
+      setSuccessMessage('');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setSubmitError('');
@@ -147,10 +155,7 @@ function CompanyForm({ getAccessTokenSilently }) {
           <input id="company-email" name="email" type="email" value={formData.email} onChange={handleChange} maxLength={320} required />
         </div>
 
-        <div>
-          <label htmlFor="company-phone">Telefone comercial</label>
-          <input id="company-phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} minLength={8} maxLength={30} required />
-        </div>
+        <PhoneField id="company-phone" label="Telefone comercial" value={formData.phone} onChange={handleChange} hint="Aparece no orçamento enviado ao cliente." />
 
         <div>
           <label htmlFor="company-tax-id">CPF ou CNPJ</label>

@@ -1,4 +1,5 @@
 import Company from '../models/company.js';
+import { standardizeBrazilianPhone } from '../utils/phone.js';
 import { recordActivity, toChangedFields, withTransaction } from './activity-log.js';
 
 function normalizeOptionalString(value) {
@@ -17,7 +18,7 @@ function buildCompanyData(input) {
   return {
     name: input.name.trim(),
     email: input.email.trim().toLowerCase(),
-    phone: input.phone.trim(),
+    phone: standardizeBrazilianPhone(input.phone),
     taxId: normalizeOptionalString(input.taxId),
     street: normalizeOptionalString(address?.street),
     number: normalizeOptionalString(address?.number),

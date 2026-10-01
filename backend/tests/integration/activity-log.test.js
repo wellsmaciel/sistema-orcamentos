@@ -79,7 +79,7 @@ describe('Registro de atividades dos usuários', () => {
     const user = await createTestUser();
     const client = await createClient(user.id, buildClientInput(), { transaction });
 
-    await updateClient(user.id, client.id, buildClientInput({ phone: '11888888888', address: { ...buildClientInput().address, number: '200' } }), { transaction });
+    await updateClient(user.id, client.id, buildClientInput({ phone: '11988888888', address: { ...buildClientInput().address, number: '200' } }), { transaction });
     await deactivateClient(user.id, client.id, { transaction });
     await reactivateClient(user.id, client.id, { transaction });
     await deleteClient(user.id, client.id, { transaction });
@@ -91,13 +91,13 @@ describe('Registro de atividades dos usuários', () => {
     const user = await createTestUser();
     const client = await createClient(user.id, buildClientInput(), { transaction });
 
-    await updateClient(user.id, client.id, buildClientInput({ phone: '11888888888', address: { ...buildClientInput().address, street: 'Rua Nova' } }), { transaction });
+    await updateClient(user.id, client.id, buildClientInput({ phone: '11988888888', address: { ...buildClientInput().address, street: 'Rua Nova' } }), { transaction });
 
     const [updated] = (await listActivitiesPage(user.id, { transaction })).items;
     expect(updated).toMatchObject({ action: 'CLIENT_UPDATED', entityType: 'CLIENT', entityId: client.id, changedFields: ['address', 'phone'] });
 
     const stored = await ActivityLog.findAll({ where: { userId: user.id }, transaction });
-    expect(JSON.stringify(stored.map((row) => row.details))).not.toMatch(/11888888888|Rua Nova|Maria/);
+    expect(JSON.stringify(stored.map((row) => row.details))).not.toMatch(/11988888888|98888-8888|Rua Nova|Maria/);
   });
 
   test('não registra alteração quando nada mudou nem inativação repetida', async () => {
@@ -140,7 +140,7 @@ describe('Registro de atividades dos usuários', () => {
     const otherUser = await createTestUser();
     const client = await createClient(owner.id, buildClientInput(), { transaction });
 
-    await updateClient(otherUser.id, client.id, buildClientInput({ phone: '11777777777' }), { transaction });
+    await updateClient(otherUser.id, client.id, buildClientInput({ phone: '11977777777' }), { transaction });
     await deleteClient(otherUser.id, client.id, { transaction });
 
     expect(await listActions(owner.id)).toEqual(['CLIENT_CREATED']);

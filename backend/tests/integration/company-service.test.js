@@ -85,7 +85,7 @@ describe('Serviço de dados profissionais', () => {
       {
         name: '  Nome Atualizado  ',
         email: '  ATUALIZADO@EXAMPLE.COM  ',
-        phone: '  11888888888  ',
+        phone: '  11988888888  ',
         taxId: '',
         address: {
           street: '  Rua Atualizada  ',

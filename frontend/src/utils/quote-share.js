@@ -1,20 +1,14 @@
+import { normalizeBrazilianPhone } from './phone.js';
+
 function formatQuoteNumber(quoteNumber) {
   return String(quoteNumber).padStart(6, '0');
 }
 
-// Aceita telefones brasileiros com DDD (10 ou 11 dígitos), com ou sem o código do país 55.
+// Usa a mesma regra de telefone dos cadastros e acrescenta o código do Brasil exigido pelo WhatsApp.
 function normalizeWhatsAppPhone(phone) {
-  const digits = String(phone ?? '').replace(/\D/g, '');
+  const digits = normalizeBrazilianPhone(phone);
 
-  if (digits.length === 10 || digits.length === 11) {
-    return `55${digits}`;
-  }
-
-  if ((digits.length === 12 || digits.length === 13) && digits.startsWith('55')) {
-    return digits;
-  }
-
-  return null;
+  return digits ? `55${digits}` : null;
 }
 
 function buildShareMessage(quote, publicUrl) {

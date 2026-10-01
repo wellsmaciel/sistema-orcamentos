@@ -997,9 +997,11 @@ components:
           description: E-mail comercial do prestador.
         phone:
           type: string
-          minLength: 8
           maxLength: 30
-          description: Telefone comercial do prestador.
+          examples:
+            - '(21) 99999-8888'
+          description: >
+            Telefone comercial do prestador. Telefone brasileiro com DDD (celular com 11 dígitos ou fixo com 10), aceitando pontuação e +55; salvo no formato "(21) 99999-8888".
         taxId:
           type: string
           maxLength: 20
@@ -1100,9 +1102,11 @@ components:
           description: E-mail utilizado para o envio do orçamento.
         phone:
           type: string
-          minLength: 8
           maxLength: 30
-          description: Telefone para contato com o cliente.
+          examples:
+            - '(21) 99999-8888'
+          description: >
+            Telefone para contato com o cliente. Telefone brasileiro com DDD (celular com 11 dígitos ou fixo com 10), aceitando pontuação e +55; salvo no formato "(21) 99999-8888".
         address:
           $ref: '#/components/schemas/Address'
 
