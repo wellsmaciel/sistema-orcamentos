@@ -1,11 +1,13 @@
+import { hasCompanyLogo } from '../services/company-logo.js';
 import { getCompany as getCompanyService, saveCompany as saveCompanyService } from '../services/company.js';
 
-function serializeCompany(company) {
+function serializeCompany(company, hasLogo) {
   const serializedCompany = {
     id: company.id,
     name: company.name,
     email: company.email,
     phone: company.phone,
+    hasLogo,
   };
 
   if (company.taxId) {
@@ -43,7 +45,7 @@ async function getCompany(request, response, next) {
       });
     }
 
-    return response.status(200).json(serializeCompany(company));
+    return response.status(200).json(serializeCompany(company, await hasCompanyLogo(request.authenticatedUser.id)));
   } catch (error) {
     return next(error);
   }
@@ -53,7 +55,7 @@ async function saveCompany(request, response, next) {
   try {
     const company = await saveCompanyService(request.authenticatedUser.id, request.body);
 
-    return response.status(200).json(serializeCompany(company));
+    return response.status(200).json(serializeCompany(company, await hasCompanyLogo(request.authenticatedUser.id)));
   } catch (error) {
     return next(error);
   }

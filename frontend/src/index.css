@@ -131,3 +131,25 @@ textarea:focus-visible {
   background: #000000;
   border-color: #ffffff;
 }
+
+/* No fundo preto, os logos ganham um fundo branco para continuarem visíveis. */
+:root[data-contrast='high'] :is(.app-title img, .public-quote-credit img, .public-quote-logo, .company-logo-preview img) {
+  padding: 4px;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+:root[data-contrast='high'] .public-quote-credit {
+  color: #ffffff;
+}
+
+:root[data-contrast='high'] .file-button {
+  color: #000000;
+  background: #ffff00;
+  border-color: #ffff00;
+}
+
+:root[data-contrast='high'] .file-button:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+}

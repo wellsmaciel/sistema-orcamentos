@@ -302,17 +302,20 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
           </div>
         </fieldset>
 
-        <button type="submit" disabled={isBusy}>
-          Buscar
-        </button>
+        <div className="list-filter-actions">
+          <button type="submit" disabled={isBusy}>
+            Buscar
+          </button>
 
-        <button type="button" onClick={handleClearFilters} disabled={isBusy}>
-          Limpar filtros
-        </button>
+          <button type="button" onClick={handleClearFilters} disabled={isBusy}>
+            Limpar filtros
+          </button>
+
+          <button type="button" onClick={handleRefresh} disabled={isBusy}>
+            {isLoading ? 'Atualizando...' : errorMessage ? 'Tentar novamente' : 'Atualizar lista'}
+          </button>
+        </div>
       </form>
-      <button type="button" onClick={handleRefresh} disabled={isBusy}>
-        {isLoading ? 'Atualizando...' : errorMessage ? 'Tentar novamente' : 'Atualizar lista'}
-      </button>
 
       {isLoading && <p role="status">Carregando orçamentos...</p>}
 

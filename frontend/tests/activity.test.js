@@ -20,3 +20,8 @@ test('descreve alterações do perfil profissional', () => {
     'Perfil profissional alterado (CPF/CNPJ)',
   );
 });
+
+test('descreve a troca e a remoção do logo da empresa', () => {
+  assert.equal(describeActivity({ action: 'COMPANY_LOGO_UPDATED', entityType: 'COMPANY', entityName: null, changedFields: [] }), 'Logo da empresa alterado');
+  assert.equal(describeActivity({ action: 'COMPANY_LOGO_REMOVED', entityType: 'COMPANY', entityName: null, changedFields: [] }), 'Logo da empresa removido');
+});

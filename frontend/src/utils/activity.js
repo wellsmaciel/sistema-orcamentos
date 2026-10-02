@@ -6,6 +6,8 @@ const ACTION_LABELS = {
   CLIENT_REACTIVATED: 'Cliente reativado',
   COMPANY_CREATED: 'Perfil profissional cadastrado',
   COMPANY_UPDATED: 'Perfil profissional alterado',
+  COMPANY_LOGO_UPDATED: 'Logo da empresa alterado',
+  COMPANY_LOGO_REMOVED: 'Logo da empresa removido',
 };
 
 const FIELD_LABELS = {

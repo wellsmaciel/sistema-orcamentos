@@ -71,6 +71,7 @@ function PublicQuote({ publicToken }) {
   const [responseError, setResponseError] = useState('');
   const [responseMessage, setResponseMessage] = useState('');
   const [refreshIndex, setRefreshIndex] = useState(0);
+  const [hasLogoError, setHasLogoError] = useState(false);
 
   useEffect(() => {
     let isCancelled = false;
@@ -152,6 +153,15 @@ function PublicQuote({ publicToken }) {
   return (
     <main>
       <section>
+        {/* O logo atual da empresa; se a imagem falhar, o orçamento continua legível sem ele. */}
+        {quote.hasProviderLogo && !hasLogoError && (
+          <img
+            className="public-quote-logo"
+            src={`${import.meta.env.VITE_API_BASE_URL}/api/v1/public/quotes/${publicToken}/logo`}
+            alt={quote.provider ? `Logo de ${quote.provider.name}` : 'Logo do prestador'}
+            onError={() => setHasLogoError(true)}
+          />
+        )}
         <h1>Orçamento nº {formatQuoteNumber(quote.quoteNumber)}</h1>
         {quote.provider && (
           <section aria-labelledby="quote-provider-title">
@@ -294,6 +304,11 @@ function PublicQuote({ publicToken }) {
           </section>
         )}
       </section>
+
+      <p className="public-quote-credit">
+        <img src="/logo-auth0.png" alt="" width="29" height="16" />
+        Orçamento gerado com Sistema de Orçamentos
+      </p>
     </main>
   );
 }

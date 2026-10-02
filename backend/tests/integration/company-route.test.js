@@ -22,4 +22,11 @@ describe('Rotas de dados profissionais', () => {
       message: 'É necessário apresentar um token de acesso válido.',
     });
   });
+
+  test.each(['get', 'put', 'delete'])('%s /api/v1/company/logo deve responder 401 sem token', async (method) => {
+    const response = await request(app)[method]('/api/v1/company/logo');
+
+    expect(response.status).toBe(401);
+    expect(response.body.code).toBe('UNAUTHORIZED');
+  });
 });

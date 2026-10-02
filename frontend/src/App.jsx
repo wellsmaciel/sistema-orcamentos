@@ -104,7 +104,10 @@ function App() {
   }
   return (
     <main>
-      <h1>Sistema de Orçamentos</h1>
+      <h1 className="app-title">
+        <img src="/logo-auth0.png" alt="" width="72" height="40" />
+        Sistema de Orçamentos
+      </h1>
 
       {!isAuthenticated ? (
         <>

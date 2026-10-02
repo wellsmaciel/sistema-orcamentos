@@ -8,12 +8,19 @@ const ITEM_ID = '550e8400-e29b-41d4-a716-446655440002';
 const PUBLIC_TOKEN = 'a'.repeat(64);
 
 const services = Object.fromEntries(
-  ['createQuote', 'listQuotes', 'listQuotesPage', 'updateQuote', 'confirmQuote', 'getPublicQuote', 'respondToPublicQuote', 'createQuoteCorrection', 'getQuoteHistory'].map((name) => [name, jest.fn()]),
+  ['createQuote', 'listQuotes', 'listQuotesPage', 'updateQuote', 'confirmQuote', 'getPublicQuote', 'respondToPublicQuote', 'createQuoteCorrection', 'getQuoteHistory', 'hasCompanyLogo'].map((name) => [name, jest.fn()]),
 );
 
 // Testa rotas, validadores e JSON reais; autenticação e persistência são simuladas
 // apenas nesta suíte. As suítes de autorização e banco continuam independentes.
 jest.unstable_mockModule('../../src/services/quote.js', () => services);
+jest.unstable_mockModule('../../src/services/company-logo.js', () => ({
+  getCompanyLogo: jest.fn(),
+  getPublicQuoteLogo: jest.fn(),
+  hasCompanyLogo: services.hasCompanyLogo,
+  removeCompanyLogo: jest.fn(),
+  saveCompanyLogo: jest.fn(),
+}));
 jest.unstable_mockModule('../../src/middlewares/auth.js', () => ({
   validateAccessToken: (_request, _response, next) => next(),
 }));
@@ -205,6 +212,17 @@ describe('Contrato JSON de orçamento e itens', () => {
       expect(response.body).not.toHaveProperty(field);
     }
     expect(services.getPublicQuote).toHaveBeenCalledWith(PUBLIC_TOKEN);
+  });
+
+  test.each([true, false])('GET público deve informar se a empresa tem logo (%s)', async (hasLogo) => {
+    services.getPublicQuote.mockResolvedValue(buildQuote());
+    services.hasCompanyLogo.mockResolvedValue(hasLogo);
+
+    const response = await request(app).get(`/api/v1/public/quotes/${PUBLIC_TOKEN}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.hasProviderLogo).toBe(hasLogo);
+    expect(services.hasCompanyLogo).toHaveBeenCalledWith(USER_ID);
   });
 
   test.each(['ACCEPTED', 'REJECTED'])('POST público deve preservar os itens após %s', async (decision) => {

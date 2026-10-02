@@ -156,14 +156,16 @@ function ClientList({ getAccessTokenSilently, onEdit, onNewClient }) {
           </select>
         </div>
 
-        <button type="submit" disabled={controlsDisabled}>
-          Buscar
-        </button>
-      </form>
+        <div className="list-filter-actions">
+          <button type="submit" disabled={controlsDisabled}>
+            Buscar
+          </button>
 
-      <button type="button" onClick={() => setRefreshIndex((index) => index + 1)} disabled={controlsDisabled}>
-        {isLoading ? 'Atualizando...' : listError ? 'Tentar novamente' : 'Atualizar lista'}
-      </button>
+          <button type="button" onClick={() => setRefreshIndex((index) => index + 1)} disabled={controlsDisabled}>
+            {isLoading ? 'Atualizando...' : listError ? 'Tentar novamente' : 'Atualizar lista'}
+          </button>
+        </div>
+      </form>
 
       {isLoading && <p role="status">Carregando clientes...</p>}
       {listError && <p role="alert">{listError}</p>}
