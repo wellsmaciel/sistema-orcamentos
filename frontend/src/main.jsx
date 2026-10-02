@@ -4,9 +4,21 @@ import { Auth0Provider } from '@auth0/auth0-react';
 import './index.css';
 import App from './App.jsx';
 import AccessibilityControls from './components/AccessibilityControls.jsx';
+import PrivacyPolicy from './components/PrivacyPolicy.jsx';
+import SiteFooter from './components/SiteFooter.jsx';
+
+// A política de privacidade é pública: abre sem login e sem passar pelo Auth0.
+const isPrivacyPage = window.location.pathname.replace(/\/+$/, '') === '/privacidade';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    {isPrivacyPage ? (
+      <>
+        <AccessibilityControls />
+        <PrivacyPolicy />
+        <SiteFooter />
+      </>
+    ) : (
     <Auth0Provider
       domain={import.meta.env.VITE_AUTH0_DOMAIN}
       clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
@@ -20,6 +32,8 @@ createRoot(document.getElementById('root')).render(
     >
       <AccessibilityControls />
       <App />
+      <SiteFooter />
     </Auth0Provider>
+    )}
   </StrictMode>,
 );
