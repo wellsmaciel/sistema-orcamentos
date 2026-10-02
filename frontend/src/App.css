@@ -577,3 +577,39 @@ main > button:last-child:hover:not(:disabled) {
     font-size: 0.95rem;
   }
 }
+
+/* Rodapé com autoria e link para a política de privacidade. */
+.site-footer {
+  width: min(calc(100% - 32px), 720px);
+  margin: 0 auto 32px;
+  padding-top: 16px;
+  border-top: 1px solid #cbd5e1;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Linhas de texto com largura confortável para leitura, também em telas grandes. */
+.privacy-policy {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.privacy-policy h2 {
+  margin-top: 24px;
+}
+
+.privacy-policy ul {
+  display: block;
+  padding-left: 24px;
+  list-style: disc;
+}
+
+.privacy-policy li + li {
+  margin-top: 8px;
+}
+
+@media (min-width: 1024px) {
+  .site-footer {
+    width: min(calc(100% - 64px), 1100px);
+  }
+}
