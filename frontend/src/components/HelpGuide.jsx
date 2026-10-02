@@ -54,7 +54,10 @@ function HelpGuide() {
             Escolha a forma de cobrança: <strong>Preço por item</strong> (o total é calculado pelos itens) ou <strong>Valor global</strong>{' '}
             (você informa o total).
           </li>
-          <li>Adicione os itens com <strong>+ Adicionar outro item</strong>. Linhas deixadas em branco são ignoradas.</li>
+          <li>
+            Adicione os itens com <strong>+ Adicionar outro item</strong>. Linhas deixadas em branco são ignoradas. No{' '}
+            <strong>Valor global</strong>, se o serviço for um item só, use <strong>Usar a descrição geral como item</strong>.
+          </li>
           <li>Informe a data prevista e o endereço do serviço e, se precisar, observações do local.</li>
           <li>
             Opcional: clique em <strong>Revisar descrição com IA</strong> para receber uma sugestão de texto mais claro. Nada muda até você
