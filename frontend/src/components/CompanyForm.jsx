@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { requestCompany, saveCompany } from '../services/company.js';
 import { PHONE_ERROR_MESSAGE, normalizeBrazilianPhone } from '../utils/phone.js';
+import CompanyLogoField from './CompanyLogoField.jsx';
 import PhoneField from './PhoneField.jsx';
 
 const initialFormData = {
@@ -44,6 +45,7 @@ function CompanyForm({ getAccessTokenSilently }) {
   const [loadError, setLoadError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [savedCompany, setSavedCompany] = useState(null);
 
   const hasAddress = addressFields.some((field) => formData[field].trim().length > 0);
 
@@ -58,6 +60,7 @@ function CompanyForm({ getAccessTokenSilently }) {
 
         if (!ignoreResult && company) {
           setFormData(companyToFormData(company));
+          setSavedCompany(company);
         }
       } catch (requestError) {
         if (!ignoreResult) {
@@ -124,6 +127,7 @@ function CompanyForm({ getAccessTokenSilently }) {
       const company = await saveCompany(getAccessTokenSilently, companyInput);
 
       setFormData(companyToFormData(company));
+      setSavedCompany(company);
       setSuccessMessage('Dados profissionais salvos com sucesso.');
     } catch (requestError) {
       setSubmitError(requestError.message);
@@ -210,6 +214,13 @@ function CompanyForm({ getAccessTokenSilently }) {
         {submitError && <p role="alert">{submitError}</p>}
         {successMessage && <p role="status">{successMessage}</p>}
       </form>
+
+      <CompanyLogoField
+        key={savedCompany?.id ?? 'sem-perfil'}
+        getAccessTokenSilently={getAccessTokenSilently}
+        hasCompany={Boolean(savedCompany)}
+        hasLogo={Boolean(savedCompany?.hasLogo)}
+      />
     </section>
   );
 }

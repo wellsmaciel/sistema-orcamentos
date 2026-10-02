@@ -138,6 +138,18 @@ form > button,
   margin-top: 24px;
 }
 
+/* Buscar, limpar e atualizar listas: lado a lado, alinhados à esquerda; quebram linha se faltar espaço. */
+.list-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.list-filter-actions button {
+  margin: 0;
+}
+
 .dashboard-actions button {
   width: 100%;
   min-height: 64px;
@@ -576,6 +588,94 @@ main > button:last-child:hover:not(:disabled) {
   .top-nav button {
     font-size: 0.95rem;
   }
+}
+
+/* Logo do app ao lado do título. */
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-title img {
+  flex: none;
+  width: clamp(54px, 14vw, 72px);
+  height: auto;
+}
+
+/* Logo da empresa: prévia no perfil e topo do orçamento público. */
+.company-logo {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #cbd5e1;
+}
+
+.company-logo-preview {
+  margin: 0 0 12px;
+}
+
+.company-logo-preview img,
+.public-quote-logo {
+  display: block;
+  max-width: min(100%, 200px);
+  max-height: 120px;
+  object-fit: contain;
+}
+
+.company-logo-preview figcaption {
+  margin-top: 4px;
+  font-size: 0.875rem;
+}
+
+.company-logo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Rótulo do campo de arquivo com a aparência de um botão secundário. */
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 4px 8px 4px 0;
+  padding: 8px 16px;
+  box-sizing: border-box;
+  border: 2px solid #1d4ed8;
+  border-radius: 10px;
+  color: #1d4ed8;
+  background-color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.file-button:hover {
+  background-color: #eff6ff;
+}
+
+.file-button:focus-within {
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+.file-button-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.public-quote-logo {
+  margin-bottom: 16px;
+}
+
+/* Crédito discreto do app no orçamento que o cliente recebe. */
+.public-quote-credit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 32px 0 0;
+  color: #475569;
+  font-size: 0.875rem;
 }
 
 /* Rodapé com autoria e link para a política de privacidade. */

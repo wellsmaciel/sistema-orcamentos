@@ -9,6 +9,7 @@ import {
   listQuotesPage as listQuotesPageService,
   getQuoteHistory as getQuoteHistoryService,
 } from '../services/quote.js';
+import { hasCompanyLogo } from '../services/company-logo.js';
 import { serializeQuoteItems } from '../utils/quote-items-response.js';
 
 function serializeQuote(quote) {
@@ -67,7 +68,7 @@ function serializeQuote(quote) {
   }
   return responseBody;
 }
-function serializePublicQuote(quote) {
+function serializePublicQuote(quote, hasProviderLogo = false) {
   const serviceAddress = {
     street: quote.serviceStreet,
     number: quote.serviceNumber,
@@ -92,6 +93,7 @@ function serializePublicQuote(quote) {
     serviceAddress,
     status: quote.status,
     sentAt: quote.sentAt,
+    hasProviderLogo,
   };
 
   if (quote.locationNotes) {
@@ -232,7 +234,7 @@ async function getPublicQuote(request, response, next) {
       });
     }
 
-    return response.status(200).json(serializePublicQuote(quote));
+    return response.status(200).json(serializePublicQuote(quote, await hasCompanyLogo(quote.userId)));
   } catch (error) {
     return next(error);
   }
@@ -255,7 +257,7 @@ async function respondToPublicQuote(request, response, next) {
       });
     }
 
-    return response.status(200).json(serializePublicQuote(result.quote));
+    return response.status(200).json(serializePublicQuote(result.quote, await hasCompanyLogo(result.quote.userId)));
   } catch (error) {
     return next(error);
   }

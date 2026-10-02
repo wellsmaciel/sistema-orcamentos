@@ -19,7 +19,7 @@ function PrivacyPolicy() {
         <h2>Quais dados guardamos</h2>
         <ul>
           <li><strong>Conta:</strong> nome, e-mail e o identificador da conta no serviço de login.</li>
-          <li><strong>Perfil profissional:</strong> nome profissional ou da empresa, e-mail, telefone e, se informados, CPF ou CNPJ e endereço.</li>
+          <li><strong>Perfil profissional:</strong> nome profissional ou da empresa, e-mail, telefone e, se informados, CPF ou CNPJ, endereço e logo da empresa.</li>
           <li><strong>Clientes cadastrados pelo prestador:</strong> nome, e-mail, telefone e endereço.</li>
           <li><strong>Orçamentos:</strong> descrição, itens, valores, data e endereço do serviço, resposta do cliente e, em caso de recusa, o motivo informado.</li>
           <li>
@@ -44,7 +44,7 @@ function PrivacyPolicy() {
           </li>
           <li><strong>Railway:</strong> hospeda o aplicativo e o banco de dados.</li>
           <li>
-            <strong>Link público do orçamento:</strong> quem tiver o link consegue ver o orçamento e respondê-lo. O prestador decide com quem
+            <strong>Link público do orçamento:</strong> quem tiver o link consegue ver o orçamento, com o logo atual da empresa, e respondê-lo. O prestador decide com quem
             compartilha o link.
           </li>
         </ul>

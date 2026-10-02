@@ -247,6 +247,104 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/company/logo:
+    get:
+      tags:
+        - Perfil profissional
+      summary: Consulta o logo da empresa
+      description: >
+        Retorna a imagem do logo da empresa do prestador autenticado, com o
+        tipo original (PNG, JPEG ou WebP) no cabeçalho Content-Type.
+      operationId: getCompanyLogo
+      security:
+        - Auth0Bearer: []
+      responses:
+        '200':
+          description: Imagem do logo.
+          content:
+            image/png:
+              schema:
+                type: string
+                contentMediaType: image/png
+            image/jpeg:
+              schema:
+                type: string
+                contentMediaType: image/jpeg
+            image/webp:
+              schema:
+                type: string
+                contentMediaType: image/webp
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - Perfil profissional
+      summary: Envia ou substitui o logo da empresa
+      description: >
+        Recebe a imagem no corpo da requisição, sem JSON, com até 200 KB.
+        O tipo é conferido pelos primeiros bytes do arquivo e precisa ser
+        igual ao Content-Type; SVG não é aceito. Exige que os dados
+        profissionais já estejam salvos. O logo atual aparece em todos os
+        orçamentos enviados, inclusive os antigos.
+      operationId: saveCompanyLogo
+      security:
+        - Auth0Bearer: []
+      requestBody:
+        required: true
+        content:
+          image/png:
+            schema:
+              type: string
+              contentMediaType: image/png
+          image/jpeg:
+            schema:
+              type: string
+              contentMediaType: image/jpeg
+          image/webp:
+            schema:
+              type: string
+              contentMediaType: image/webp
+      responses:
+        '204':
+          description: Logo salvo.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Perfil profissional
+      summary: Remove o logo da empresa
+      operationId: removeCompanyLogo
+      security:
+        - Auth0Bearer: []
+      responses:
+        '204':
+          description: Logo removido.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/clients:
     get:
       tags:
@@ -699,6 +797,52 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/public/quotes/{publicToken}/logo:
+    get:
+      tags:
+        - Orçamentos
+      summary: Consulta o logo da empresa pelo link público
+      description: >
+        Retorna somente a imagem do logo atual da empresa que enviou o
+        orçamento. Não exige autenticação e pode ficar em cache por 5 minutos.
+      operationId: getPublicQuoteLogo
+      security: []
+      parameters:
+        - name: publicToken
+          in: path
+          required: true
+          description: Token público gerado na confirmação do orçamento.
+          schema:
+            type: string
+            minLength: 64
+            maxLength: 64
+            pattern: '^[0-9a-f]{64}$'
+      responses:
+        '200':
+          description: Imagem do logo.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                examples:
+                  - 'public, max-age=300'
+          content:
+            image/png:
+              schema:
+                type: string
+                contentMediaType: image/png
+            image/jpeg:
+              schema:
+                type: string
+                contentMediaType: image/jpeg
+            image/webp:
+              schema:
+                type: string
+                contentMediaType: image/webp
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/public/quotes/{publicToken}/respond:
     post:
       tags:
@@ -974,6 +1118,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+    PayloadTooLarge:
+      description: O corpo enviado é maior que o permitido.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnsupportedMediaType:
+      description: O arquivo enviado não é uma imagem PNG, JPEG ou WebP válida.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     InternalServerError:
       description: Erro interno inesperado.
       content:
@@ -1059,11 +1215,15 @@ components:
         - name
         - email
         - phone
+        - hasLogo
       properties:
         id:
           type: string
           format: uuid
           description: Identificador dos dados profissionais.
+        hasLogo:
+          type: boolean
+          description: Indica se a empresa tem logo salvo.
         name:
           type: string
           description: Nome profissional ou nome da empresa.
@@ -1747,6 +1907,8 @@ components:
             - CLIENT_REACTIVATED
             - COMPANY_CREATED
             - COMPANY_UPDATED
+            - COMPANY_LOGO_UPDATED
+            - COMPANY_LOGO_REMOVED
         entityType:
           type: string
           enum:
@@ -1856,6 +2018,7 @@ components:
         - serviceAddress
         - status
         - sentAt
+        - hasProviderLogo
       properties:
         quoteNumber:
           type: integer
@@ -1864,6 +2027,9 @@ components:
         clientName:
           type: string
           description: Nome do cliente no momento da criação do orçamento.
+        hasProviderLogo:
+          type: boolean
+          description: Indica se a empresa tem logo; a imagem fica em /api/v1/public/quotes/{publicToken}/logo.
         provider:
           $ref: '#/components/schemas/QuoteProviderSnapshot'
         description:

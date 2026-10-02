@@ -10,6 +10,8 @@ import { confirmQuote, createQuote, listQuotes, updateQuote, getPublicQuote, res
 import { validateQuote, validateQuoteIdParameter, validateQuoteUpdate, validateQuoteResponse, validateQuoteListQuery, validateQuoteDescriptionReview } from './middlewares/validate-quote.js';
 import { reviewQuoteDescription } from './controllers/quote-description-review.js';
 import { getCompany, saveCompany } from './controllers/company.js';
+import { deleteMyCompanyLogo, getMyCompanyLogo, getPublicQuoteLogo, saveMyCompanyLogo } from './controllers/company-logo.js';
+import { ALLOWED_LOGO_TYPES, MAX_LOGO_BYTES } from './utils/image-type.js';
 import { validateCompany } from './middlewares/validate-company.js';
 import { requestLogger } from './middlewares/request-logger.js';
 import { listActivities } from './controllers/activity.js';
@@ -33,10 +35,15 @@ app.get('/health', (_request, response) => {
 });
 
 app.get('/api/v1/public/quotes/:publicToken', getPublicQuote);
+app.get('/api/v1/public/quotes/:publicToken/logo', getPublicQuoteLogo);
 app.post('/api/v1/public/quotes/:publicToken/respond', validateQuoteResponse, respondToPublicQuote);
 app.get('/api/v1/me', validateAccessToken, loadAuthenticatedUser, getAuthenticatedUser);
 app.get('/api/v1/company', validateAccessToken, loadAuthenticatedUser, getCompany);
 app.put('/api/v1/company', validateAccessToken, loadAuthenticatedUser, validateCompany, saveCompany);
+app.get('/api/v1/company/logo', validateAccessToken, loadAuthenticatedUser, getMyCompanyLogo);
+// O corpo só é lido depois do token, e no máximo 200 KB; acima disso o tratador de erros responde 413.
+app.put('/api/v1/company/logo', validateAccessToken, loadAuthenticatedUser, express.raw({ type: ALLOWED_LOGO_TYPES, limit: MAX_LOGO_BYTES }), saveMyCompanyLogo);
+app.delete('/api/v1/company/logo', validateAccessToken, loadAuthenticatedUser, deleteMyCompanyLogo);
 app.get('/api/v1/activities', validateAccessToken, loadAuthenticatedUser, listActivities);
 app.get('/api/v1/management/summary', validateAccessToken, loadAuthenticatedUser, getManagementSummary);
 app.get('/api/v1/notifications/responses', validateAccessToken, loadAuthenticatedUser, listResponseNotifications);

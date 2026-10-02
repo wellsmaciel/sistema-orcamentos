@@ -13,6 +13,7 @@ Ao criar ou editar um rascunho, o prestador pode pedir uma revisão da descriç�
 - Cadastro completo de clientes: criação, consulta e busca, edição, exclusão, inativação e reativação.
 - Orçamento e itens na mesma tela, com preço por item (total calculado) ou valor global (total informado).
 - Revisão completa antes de confirmar, link público para o cliente aceitar ou recusar, motivo da recusa e correção vinculada ao orçamento anterior.
+- Logo da empresa no perfil profissional (PNG, JPEG ou WebP, reduzido no navegador para até 200 KB), exibido no topo do link público.
 - Histórico de eventos de cada orçamento.
 - Revisão da descrição com IA.
 - Envio do link pelo WhatsApp ou por e-mail do próprio prestador, com mensagem pronta; o app não envia mensagens sozinho.
@@ -175,7 +176,7 @@ As verificações também são executadas automaticamente pelo GitHub Actions em
 ## Logs e auditoria
 
 - **Requisições:** a API escreve uma linha JSON por requisição na saída padrão, coletada pelo Railway, com método, padrão da rota, status, duração, identificador da requisição e identificador do usuário. O endereço real não é registrado, para que tokens de links públicos e dados pessoais não cheguem aos logs. Cada resposta traz o cabeçalho `X-Request-Id`, também presente nos logs de erro.
-- **Ações dos usuários:** criação, edição, exclusão, inativação e reativação de clientes e alterações do perfil profissional ficam em `activity_logs`, com os nomes dos campos alterados e nunca os valores.
+- **Ações dos usuários:** criação, edição, exclusão, inativação e reativação de clientes e alterações do perfil profissional (inclusive troca e remoção do logo) ficam em `activity_logs`, com os nomes dos campos alterados e nunca os valores.
 - **Orçamentos:** cada orçamento tem seu histórico de eventos em `quote_events`.
 - **IA:** cada revisão registra o modelo, os tokens usados e a duração, sem o texto do prestador.
 
