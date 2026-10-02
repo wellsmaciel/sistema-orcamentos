@@ -13,8 +13,11 @@ import TopNav from '../src/components/TopNav.jsx';
 import Dashboard from '../src/components/Dashboard.jsx';
 import ResponseNotifications from '../src/components/ResponseNotifications.jsx';
 import ScrollFixture from './scroll-fixture.jsx';
+import { installPortugueseValidation } from '../src/utils/form-validation-messages.js';
 import '../src/index.css';
 import '../src/App.css';
+
+installPortugueseValidation();
 
 const parameters = new URLSearchParams(window.location.search);
 const mode = parameters.get('mode');

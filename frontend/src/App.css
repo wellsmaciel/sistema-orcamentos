@@ -79,6 +79,17 @@ button:disabled {
   background-color: #166534;
 }
 
+/* Atalho que merece destaque sem ser a ação principal da tela: azul preenchido. */
+.button-filled {
+  color: #ffffff;
+  background-color: #1d4ed8;
+}
+
+.button-filled:hover:not(:disabled) {
+  border-color: #1e40af;
+  background-color: #1e40af;
+}
+
 /* Ação destrutiva: excluir, remover, recusar. */
 .button-danger {
   border-color: #b91c1c;

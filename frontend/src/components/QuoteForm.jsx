@@ -97,6 +97,11 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
   const isEditing = Boolean(quote);
   const editTitle = isEditing ? `Editar orçamento nº ${String(quote.quoteNumber).padStart(6, '0')}` : '';
   const isItemized = formData.pricingMode === 'ITEMIZED';
+  const trimmedDescription = formData.description.trim();
+  const hasOnlyBlankItems = formData.items.every((item) => isBlankFormItem(item, formData.pricingMode));
+  const offersDescriptionAsItem = !isItemized && hasOnlyBlankItems && trimmedDescription.length > 0;
+  const canUseDescriptionAsItem = offersDescriptionAsItem && trimmedDescription.length <= 500;
+  const descriptionTooLongForItem = offersDescriptionAsItem && trimmedDescription.length > 500;
   const pricingPreview = isItemized ? getItemsPricingPreview(formData.items) : null;
   // Linhas em branco são ignoradas ao salvar, então também não entram no total.
   const previewTotalAmount = isItemized ? getItemsPricingPreview(formData.items.filter((item) => !isBlankFormItem(item, formData.pricingMode))).totalAmount : null;
@@ -147,6 +152,14 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
     setFormData((currentFormData) => ({
       ...currentFormData,
       items: currentFormData.items.map((item) => (item.formId === formId ? { ...item, [name]: value } : item)),
+    }));
+  }
+
+  // No valor global, o serviço muitas vezes é um item só: a descrição geral vira o Item 1, com quantidade 1.
+  function handleUseDescriptionAsItem() {
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      items: [buildFormItem({ description: currentFormData.description.trim(), quantity: '1' })],
     }));
   }
 
@@ -356,6 +369,13 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
             <legend>Itens do orçamento</legend>
             <p id="quote-items-help">Inclua pelo menos um item. A quantidade aceita até uma casa decimal, por exemplo, 2,5. Use vírgula ou ponto, sem separadores de milhares.</p>
             <p>Os itens preenchidos já fazem parte do orçamento. Use "Adicionar outro item" só para incluir mais uma linha; linhas deixadas em branco são ignoradas ao salvar.</p>
+
+            {canUseDescriptionAsItem && (
+              <button type="button" className="button-filled" onClick={handleUseDescriptionAsItem}>Usar a descrição geral como item</button>
+            )}
+            {descriptionTooLongForItem && (
+              <p>A descrição geral tem mais de 500 caracteres e não cabe num item. Descreva o item de forma resumida.</p>
+            )}
 
             {formData.items.map((item, index) => (
               <fieldset className="quote-item" key={item.formId}>
