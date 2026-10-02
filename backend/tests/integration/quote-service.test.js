@@ -673,6 +673,25 @@ describe('Serviço de orçamentos', () => {
     expect(noMatches.total).toBe(0);
   });
 
+  test('deve buscar pelo número do orçamento, com ou sem zeros e prefixo, só entre os do prestador', async () => {
+    const user = await createUser('Prestador da Busca por Número');
+    const otherUser = await createUser('Outro Prestador da Busca por Número');
+    const client = await createClient(user.id);
+    const otherClient = await createClient(otherUser.id);
+    const wanted = await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+    await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+    const otherQuote = await createQuote(otherUser.id, buildQuoteInput(otherClient.id), { transaction });
+
+    for (const search of [String(wanted.quoteNumber), String(wanted.quoteNumber).padStart(6, '0'), `nº ${wanted.quoteNumber}`, `#${wanted.quoteNumber}`]) {
+      const result = await listQuotesPage(user.id, { search, transaction });
+
+      expect(result.items.map((quote) => quote.id)).toEqual([wanted.id]);
+    }
+
+    const foreign = await listQuotesPage(user.id, { search: String(otherQuote.quoteNumber), transaction });
+    expect(foreign.items.map((quote) => quote.id)).not.toContain(otherQuote.id);
+  });
+
   test('deve paginar orçamentos com os mais recentes primeiro', async () => {
     const user = await createUser('Prestador da Paginação');
     const client = await createClient(user.id);

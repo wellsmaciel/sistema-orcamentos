@@ -74,6 +74,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
   const [descriptionReview, setDescriptionReview] = useState(idleDescriptionReview);
 
   const isEditing = Boolean(quote);
+  const editTitle = isEditing ? `Editar orçamento nº ${String(quote.quoteNumber).padStart(6, '0')}` : '';
   const isItemized = formData.pricingMode === 'ITEMIZED';
   const pricingPreview = isItemized ? getItemsPricingPreview(formData.items) : null;
   // Linhas em branco são ignoradas ao salvar, então também não entram no total.
@@ -230,7 +231,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
   if (isEditing && quote.status !== 'DRAFT') {
     return (
       <section>
-        <h2>Editar orçamento</h2>
+        <h2>{editTitle}</h2>
         <p role="alert">Somente orçamentos em rascunho podem ter seu conteúdo alterado.</p>
       </section>
     );
@@ -247,7 +248,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
 
   return (
     <section>
-      <h2>{isEditing ? 'Editar orçamento' : 'Novo orçamento'}</h2>
+      <h2>{isEditing ? editTitle : 'Novo orçamento'}</h2>
 
       {hasLegacyQuantityPrecision && <p role="alert">Este rascunho contém quantidades antigas com mais de uma casa decimal. Revise-as antes de salvar; nenhum valor foi arredondado automaticamente.</p>}
 

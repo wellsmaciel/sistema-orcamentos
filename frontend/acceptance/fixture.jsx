@@ -11,6 +11,7 @@ import AccountView from '../src/components/AccountView.jsx';
 import TopNav from '../src/components/TopNav.jsx';
 import Dashboard from '../src/components/Dashboard.jsx';
 import ResponseNotifications from '../src/components/ResponseNotifications.jsx';
+import ScrollFixture from './scroll-fixture.jsx';
 import '../src/index.css';
 import '../src/App.css';
 
@@ -33,8 +34,21 @@ function showReviewRequest(quote) {
   document.body.dataset.reviewRequested = quote.id;
 }
 
-let content = <QuoteList getAccessTokenSilently={getAccessTokenSilently} initialReviewQuoteId={parameters.get('review')} />;
+const focusQuote = parameters.get('focusId')
+  ? { quoteId: parameters.get('focusId'), quoteNumber: Number(parameters.get('focusNumber')), highlight: parameters.get('focusHighlight') !== 'false' }
+  : null;
+const draftQuote = {
+  id: 'quote-2089', quoteNumber: 2089, status: 'DRAFT', client, clientName: client.name, description: 'Troca de fiação', pricingMode: 'FIXED_TOTAL',
+  items: [{ id: 'item-1', position: 1, description: 'Fiação', quantity: '1', unitPrice: null, subtotal: null }],
+  totalAmount: '500.00', serviceDate: '2099-10-15', serviceAddress: client.address, locationNotes: '',
+};
+
+let content = <QuoteList getAccessTokenSilently={getAccessTokenSilently} initialReviewQuoteId={parameters.get('review')} focusQuote={focusQuote} />;
 if (mode === 'public') content = <PublicQuote publicToken="test-public-token" />;
+if (mode === 'scroll') content = <ScrollFixture />;
+if (mode === 'quote-edit') {
+  content = <QuoteForm quote={draftQuote} getAccessTokenSilently={getAccessTokenSilently} onSaved={(saved) => { document.body.dataset.savedQuote = `${saved.id}:${saved.quoteNumber}`; }} />;
+}
 if (mode === 'quote-form') content = <QuoteForm clients={[client]} getAccessTokenSilently={getAccessTokenSilently} onReview={showReviewRequest} />;
 if (mode === 'company') content = <CompanyForm getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'client-edit') content = <ClientForm client={client} getAccessTokenSilently={getAccessTokenSilently} />;
@@ -45,7 +59,13 @@ if (mode === 'account') {
   content = <AccountView getAccessTokenSilently={getAccessTokenSilently} auth0User={auth0User} onLogout={() => { document.body.dataset.loggedOut = 'true'; }} />;
 }
 if (mode === 'notifications') {
-  content = <ResponseNotifications getAccessTokenSilently={getAccessTokenSilently} onOpenQuotes={() => { document.body.dataset.openedQuotes = 'true'; }} />;
+  content = (
+    <ResponseNotifications
+      getAccessTokenSilently={getAccessTokenSilently}
+      onOpenQuotes={() => { document.body.dataset.openedQuotes = 'true'; }}
+      onOpenQuote={(item) => { document.body.dataset.openedQuote = `${item.quoteId}:${item.quoteNumber}`; }}
+    />
+  );
 }
 
 // Modos com a barra de navegação, imitando a estrutura do App: ?mode=layout&view=quotes|new-quote|clients

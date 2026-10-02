@@ -427,6 +427,27 @@ article p + p {
   box-shadow: 0 0 0 4px #dbeafe;
 }
 
+/* Ação dentro de uma frase, com aparência de link e área de toque confortável. */
+.inline-link-button {
+  min-height: 32px;
+  margin: 0;
+  padding: 2px 4px;
+  border: 0;
+  color: #1d4ed8;
+  background: none;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.inline-link-button:hover:not(:disabled) {
+  background-color: #eff6ff;
+}
+
+.response-notifications-more {
+  margin: 8px 0 12px;
+  font-weight: 700;
+}
+
 .review-badge {
   display: inline-block;
   margin: 0 0 8px;
@@ -696,6 +717,22 @@ main > button:last-child:hover:not(:disabled) {
 
 .privacy-policy h2 {
   margin-top: 24px;
+}
+
+.help-guide h2 {
+  scroll-margin-top: 16px;
+}
+
+.help-guide h3 {
+  margin-top: 16px;
+}
+
+.help-guide ol {
+  padding-left: 24px;
+}
+
+.help-guide ol li + li {
+  margin-top: 8px;
 }
 
 .privacy-policy ul {

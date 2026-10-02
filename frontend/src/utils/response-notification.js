@@ -11,4 +11,9 @@ function describeResponseNotification(item, { timeZone } = {}) {
   return `${item.clientName} ${decision} o orçamento nº ${formatQuoteNumber(item.quoteNumber)} em ${respondedAt}.${reason}`;
 }
 
-export { describeResponseNotification };
+// O quadro mostra só as respostas mais recentes; o selo conta todas as novas.
+function countHiddenUnread({ unreadCount = 0, items = [] }) {
+  return Math.max(0, unreadCount - items.filter((item) => item.unread).length);
+}
+
+export { countHiddenUnread, describeResponseNotification, formatQuoteNumber };

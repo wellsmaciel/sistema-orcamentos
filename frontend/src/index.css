@@ -153,3 +153,15 @@ textarea:focus-visible {
   background: #ffffff;
   border-color: #ffffff;
 }
+
+/* Links dentro das frases continuam amarelos, como os outros links, e não viram botão amarelo. */
+:root[data-contrast='high'] .inline-link-button {
+  color: #ffff00;
+  background: none;
+  border-color: transparent;
+}
+
+:root[data-contrast='high'] .inline-link-button:hover {
+  color: #000000;
+  background: #ffff00;
+}
