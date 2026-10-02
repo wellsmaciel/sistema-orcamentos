@@ -443,6 +443,22 @@ article p + p {
   background-color: #eff6ff;
 }
 
+.created-client-notice {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 2px solid #15803d;
+  border-radius: 12px;
+  background-color: #f0fdf4;
+}
+
+.created-client-notice p {
+  margin: 0 0 8px;
+}
+
+.created-client-notice button {
+  margin: 0;
+}
+
 .response-notifications-more {
   margin: 8px 0 12px;
   font-weight: 700;

@@ -26,6 +26,8 @@ function App() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [reviewQuoteId, setReviewQuoteId] = useState(null);
   const [focusQuote, setFocusQuote] = useState(null);
+  const [createdClient, setCreatedClient] = useState(null);
+  const [quoteClientId, setQuoteClientId] = useState(null);
 
   useScrollToTop(currentView);
 
@@ -41,10 +43,12 @@ function App() {
     });
   }
 
-  async function handleNavigate(view) {
+  async function handleNavigate(view, { clientId = null } = {}) {
     setSelectedQuote(null);
     setReviewQuoteId(null);
     setFocusQuote(null);
+    setCreatedClient(null);
+    setQuoteClientId(clientId);
     setCurrentView(view);
     setSelectedClient(null);
     if (view !== 'new-quote') {
@@ -112,7 +116,9 @@ function App() {
     setCurrentView('edit-client');
   }
 
-  function handleClientSaved() {
+  // Só um cliente novo mostra o atalho para criar o orçamento; na edição, a lista volta como antes.
+  function handleClientSaved(savedClient) {
+    setCreatedClient(selectedClient ? null : savedClient);
     setSelectedClient(null);
     setCurrentView('clients');
   }
@@ -166,7 +172,13 @@ function App() {
                 <section>
                   <h2>Clientes</h2>
 
-                  <ClientList getAccessTokenSilently={getAccessTokenSilently} onEdit={handleEditClient} onNewClient={() => handleNavigate('new-client')} />
+                  <ClientList
+                    getAccessTokenSilently={getAccessTokenSilently}
+                    onEdit={handleEditClient}
+                    onNewClient={() => handleNavigate('new-client')}
+                    createdClient={createdClient}
+                    onCreateQuote={(client) => handleNavigate('new-quote', { clientId: client.id })}
+                  />
                 </section>
               )}
 
@@ -198,7 +210,15 @@ function App() {
                     </>
                   )}
 
-                  {!isLoadingQuoteClients && !quoteClientsError && clients.length > 0 && <QuoteForm clients={clients} getAccessTokenSilently={getAccessTokenSilently} onReview={handleReviewNewQuote} />}
+                  {!isLoadingQuoteClients && !quoteClientsError && clients.length > 0 && (
+                    <QuoteForm
+                      key={quoteClientId ?? 'sem-cliente'}
+                      clients={clients}
+                      getAccessTokenSilently={getAccessTokenSilently}
+                      initialClientId={quoteClientId}
+                      onReview={handleReviewNewQuote}
+                    />
+                  )}
                 </section>
               )}
 
