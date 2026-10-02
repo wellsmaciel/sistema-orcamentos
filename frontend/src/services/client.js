@@ -1,3 +1,4 @@
+import { describeApiError } from '../utils/validation-message.js';
 import { fetchJsonWithTimeout, withTimeout } from './request.js';
 
 async function requestClientApi(getAccessTokenSilently, path, { method = 'GET', body } = {}) {
@@ -22,8 +23,7 @@ async function requestClientApi(getAccessTokenSilently, path, { method = 'GET', 
   if (method === 'GET') {
     const { response, responseBody } = await fetchJsonWithTimeout(`${import.meta.env.VITE_API_BASE_URL}${path}`, requestOptions);
     if (!response.ok) {
-      const detailsMessage = responseBody.details?.map((detail) => `${detail.field}: ${detail.message}`).join(' ');
-      const error = new Error(detailsMessage || responseBody.message || 'Não foi possível concluir a operação com o cliente.');
+      const error = new Error(describeApiError(responseBody, 'Não foi possível concluir a operação com o cliente.'));
       error.code = responseBody.code;
       throw error;
     }
@@ -39,9 +39,7 @@ async function requestClientApi(getAccessTokenSilently, path, { method = 'GET', 
   const responseBody = await response.json();
 
   if (!response.ok) {
-    const detailsMessage = responseBody.details?.map((detail) => `${detail.field}: ${detail.message}`).join(' ');
-
-    const error = new Error(detailsMessage || responseBody.message || 'Não foi possível concluir a operação com o cliente.');
+    const error = new Error(describeApiError(responseBody, 'Não foi possível concluir a operação com o cliente.'));
 
     error.code = responseBody.code;
 

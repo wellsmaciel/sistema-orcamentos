@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { requestQuoteDescriptionReview } from '../services/quote-description-review.js';
+import { describeApiError } from '../utils/validation-message.js';
 import { buildDescriptionReviewRequest, buildQuoteRequest, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, isBlankFormItem } from '../utils/quote-form.js';
 
 const idleDescriptionReview = { status: 'idle', suggestion: '', message: '' };
@@ -206,9 +207,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
       const responseBody = await response.json();
 
       if (!response.ok) {
-        const detailsMessage = responseBody.details?.map((detail) => `${detail.field}: ${detail.message}`).join(' ');
-
-        throw new Error(detailsMessage || responseBody.message || `Não foi possível ${isEditing ? 'alterar' : 'criar'} o orçamento.`);
+        throw new Error(describeApiError(responseBody, `Não foi possível ${isEditing ? 'alterar' : 'criar'} o orçamento.`));
       }
 
       setSavedQuote(responseBody);
