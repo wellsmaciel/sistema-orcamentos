@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { markResponseNotificationsRead, requestResponseNotifications } from '../services/response-notification.js';
-import { describeResponseNotification } from '../utils/response-notification.js';
+import { countHiddenUnread, describeResponseNotification, formatQuoteNumber } from '../utils/response-notification.js';
 
 // Enquanto o menu está aberto, a lista é atualizada a cada minuto.
 const REFRESH_INTERVAL_MS = 60000;
 
-function ResponseNotifications({ getAccessTokenSilently, onOpenQuotes, refreshIntervalMs = REFRESH_INTERVAL_MS }) {
+function ResponseNotifications({ getAccessTokenSilently, onOpenQuotes, onOpenQuote, refreshIntervalMs = REFRESH_INTERVAL_MS }) {
   const [notifications, setNotifications] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isMarking, setIsMarking] = useState(false);
@@ -56,6 +56,7 @@ function ResponseNotifications({ getAccessTokenSilently, onOpenQuotes, refreshIn
   }
 
   const { unreadCount, items } = notifications;
+  const hiddenUnread = countHiddenUnread(notifications);
 
   return (
     <section className={unreadCount > 0 ? 'response-notifications has-unread' : 'response-notifications'} aria-labelledby="response-notifications-title">
@@ -68,9 +69,28 @@ function ResponseNotifications({ getAccessTokenSilently, onOpenQuotes, refreshIn
         {items.map((item) => (
           <li key={item.quoteId}>
             {item.unread && <span className="notification-new">Nova</span>} {describeResponseNotification(item)}
+            {onOpenQuote && (
+              <>
+                {' '}
+                <button
+                  type="button"
+                  className="inline-link-button"
+                  onClick={() => onOpenQuote(item)}
+                  aria-label={`Abrir orçamento nº ${formatQuoteNumber(item.quoteNumber)}`}
+                >
+                  Abrir orçamento
+                </button>
+              </>
+            )}
           </li>
         ))}
       </ul>
+
+      {hiddenUnread > 0 && (
+        <p className="response-notifications-more">
+          {hiddenUnread === 1 ? 'E mais 1 resposta nova' : `E mais ${hiddenUnread} respostas novas`} em &quot;Ver orçamentos&quot;.
+        </p>
+      )}
 
       {errorMessage && <p role="alert">{errorMessage}</p>}
 

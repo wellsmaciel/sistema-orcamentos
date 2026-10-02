@@ -13,6 +13,7 @@ import QuoteForm from './components/QuoteForm.jsx';
 import QuoteList from './components/QuoteList.jsx';
 import PublicQuote from './components/PublicQuote.jsx';
 import CompanyForm from './components/CompanyForm.jsx';
+import useScrollToTop from './hooks/useScrollToTop.js';
 
 function App() {
   const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
@@ -24,6 +25,9 @@ function App() {
   const [quoteClientsError, setQuoteClientsError] = useState('');
   const [selectedClient, setSelectedClient] = useState(null);
   const [reviewQuoteId, setReviewQuoteId] = useState(null);
+  const [focusQuote, setFocusQuote] = useState(null);
+
+  useScrollToTop(currentView);
 
   if (publicToken) {
     return <PublicQuote publicToken={publicToken} />;
@@ -40,6 +44,7 @@ function App() {
   async function handleNavigate(view) {
     setSelectedQuote(null);
     setReviewQuoteId(null);
+    setFocusQuote(null);
     setCurrentView(view);
     setSelectedClient(null);
     if (view !== 'new-quote') {
@@ -66,13 +71,22 @@ function App() {
     setCurrentView('edit-quote');
   }
 
+  function handleOpenQuoteFromNotification(item) {
+    setReviewQuoteId(null);
+    setFocusQuote({ quoteId: item.quoteId, quoteNumber: item.quoteNumber });
+    setCurrentView('quotes');
+  }
+
   function handleReviewNewQuote(quote) {
     setReviewQuoteId(quote.id);
     setCurrentView('quotes');
   }
 
-  function handleQuoteUpdated() {
+  // Depois de salvar a edição, a lista abre filtrada pelo número, com a revisão do rascunho aberta, como na criação.
+  function handleQuoteUpdated(savedQuote) {
     setSelectedQuote(null);
+    setReviewQuoteId(savedQuote.id);
+    setFocusQuote({ quoteId: savedQuote.id, quoteNumber: savedQuote.quoteNumber, highlight: false });
     setCurrentView('quotes');
   }
 
@@ -116,6 +130,10 @@ function App() {
           <button type="button" className="button-primary" onClick={() => loginWithRedirect()}>
             Entrar no sistema
           </button>
+
+          <p>
+            Primeira vez por aqui? Veja <a href="/ajuda">como usar o sistema</a>.
+          </p>
         </>
       ) : (
         <>
@@ -127,7 +145,11 @@ function App() {
 
           {currentView === 'home' ? (
             <>
-              <ResponseNotifications getAccessTokenSilently={getAccessTokenSilently} onOpenQuotes={() => handleNavigate('quotes')} />
+              <ResponseNotifications
+                getAccessTokenSilently={getAccessTokenSilently}
+                onOpenQuotes={() => handleNavigate('quotes')}
+                onOpenQuote={handleOpenQuoteFromNotification}
+              />
               <Dashboard onNavigate={handleNavigate} />
             </>
           ) : (
@@ -184,7 +206,13 @@ function App() {
                 <section>
                   <h2>Meus orçamentos</h2>
 
-                  <QuoteList getAccessTokenSilently={getAccessTokenSilently} onEdit={handleEditQuote} initialReviewQuoteId={reviewQuoteId} />
+                  <QuoteList
+                    key={focusQuote?.quoteId ?? 'todos'}
+                    getAccessTokenSilently={getAccessTokenSilently}
+                    onEdit={handleEditQuote}
+                    initialReviewQuoteId={reviewQuoteId}
+                    focusQuote={focusQuote}
+                  />
                 </section>
               )}
 

@@ -4,18 +4,20 @@ import { Auth0Provider } from '@auth0/auth0-react';
 import './index.css';
 import App from './App.jsx';
 import AccessibilityControls from './components/AccessibilityControls.jsx';
+import HelpGuide from './components/HelpGuide.jsx';
 import PrivacyPolicy from './components/PrivacyPolicy.jsx';
 import SiteFooter from './components/SiteFooter.jsx';
 
-// A política de privacidade é pública: abre sem login e sem passar pelo Auth0.
-const isPrivacyPage = window.location.pathname.replace(/\/+$/, '') === '/privacidade';
+// A política de privacidade e a ajuda são públicas: abrem sem login e sem passar pelo Auth0.
+const PUBLIC_PAGES = { '/privacidade': PrivacyPolicy, '/ajuda': HelpGuide };
+const PublicPage = PUBLIC_PAGES[window.location.pathname.replace(/\/+$/, '')];
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {isPrivacyPage ? (
+    {PublicPage ? (
       <>
         <AccessibilityControls />
-        <PrivacyPolicy />
+        <PublicPage />
         <SiteFooter />
       </>
     ) : (

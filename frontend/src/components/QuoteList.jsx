@@ -81,9 +81,12 @@ async function requestQuoteCorrection(getAccessTokenSilently, quoteId) {
   return responseBody;
 }
 
-function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null }) {
+function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null, focusQuote = null }) {
   // Rascunho recém-criado cuja revisão deve abrir assim que a lista carregar.
   const initialReviewRef = useRef(initialReviewQuoteId);
+  // Orçamento aberto por um aviso ou recém-editado: a lista já vem filtrada pelo número dele.
+  const focusSearch = focusQuote ? formatQuoteNumber(focusQuote.quoteNumber) : '';
+  const [highlightQuoteId, setHighlightQuoteId] = useState(focusQuote && focusQuote.highlight !== false ? focusQuote.quoteId : null);
   const [quotes, setQuotes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -94,13 +97,13 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
   const [reviewError, setReviewError] = useState('');
   const [copiedQuoteId, setCopiedQuoteId] = useState(null);
   const [creatingCorrectionQuoteId, setCreatingCorrectionQuoteId] = useState(null);
-  const [query, setQuery] = useState({ page: 1 });
+  const [query, setQuery] = useState(focusSearch ? { page: 1, search: focusSearch } : { page: 1 });
   const [refreshIndex, setRefreshIndex] = useState(0);
   const [pagination, setPagination] = useState({
     total: 0,
     totalPages: 0,
   });
-  const [filters, setFilters] = useState({ ...initialFilters });
+  const [filters, setFilters] = useState({ ...initialFilters, search: focusSearch });
   const isBusy = isLoading || isLoadingReview || confirmingQuoteId !== null || creatingCorrectionQuoteId !== null;
   useEffect(() => {
     let ignoreResult = false;
@@ -182,10 +185,12 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
   }, [quotes, handleReview]);
 
   useEffect(() => {
-    if (reviewQuoteId) {
-      document.getElementById(`quote-${reviewQuoteId}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    const targetId = reviewQuoteId ?? highlightQuoteId;
+
+    if (targetId && !isLoading) {
+      document.getElementById(`quote-${targetId}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     }
-  }, [reviewQuoteId]);
+  }, [reviewQuoteId, highlightQuoteId, isLoading]);
 
   function handleFilterChange(event) {
     const { name, value } = event.target;
@@ -204,6 +209,7 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
       return;
     }
 
+    setHighlightQuoteId(null);
     setQuery({
       ...filters,
       search: filters.search.trim(),
@@ -212,6 +218,7 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
   }
 
   function handleClearFilters() {
+    setHighlightQuoteId(null);
     setFilters({ ...initialFilters });
     setQuery({ page: 1 });
   }
@@ -266,7 +273,7 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
     <div>
       <form onSubmit={handleApplyFilters}>
         <div>
-          <label htmlFor="quote-client-search">Buscar por nome do cliente</label>
+          <label htmlFor="quote-client-search">Buscar por cliente ou nº do orçamento</label>
           <input id="quote-client-search" name="search" type="search" value={filters.search} onChange={handleFilterChange} maxLength={150} disabled={isBusy} />
         </div>
 
@@ -335,9 +342,10 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
 
             return (
               <li key={quote.id}>
-                <article id={`quote-${quote.id}`} className={reviewQuoteId === quote.id ? 'quote-card-reviewing' : undefined}>
+                <article id={`quote-${quote.id}`} className={reviewQuoteId === quote.id || highlightQuoteId === quote.id ? 'quote-card-reviewing' : undefined}>
                   <h3>Orçamento nº {formatQuoteNumber(quote.quoteNumber)}</h3>
                   {reviewQuoteId === quote.id && <p className="review-badge">Em revisão</p>}
+                  {reviewQuoteId !== quote.id && highlightQuoteId === quote.id && <p className="review-badge">Aberto pelo aviso</p>}
 
                   {quote.status === 'DRAFT' && (
                     <div>

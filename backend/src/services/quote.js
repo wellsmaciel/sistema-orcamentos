@@ -9,6 +9,7 @@ import QuoteEvent from '../models/quote-event.js';
 import { calculateItemsTotal } from '../utils/quote-pricing.js';
 import { normalizeStoredQuantity } from '../utils/quote-quantity.js';
 import { diffQuoteSnapshots, snapshotQuote } from '../utils/quote-history.js';
+import { parseQuoteNumberSearch } from '../utils/quote-search.js';
 import { validateQuoteItemsInput } from '../validators/quote-items.js';
 
 const PUBLIC_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
@@ -564,9 +565,19 @@ async function listQuotesPage(userId, { search = '', status, serviceDateFrom, se
   if (normalizedSearch) {
     const escapedSearch = normalizedSearch.replace(/[\\%_]/g, '\\$&');
 
-    where.clientName = {
-      [Op.iLike]: `%${escapedSearch}%`,
+    const clientNameCondition = {
+      clientName: {
+        [Op.iLike]: `%${escapedSearch}%`,
+      },
     };
+    const quoteNumber = parseQuoteNumberSearch(normalizedSearch);
+
+    // Só números (ou "nº 123"): procura pelo número do orçamento e também pelo nome, que pode ter dígitos.
+    if (quoteNumber) {
+      where[Op.or] = [{ quoteNumber }, clientNameCondition];
+    } else {
+      Object.assign(where, clientNameCondition);
+    }
   }
 
   if (status) {

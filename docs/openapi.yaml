@@ -1027,7 +1027,7 @@ paths:
       parameters:
         - name: search
           in: query
-          description: Parte do nome preservado do cliente, sem distinguir maiúsculas e minúsculas.
+          description: Parte do nome preservado do cliente, sem distinguir maiúsculas e minúsculas. Só com dígitos (com ou sem zeros à esquerda, "nº" ou "#"), também encontra o orçamento com esse número.
           schema:
             type: string
             maxLength: 150

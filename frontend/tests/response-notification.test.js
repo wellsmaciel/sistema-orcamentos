@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { describeResponseNotification } from '../src/utils/response-notification.js';
+import { countHiddenUnread, describeResponseNotification } from '../src/utils/response-notification.js';
 
 test('descreve a recusa com o motivo', () => {
   assert.equal(
@@ -17,4 +17,12 @@ test('descreve o aceite sem motivo', () => {
     describeResponseNotification({ clientName: 'João', decision: 'ACCEPTED', quoteNumber: 7, respondedAt: '2026-09-30T09:00:00.000Z', rejectionReason: null }, { timeZone: 'UTC' }),
     'João aceitou o orçamento nº 000007 em 30/09/2026, 09:00.',
   );
+});
+
+test('conta as respostas novas que não cabem no quadro', () => {
+  const items = [{ unread: true }, { unread: true }, { unread: false }];
+
+  assert.equal(countHiddenUnread({ unreadCount: 6, items }), 4);
+  assert.equal(countHiddenUnread({ unreadCount: 2, items }), 0);
+  assert.equal(countHiddenUnread({ unreadCount: 0, items: [] }), 0);
 });
