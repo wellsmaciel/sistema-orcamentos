@@ -15,6 +15,7 @@ test('o guia de ajuda é público e o rodapé leva até ele', async ({ page }) =
     await expect(page.getByRole('heading', { level: 2, name: topic })).toBeVisible();
   }
   await expect(page.getByRole('button', { name: 'Entrar no sistema' })).toHaveCount(0);
+  await expect(page.getByText('Usar a descrição geral como item')).toBeVisible();
 
   // O índice leva até a seção.
   await page.getByRole('navigation', { name: 'Tópicos da ajuda' }).getByRole('link', { name: 'Perguntas frequentes' }).click();
