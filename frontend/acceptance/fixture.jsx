@@ -5,6 +5,7 @@ import AccessibilityControls from '../src/components/AccessibilityControls.jsx';
 import QuoteForm from '../src/components/QuoteForm.jsx';
 import CompanyForm from '../src/components/CompanyForm.jsx';
 import ClientForm from '../src/components/ClientForm.jsx';
+import ClientList from '../src/components/ClientList.jsx';
 import ActivityList from '../src/components/ActivityList.jsx';
 import ManagementView from '../src/components/ManagementView.jsx';
 import AccountView from '../src/components/AccountView.jsx';
@@ -49,7 +50,20 @@ if (mode === 'scroll') content = <ScrollFixture />;
 if (mode === 'quote-edit') {
   content = <QuoteForm quote={draftQuote} getAccessTokenSilently={getAccessTokenSilently} onSaved={(saved) => { document.body.dataset.savedQuote = `${saved.id}:${saved.quoteNumber}`; }} />;
 }
-if (mode === 'quote-form') content = <QuoteForm clients={[client]} getAccessTokenSilently={getAccessTokenSilently} onReview={showReviewRequest} />;
+if (mode === 'quote-form') {
+  content = <QuoteForm clients={[client]} getAccessTokenSilently={getAccessTokenSilently} initialClientId={parameters.get('client')} onReview={showReviewRequest} />;
+}
+if (mode === 'clients-created') {
+  content = (
+    <ClientList
+      getAccessTokenSilently={getAccessTokenSilently}
+      onEdit={() => {}}
+      onNewClient={() => {}}
+      createdClient={client}
+      onCreateQuote={(created) => { document.body.dataset.quoteForClient = created.id; }}
+    />
+  );
+}
 if (mode === 'company') content = <CompanyForm getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'client-edit') content = <ClientForm client={client} getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'activities') content = <ActivityList getAccessTokenSilently={getAccessTokenSilently} />;

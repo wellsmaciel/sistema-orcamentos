@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { requestQuoteDescriptionReview } from '../services/quote-description-review.js';
+import { describeApiError } from '../utils/validation-message.js';
 import { buildDescriptionReviewRequest, buildQuoteRequest, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, isBlankFormItem } from '../utils/quote-form.js';
 
 const idleDescriptionReview = { status: 'idle', suggestion: '', message: '' };
@@ -66,8 +67,28 @@ function getCurrentDate() {
   return `${year}-${month}-${day}`;
 }
 
-function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved, onReview }) {
-  const [formData, setFormData] = useState(() => buildInitialFormData(quote));
+// O endereço do serviço começa igual ao endereço do cliente escolhido.
+function withClientAddress(formData, client) {
+  return {
+    ...formData,
+    clientId: client.id,
+    street: client.address.street,
+    number: client.address.number,
+    complement: client.address.complement ?? '',
+    postalCode: client.address.postalCode,
+    district: client.address.district,
+    city: client.address.city,
+    state: client.address.state,
+  };
+}
+
+function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initialClientId = null, onSaved, onReview }) {
+  const [formData, setFormData] = useState(() => {
+    const initialFormData = buildInitialFormData(quote);
+    const initialClient = !quote && initialClientId ? clients.find((client) => client.id === initialClientId) : null;
+
+    return initialClient ? withClientAddress(initialFormData, initialClient) : initialFormData;
+  });
   const [savedQuote, setSavedQuote] = useState(null);
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,17 +129,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
       return;
     }
 
-    setFormData((currentFormData) => ({
-      ...currentFormData,
-      clientId: client.id,
-      street: client.address.street,
-      number: client.address.number,
-      complement: client.address.complement ?? '',
-      postalCode: client.address.postalCode,
-      district: client.address.district,
-      city: client.address.city,
-      state: client.address.state,
-    }));
+    setFormData((currentFormData) => withClientAddress(currentFormData, client));
   }
 
   function handleChange(event) {
@@ -206,9 +217,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, onSaved
       const responseBody = await response.json();
 
       if (!response.ok) {
-        const detailsMessage = responseBody.details?.map((detail) => `${detail.field}: ${detail.message}`).join(' ');
-
-        throw new Error(detailsMessage || responseBody.message || `Não foi possível ${isEditing ? 'alterar' : 'criar'} o orçamento.`);
+        throw new Error(describeApiError(responseBody, `Não foi possível ${isEditing ? 'alterar' : 'criar'} o orçamento.`));
       }
 
       setSavedQuote(responseBody);

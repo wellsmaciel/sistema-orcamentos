@@ -1,3 +1,4 @@
+import { describeApiError } from '../utils/validation-message.js';
 import { fetchJsonWithTimeout, withTimeout } from './request.js';
 
 async function requestCompany(getAccessTokenSilently) {
@@ -35,7 +36,7 @@ async function saveCompany(getAccessTokenSilently, company) {
   const responseBody = await response.json();
 
   if (!response.ok) {
-    throw new Error(responseBody.message ?? 'Não foi possível salvar os dados profissionais.');
+    throw new Error(describeApiError(responseBody, 'Não foi possível salvar os dados profissionais.'));
   }
 
   return responseBody;

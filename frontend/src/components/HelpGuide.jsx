@@ -36,7 +36,10 @@ function HelpGuide() {
 
         <h2 id="clientes">Clientes</h2>
         <ol>
-          <li>Em <strong>Clientes</strong>, clique em <strong>Novo cliente</strong> e informe nome, e-mail, telefone e endereço.</li>
+          <li>
+            Em <strong>Clientes</strong>, clique em <strong>Novo cliente</strong> e informe nome, e-mail, telefone e endereço. Depois de salvar,
+            o botão <strong>Criar orçamento para…</strong> abre um orçamento novo com esse cliente já escolhido.
+          </li>
           <li>Use <strong>Editar cliente</strong> para corrigir dados. Os orçamentos já enviados guardam os dados da época em que foram criados.</li>
           <li>
             <strong>Inativar cliente</strong> tira o cliente da lista de novos orçamentos sem apagar o histórico.{' '}

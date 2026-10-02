@@ -163,7 +163,8 @@ function CompanyForm({ getAccessTokenSilently }) {
 
         <div>
           <label htmlFor="company-tax-id">CPF ou CNPJ</label>
-          <input id="company-tax-id" name="taxId" type="text" value={formData.taxId} onChange={handleChange} maxLength={20} />
+          <input id="company-tax-id" name="taxId" type="text" value={formData.taxId} onChange={handleChange} maxLength={20} aria-describedby="company-tax-id-hint" />
+          <p id="company-tax-id-hint">CPF com 11 dígitos ou CNPJ com 14, com ou sem pontuação, por exemplo 11.222.333/0001-81.</p>
         </div>
 
         <fieldset>

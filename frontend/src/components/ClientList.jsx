@@ -14,7 +14,7 @@ const successLabels = {
   reactivate: 'reativado',
 };
 
-function ClientList({ getAccessTokenSilently, onEdit, onNewClient }) {
+function ClientList({ getAccessTokenSilently, onEdit, onNewClient, createdClient = null, onCreateQuote }) {
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState('true');
   const [query, setQuery] = useState({
@@ -138,6 +138,18 @@ function ClientList({ getAccessTokenSilently, onEdit, onNewClient }) {
 
   return (
     <section>
+      {/* Logo depois do cadastro, o próximo passo mais comum é o orçamento; o aviso não obriga a seguir. */}
+      {createdClient && onCreateQuote && (
+        <div className="created-client-notice" role="status">
+          <p>
+            Cliente <strong>{createdClient.name}</strong> cadastrado.
+          </p>
+          <button type="button" className="button-primary" onClick={() => onCreateQuote(createdClient)}>
+            Criar orçamento para {createdClient.name}
+          </button>
+        </div>
+      )}
+
       <button type="button" className="button-primary" onClick={onNewClient} disabled={controlsDisabled}>
         Novo cliente
       </button>
