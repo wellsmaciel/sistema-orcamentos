@@ -6,6 +6,36 @@ function normalizeDecimalInput(value) {
   return typeof value === 'string' ? value.trim().replace(',', '.') : '';
 }
 
+// Aceita o valor como as pessoas escrevem no Brasil: "1.200,50", "1200,50", "R$ 1.200" ou "1200.50".
+// Com ponto e vírgula juntos, o último separador é o decimal. Só com pontos, um ponto seguido de
+// exatamente três dígitos é separador de milhar ("1.200" = mil e duzentos).
+function normalizeMoneyInput(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  const compactValue = value.trim().replace(/^R\$\s*/i, '').replace(/\s/g, '');
+  const lastComma = compactValue.lastIndexOf(',');
+  const lastDot = compactValue.lastIndexOf('.');
+
+  if (lastComma !== -1 && lastDot !== -1) {
+    const decimalSeparator = lastComma > lastDot ? ',' : '.';
+    const thousandsSeparator = decimalSeparator === ',' ? '.' : ',';
+
+    return compactValue.split(thousandsSeparator).join('').replace(decimalSeparator, '.');
+  }
+
+  if (lastComma !== -1) {
+    return compactValue.replace(',', '.');
+  }
+
+  if (/^\d{1,3}(?:\.\d{3})+$/.test(compactValue)) {
+    return compactValue.split('.').join('');
+  }
+
+  return compactValue;
+}
+
 function formatQuoteQuantity(value) {
   const normalizedValue = normalizeDecimalInput(value);
 
@@ -19,10 +49,13 @@ function formatQuoteQuantity(value) {
 }
 
 function parsePositiveDecimal(value, pattern, decimalPlaces, label) {
-  const normalizedValue = normalizeDecimalInput(value);
+  const isMoney = pattern === MONEY_PATTERN;
+  const normalizedValue = isMoney ? normalizeMoneyInput(value) : normalizeDecimalInput(value);
 
   if (!pattern.test(normalizedValue)) {
-    throw new RangeError(`${label}: informe um número sem separadores de milhares, com até ${decimalPlaces} casas decimais.`);
+    throw new RangeError(isMoney
+      ? `${label}: informe um valor como 1.200,50, com até ${decimalPlaces} casas decimais.`
+      : `${label}: informe um número sem separadores de milhares, com até ${decimalPlaces} casas decimais.`);
   }
 
   const [integerPart, decimalPart = ''] = normalizedValue.split('.');
@@ -174,4 +207,4 @@ function buildDescriptionReviewRequest(formData) {
   return { description: formData.description.trim(), items };
 }
 
-export { normalizeDecimalInput, formatQuoteQuantity, calculateFormItemSubtotal, getItemsPricingPreview, formatQuoteMoney, buildQuoteRequest, buildDescriptionReviewRequest, isBlankFormItem };
+export { normalizeDecimalInput, normalizeMoneyInput, formatQuoteQuantity, calculateFormItemSubtotal, getItemsPricingPreview, formatQuoteMoney, buildQuoteRequest, buildDescriptionReviewRequest, isBlankFormItem };

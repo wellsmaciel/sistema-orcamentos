@@ -413,9 +413,9 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
                         inputMode="decimal"
                         value={item.unitPrice}
                         onChange={(event) => handleItemChange(item.formId, event)}
-                        pattern="[0-9]{1,10}([.,][0-9]{1,2})?"
-                        maxLength={13}
-                        title="Informe um preço maior que zero, com até duas casas decimais e sem separadores de milhares."
+                        pattern="(R\$ ?)?[0-9]{1,3}(\.?[0-9]{3})*([.,][0-9]{1,2})?"
+                        maxLength={20}
+                        title="Informe um preço maior que zero, por exemplo 1.200,50 ou 1200,50."
                         required={!isOptionalItem(item)}
                       />
                     </div>
@@ -450,9 +450,9 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
                 inputMode="decimal"
                 value={formData.totalAmount}
                 onChange={handleChange}
-                pattern="[0-9]{1,10}([.,][0-9]{1,2})?"
-                maxLength={13}
-                title="Informe um valor maior que zero, com até duas casas decimais e sem separadores de milhares."
+                pattern="(R\$ ?)?[0-9]{1,3}(\.?[0-9]{3})*([.,][0-9]{1,2})?"
+                maxLength={20}
+                title="Informe um valor maior que zero, por exemplo 1.200,50 ou 1200,50."
                 required
               />
             </div>
