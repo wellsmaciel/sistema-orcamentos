@@ -4,7 +4,7 @@ import sequelize from '../../src/config/database.js';
 import Client from '../../src/models/client.js';
 import User from '../../src/models/user.js';
 import Company from '../../src/models/company.js';
-import { confirmQuote, createQuote, getPublicQuote, listQuotes, updateQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory } from '../../src/services/quote.js';
+import { confirmQuote, createQuote, getPublicQuote, updateQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory } from '../../src/services/quote.js';
 import { jest } from '@jest/globals';
 import Quote from '../../src/models/quote.js';
 import QuoteItem from '../../src/models/quote-item.js';
@@ -192,7 +192,7 @@ describe('Serviço de orçamentos', () => {
       transaction,
     });
 
-    const quotes = await listQuotes(user.id, {
+    const { items: quotes } = await listQuotesPage(user.id, {
       transaction,
     });
 
@@ -1281,7 +1281,7 @@ describe('Serviço de orçamentos', () => {
 
     await createQuote(otherUser.id, buildQuoteInput(otherClient.id), { transaction });
 
-    const quotes = await listQuotes(user.id, { transaction });
+    const { items: quotes } = await listQuotesPage(user.id, { transaction });
 
     expect(quotes).toHaveLength(1);
     expect(quotes[0].id).toBe(quote.id);

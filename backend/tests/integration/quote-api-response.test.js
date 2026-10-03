@@ -8,7 +8,7 @@ const ITEM_ID = '550e8400-e29b-41d4-a716-446655440002';
 const PUBLIC_TOKEN = 'a'.repeat(64);
 
 const services = Object.fromEntries(
-  ['createQuote', 'listQuotes', 'listQuotesPage', 'updateQuote', 'confirmQuote', 'getPublicQuote', 'respondToPublicQuote', 'createQuoteCorrection', 'getQuoteHistory', 'hasCompanyLogo'].map((name) => [name, jest.fn()]),
+  ['createQuote', 'listQuotesPage', 'updateQuote', 'confirmQuote', 'getPublicQuote', 'respondToPublicQuote', 'createQuoteCorrection', 'getQuoteHistory', 'hasCompanyLogo'].map((name) => [name, jest.fn()]),
 );
 
 // Testa rotas, validadores e JSON reais; autenticação e persistência são simuladas
@@ -147,16 +147,6 @@ describe('Contrato JSON de orçamento e itens', () => {
     expectItems(response.body, pricingMode);
     expect(response.body.totalAmount).toBe(pricingMode === 'ITEMIZED' ? '49.98' : '1000.00');
     expect(services.createQuote).toHaveBeenCalledWith(USER_ID, input);
-  });
-
-  test('GET deve incluir itens na listagem privada', async () => {
-    services.listQuotes.mockResolvedValue([buildQuote()]);
-
-    const response = await request(app).get('/api/v1/quotes');
-
-    expect(response.status).toBe(200);
-    expectItems(response.body.items[0]);
-    expect(services.listQuotes).toHaveBeenCalledWith(USER_ID);
   });
 
   test('GET search deve incluir itens e preservar os metadados da página', async () => {
