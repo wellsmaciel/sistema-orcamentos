@@ -183,6 +183,11 @@ As verificações também são executadas automaticamente pelo GitHub Actions em
 - **Orçamentos:** cada orçamento tem seu histórico de eventos em `quote_events`.
 - **IA:** cada revisão registra o modelo, os tokens usados e a duração, sem o texto do prestador.
 
+## Cabeçalhos de segurança
+
+- **API:** `helmet` envia HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options` e `Referrer-Policy: no-referrer`, e remove `X-Powered-By`. `Cross-Origin-Resource-Policy` fica `cross-origin` porque o site exibe o logo servido pela API.
+- **Site:** `frontend/public/serve.json` configura o `serve` usado no Railway: o site não pode ser exibido dentro de frames de outros sites (`frame-ancestors 'none'`, proteção contra clickjacking no link do orçamento), além de HSTS, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` (o token do link público não vai para outros sites) e `Permissions-Policy`.
+
 ## Variáveis de ambiente
 
 As variáveis necessárias estão documentadas nos seguintes arquivos:
