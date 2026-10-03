@@ -55,8 +55,10 @@ function HelpGuide() {
             (você informa o total).
           </li>
           <li>
-            Adicione os itens com <strong>+ Adicionar outro item</strong>. Linhas deixadas em branco são ignoradas. No{' '}
-            <strong>Valor global</strong>, se o serviço for um item só, use <strong>Usar a descrição geral como item</strong>.
+            Adicione os itens com <strong>+ Adicionar outro item</strong>. Linhas deixadas em branco são ignoradas. Se a descrição já
+            lista as peças, use <strong>Separar a descrição em itens com IA</strong>: a IA sugere os itens e as quantidades, você confere
+            e clica em <strong>Usar itens</strong>; os preços continuam com você. No <strong>Valor global</strong>, se o serviço for um
+            item só, use <strong>Usar a descrição geral como item</strong>.
           </li>
           <li>Informe a data prevista e o endereço do serviço e, se precisar, observações do local.</li>
           <li>

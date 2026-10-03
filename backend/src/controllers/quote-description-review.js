@@ -4,10 +4,7 @@ import {
   isQuoteDescriptionReviewAvailable,
   reviewQuoteDescription as reviewQuoteDescriptionService,
 } from '../services/quote-description-review.js';
-import { createRateLimiter } from '../utils/rate-limiter.js';
-
-// Protege o custo da API de IA: cada prestador pode pedir 10 revisões a cada 10 minutos.
-const reviewLimiter = createRateLimiter({ limit: 10, windowMs: 10 * 60 * 1000 });
+import { aiUsageLimiter } from '../utils/ai-rate-limit.js';
 
 const ERROR_RESPONSES = {
   AI_NOT_CONFIGURED: { status: 503, message: 'A revisão com IA não está disponível neste ambiente.' },
@@ -28,7 +25,7 @@ async function reviewQuoteDescription(request, response, next) {
     return sendReviewError(response, 'AI_NOT_CONFIGURED');
   }
 
-  if (!reviewLimiter.tryConsume(request.authenticatedUser.id)) {
+  if (!aiUsageLimiter.tryConsume(request.authenticatedUser.id)) {
     return sendReviewError(response, 'AI_RATE_LIMITED');
   }
 

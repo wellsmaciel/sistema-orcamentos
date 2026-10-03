@@ -67,4 +67,27 @@ function validateQuoteDescriptionReviewInput(input) {
   return errors;
 }
 
-export { validateQuoteDescriptionReviewInput };
+// Para separar em itens, só a descrição é enviada à IA.
+function validateQuoteItemSuggestionInput(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return [{ field: 'body', message: 'O corpo da requisição deve ser um objeto.' }];
+  }
+
+  const errors = [];
+
+  for (const property of Object.keys(input)) {
+    if (property !== 'description') {
+      addError(errors, property, 'Este campo não é permitido.');
+    }
+  }
+
+  if (typeof input.description !== 'string' || input.description.trim().length === 0) {
+    addError(errors, 'description', 'Este campo é obrigatório.');
+  } else if (input.description.trim().length > 10000) {
+    addError(errors, 'description', 'Este campo deve possuir no máximo 10000 caracteres.');
+  }
+
+  return errors;
+}
+
+export { validateQuoteDescriptionReviewInput, validateQuoteItemSuggestionInput };

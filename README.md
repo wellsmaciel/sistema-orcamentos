@@ -15,7 +15,8 @@ Ao criar ou editar um rascunho, o prestador pode pedir uma revisão da descriç�
 - Revisão completa antes de confirmar, link público para o cliente aceitar ou recusar, motivo da recusa e correção vinculada ao orçamento anterior.
 - Logo da empresa no perfil profissional (PNG, JPEG ou WebP, reduzido no navegador para até 200 KB), exibido no topo do link público.
 - Histórico de eventos de cada orçamento.
-- Revisão da descrição com IA.
+- Revisão da descrição com IA e separação da descrição em itens com IA (a IA sugere itens e quantidades; os preços ficam com o prestador).
+- Preços aceitos no formato brasileiro, como "1.200,50" ou "R$ 1.200".
 - Envio do link pelo WhatsApp ou por e-mail do próprio prestador, com mensagem pronta; o app não envia mensagens sozinho.
 - Aviso na tela inicial quando um cliente aceita ou recusa um orçamento, com atalho para abrir cada orçamento respondido.
 - Busca de orçamentos pelo nome do cliente ou pelo número do orçamento.

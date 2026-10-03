@@ -7,8 +7,9 @@ import { loadAuthenticatedUser } from './middlewares/authenticated-user.js';
 import { createClient, listClients, listClientsPage, updateClient, deleteClient, deactivateClient, reactivateClient } from './controllers/client.js';
 import { validateClient, validateClientIdParameter, validateClientListQuery } from './middlewares/validate-client.js';
 import { confirmQuote, createQuote, listQuotes, updateQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory } from './controllers/quote.js';
-import { validateQuote, validateQuoteIdParameter, validateQuoteUpdate, validateQuoteResponse, validateQuoteListQuery, validateQuoteDescriptionReview } from './middlewares/validate-quote.js';
+import { validateQuote, validateQuoteIdParameter, validateQuoteUpdate, validateQuoteResponse, validateQuoteListQuery, validateQuoteDescriptionReview, validateQuoteItemSuggestion } from './middlewares/validate-quote.js';
 import { reviewQuoteDescription } from './controllers/quote-description-review.js';
+import { suggestQuoteItems } from './controllers/quote-item-suggestion.js';
 import { getCompany, saveCompany } from './controllers/company.js';
 import { deleteMyCompanyLogo, getMyCompanyLogo, getPublicQuoteLogo, saveMyCompanyLogo } from './controllers/company-logo.js';
 import { ALLOWED_LOGO_TYPES, MAX_LOGO_BYTES } from './utils/image-type.js';
@@ -59,6 +60,7 @@ app.post('/api/v1/quotes', validateAccessToken, loadAuthenticatedUser, validateQ
 app.get('/api/v1/quotes', validateAccessToken, loadAuthenticatedUser, listQuotes);
 app.get('/api/v1/quotes/search', validateAccessToken, loadAuthenticatedUser, validateQuoteListQuery, listQuotesPage);
 app.post('/api/v1/quotes/description-review', validateAccessToken, loadAuthenticatedUser, validateQuoteDescriptionReview, reviewQuoteDescription);
+app.post('/api/v1/quotes/item-suggestions', validateAccessToken, loadAuthenticatedUser, validateQuoteItemSuggestion, suggestQuoteItems);
 app.get('/api/v1/quotes/:quoteId/history', validateAccessToken, loadAuthenticatedUser, validateQuoteIdParameter, getQuoteHistory);
 
 app.put('/api/v1/quotes/:quoteId', validateAccessToken, loadAuthenticatedUser, validateQuoteIdParameter, validateQuoteUpdate, updateQuote);
