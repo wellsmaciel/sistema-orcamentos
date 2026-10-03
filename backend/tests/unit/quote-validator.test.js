@@ -1,4 +1,4 @@
-import { validateQuoteId, validateQuoteInput, validateQuoteUpdateInput, validateQuoteResponseInput } from '../../src/validators/quote.js';
+import { getCurrentDate, validateQuoteId, validateQuoteInput, validateQuoteUpdateInput, validateQuoteResponseInput } from '../../src/validators/quote.js';
 
 const CURRENT_DATE = '2026-09-27';
 
@@ -195,5 +195,22 @@ describe('Validação de orçamento', () => {
 
       expect(validateQuoteInput(input, CURRENT_DATE)).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'items' })]));
     });
+  });
+});
+
+describe('Data de hoje no horário de Brasília', () => {
+  test.each([
+    ['2026-10-03T01:30:00.000Z', '2026-10-02'], // 22h30 de 02/10 em Brasília; em UTC já é 03/10
+    ['2026-10-03T02:59:59.000Z', '2026-10-02'], // 23h59 em Brasília
+    ['2026-10-03T03:00:00.000Z', '2026-10-03'], // meia-noite em Brasília
+    ['2026-10-03T15:00:00.000Z', '2026-10-03'], // meio-dia em Brasília
+  ])('em %s (UTC), hoje é %s', (instant, expected) => {
+    expect(getCurrentDate(new Date(instant))).toBe(expected);
+  });
+
+  test('às 22h30 de Brasília, a data de hoje ainda é aceita para o serviço', () => {
+    const input = { ...buildValidInput(), serviceDate: '2026-10-02' };
+
+    expect(validateQuoteInput(input, getCurrentDate(new Date('2026-10-03T01:30:00.000Z')))).toEqual([]);
   });
 });

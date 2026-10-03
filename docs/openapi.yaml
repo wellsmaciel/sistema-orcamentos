@@ -404,31 +404,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
   /api/v1/quotes:
-    get:
-      tags:
-        - Orçamentos
-      summary: Lista os orçamentos do prestador
-      description: >
-        Retorna somente os orçamentos pertencentes ao prestador autenticado,
-        ordenados do mais recente para o mais antigo. Quando não houver
-        orçamentos, retorna uma lista vazia.
-      operationId: listQuotes
-      security:
-        - Auth0Bearer: []
-      responses:
-        '200':
-          description: Lista de orçamentos.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/QuoteListResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
     post:
       tags:
         - Orçamentos
@@ -2169,17 +2144,6 @@ components:
           type: integer
           minimum: 0
           description: Total de páginas. Retorna zero quando não há resultados.
-
-    QuoteListResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - items
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Quote'
 
     QuoteDescriptionReviewRequest:
       type: object

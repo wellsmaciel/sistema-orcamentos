@@ -6,7 +6,7 @@ import { validateAccessToken } from './middlewares/auth.js';
 import { loadAuthenticatedUser } from './middlewares/authenticated-user.js';
 import { createClient, listClients, listClientsPage, updateClient, deleteClient, deactivateClient, reactivateClient } from './controllers/client.js';
 import { validateClient, validateClientIdParameter, validateClientListQuery } from './middlewares/validate-client.js';
-import { confirmQuote, createQuote, listQuotes, updateQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory } from './controllers/quote.js';
+import { confirmQuote, createQuote, updateQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory } from './controllers/quote.js';
 import { validateQuote, validateQuoteIdParameter, validateQuoteUpdate, validateQuoteResponse, validateQuoteListQuery, validateQuoteDescriptionReview, validateQuoteItemSuggestion } from './middlewares/validate-quote.js';
 import { reviewQuoteDescription } from './controllers/quote-description-review.js';
 import { suggestQuoteItems } from './controllers/quote-item-suggestion.js';
@@ -57,7 +57,6 @@ app.delete('/api/v1/clients/:clientId', validateAccessToken, loadAuthenticatedUs
 app.post('/api/v1/clients/:clientId/deactivate', validateAccessToken, loadAuthenticatedUser, validateClientIdParameter, deactivateClient);
 app.post('/api/v1/clients/:clientId/reactivate', validateAccessToken, loadAuthenticatedUser, validateClientIdParameter, reactivateClient);
 app.post('/api/v1/quotes', validateAccessToken, loadAuthenticatedUser, validateQuote, createQuote);
-app.get('/api/v1/quotes', validateAccessToken, loadAuthenticatedUser, listQuotes);
 app.get('/api/v1/quotes/search', validateAccessToken, loadAuthenticatedUser, validateQuoteListQuery, listQuotesPage);
 app.post('/api/v1/quotes/description-review', validateAccessToken, loadAuthenticatedUser, validateQuoteDescriptionReview, reviewQuoteDescription);
 app.post('/api/v1/quotes/item-suggestions', validateAccessToken, loadAuthenticatedUser, validateQuoteItemSuggestion, suggestQuoteItems);
