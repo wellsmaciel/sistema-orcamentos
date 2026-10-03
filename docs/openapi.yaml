@@ -1695,7 +1695,7 @@ components:
         quoteNumber:
           type: integer
           minimum: 1
-          description: Número sequencial utilizado para identificar o orçamento.
+          description: Número sequencial do orçamento dentro da conta do prestador (o primeiro orçamento de cada conta é o 1).
           examples:
             - 1
         client:
@@ -2061,7 +2061,7 @@ components:
         quoteNumber:
           type: integer
           minimum: 1
-          description: Número sequencial utilizado para identificar o orçamento.
+          description: Número sequencial do orçamento dentro da conta do prestador (o primeiro orçamento de cada conta é o 1).
         clientName:
           type: string
           description: Nome do cliente no momento da criação do orçamento.

@@ -511,6 +511,47 @@ describe('Serviço de orçamentos', () => {
       outcome: 'NOT_RESPONDABLE',
     });
   });
+  test('cada prestador tem a própria numeração, começando em 1', async () => {
+    const firstUser = await createUser('Primeiro Prestador');
+    const secondUser = await createUser('Segundo Prestador');
+    const firstClient = await createClient(firstUser.id);
+    const secondClient = await createClient(secondUser.id);
+
+    const first1 = await createQuote(firstUser.id, buildQuoteInput(firstClient.id), { transaction });
+    const second1 = await createQuote(secondUser.id, buildQuoteInput(secondClient.id), { transaction });
+    const second2 = await createQuote(secondUser.id, buildQuoteInput(secondClient.id), { transaction });
+    const first2 = await createQuote(firstUser.id, buildQuoteInput(firstClient.id), { transaction });
+
+    expect([first1.quoteNumber, first2.quoteNumber]).toEqual([1, 2]);
+    expect([second1.quoteNumber, second2.quoteNumber]).toEqual([1, 2]);
+
+    await firstUser.reload({ transaction });
+    expect(firstUser.lastQuoteNumber).toBe(2);
+  });
+
+  test('a correção recebe o próximo número do mesmo prestador', async () => {
+    const user = await createUser('Prestador da Correção');
+    const client = await createClient(user.id);
+    const original = await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+    const { quote: sent } = await confirmQuote(user.id, original.id, { transaction });
+    await respondToPublicQuote(sent.publicToken, { decision: 'REJECTED' }, { transaction });
+
+    const { quote: correction } = await createQuoteCorrection(user.id, original.id, { transaction });
+
+    expect(original.quoteNumber).toBe(1);
+    expect(correction.quoteNumber).toBe(2);
+  });
+
+  test('o banco não aceita dois orçamentos com o mesmo número para o mesmo prestador', async () => {
+    const user = await createUser('Prestador Duplicado');
+    const client = await createClient(user.id);
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+    const { id: _id, items: _items, ...duplicate } = quote.get({ plain: true });
+
+    await expect(sequelize.transaction({ transaction }, () => Quote.create(duplicate, { transaction })))
+      .rejects.toMatchObject({ name: 'SequelizeUniqueConstraintError', fields: { user_id: user.id, quote_number: '1' } });
+  });
+
   test('deve criar um novo rascunho a partir de um orçamento recusado', async () => {
     const user = await createUser('Prestador de Teste');
     const client = await createClient(user.id);

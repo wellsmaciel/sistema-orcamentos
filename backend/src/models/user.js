@@ -51,6 +51,13 @@ User.init(
       allowNull: true,
       field: 'response_notifications_seen_at',
     },
+
+    lastQuoteNumber: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: 'last_quote_number',
+    },
   },
   {
     sequelize,

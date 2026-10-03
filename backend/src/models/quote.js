@@ -15,12 +15,14 @@ Quote.init(
       defaultValue: Sequelize.literal('gen_random_uuid()'),
     },
 
+    // Número de cada prestador (o primeiro orçamento de cada conta é o 1), único por prestador.
     quoteNumber: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      autoIncrement: true,
-      unique: true,
       field: 'quote_number',
+      validate: {
+        min: 1,
+      },
     },
 
     userId: {
