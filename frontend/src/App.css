@@ -454,6 +454,19 @@ article p + p {
   background-color: #eff6ff;
 }
 
+.item-suggestion-list {
+  margin: 0 0 12px;
+  padding-left: 24px;
+}
+
+.item-suggestion-list li + li {
+  margin-top: 4px;
+}
+
+.item-suggestion-quantity {
+  color: #475569;
+}
+
 .created-client-notice {
   margin-bottom: 16px;
   padding: 12px 16px;

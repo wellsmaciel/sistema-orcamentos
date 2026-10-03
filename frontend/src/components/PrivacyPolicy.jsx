@@ -39,8 +39,9 @@ function PrivacyPolicy() {
           <li><strong>Auth0:</strong> realiza o cadastro, o login e a troca de senha.</li>
           <li><strong>Google:</strong> somente para quem escolhe entrar com a conta Google.</li>
           <li>
-            <strong>Anthropic:</strong> quando o prestador clica em &quot;Revisar descrição com IA&quot;, apenas a descrição e os itens do
-            orçamento são enviados para gerar uma sugestão. Dados do cliente não são enviados.
+            <strong>Anthropic:</strong> quando o prestador clica em &quot;Revisar descrição com IA&quot; ou &quot;Separar a descrição em
+            itens com IA&quot;, apenas a descrição e os itens do orçamento são enviados para gerar uma sugestão (na separação em itens,
+            só a descrição). Dados do cliente não são enviados.
           </li>
           <li><strong>Railway:</strong> hospeda o aplicativo e o banco de dados.</li>
           <li>

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { requestQuoteDescriptionReview } from '../services/quote-description-review.js';
+import { requestQuoteDescriptionReview, requestQuoteItemSuggestions } from '../services/quote-description-review.js';
 import { describeApiError } from '../utils/validation-message.js';
 import { buildDescriptionReviewRequest, buildQuoteRequest, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, isBlankFormItem } from '../utils/quote-form.js';
 
 const idleDescriptionReview = { status: 'idle', suggestion: '', message: '' };
+const idleItemSuggestion = { status: 'idle', items: [], message: '' };
 
 const emptyFormData = {
   clientId: '',
@@ -93,13 +94,16 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [descriptionReview, setDescriptionReview] = useState(idleDescriptionReview);
+  const [itemSuggestion, setItemSuggestion] = useState(idleItemSuggestion);
 
   const isEditing = Boolean(quote);
   const editTitle = isEditing ? `Editar orçamento nº ${String(quote.quoteNumber).padStart(6, '0')}` : '';
   const isItemized = formData.pricingMode === 'ITEMIZED';
   const trimmedDescription = formData.description.trim();
   const hasOnlyBlankItems = formData.items.every((item) => isBlankFormItem(item, formData.pricingMode));
-  const offersDescriptionAsItem = !isItemized && hasOnlyBlankItems && trimmedDescription.length > 0;
+  // Atalhos para preencher os itens a partir da descrição: só enquanto nenhum item foi preenchido.
+  const offersItemShortcuts = hasOnlyBlankItems && trimmedDescription.length > 0;
+  const offersDescriptionAsItem = !isItemized && offersItemShortcuts;
   const canUseDescriptionAsItem = offersDescriptionAsItem && trimmedDescription.length <= 500;
   const descriptionTooLongForItem = offersDescriptionAsItem && trimmedDescription.length > 500;
   const pricingPreview = isItemized ? getItemsPricingPreview(formData.items) : null;
@@ -205,6 +209,33 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
     setDescriptionReview({ ...idleDescriptionReview, status: 'applied', message: 'Sugestão aplicada. Confira o texto e salve o orçamento.' });
   }
 
+  async function handleSuggestItems() {
+    try {
+      setItemSuggestion({ ...idleItemSuggestion, status: 'loading' });
+
+      const items = await requestQuoteItemSuggestions(getAccessTokenSilently, formData.description);
+
+      setItemSuggestion({ ...idleItemSuggestion, status: 'ready', items });
+    } catch (suggestionError) {
+      setItemSuggestion({ ...idleItemSuggestion, status: 'error', message: suggestionError.message });
+    }
+  }
+
+  // Os itens sugeridos substituem as linhas vazias; os preços continuam com o prestador.
+  function handleApplyItemSuggestion() {
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      items: itemSuggestion.items.map((item) => buildFormItem({ description: item.description, quantity: item.quantity })),
+    }));
+    setItemSuggestion({
+      ...idleItemSuggestion,
+      status: 'applied',
+      message: isItemized
+        ? 'Itens aplicados. Informe o preço de cada item e confira as quantidades.'
+        : 'Itens aplicados. Confira as descrições e as quantidades.',
+    });
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -238,6 +269,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
       if (!isEditing) {
         setFormData(buildInitialFormData(null));
         setDescriptionReview(idleDescriptionReview);
+        setItemSuggestion(idleItemSuggestion);
       }
 
       if (onSaved) {
@@ -370,11 +402,38 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
             <p id="quote-items-help">Inclua pelo menos um item. A quantidade aceita até uma casa decimal, por exemplo, 2,5. Use vírgula ou ponto, sem separadores de milhares.</p>
             <p>Os itens preenchidos já fazem parte do orçamento. Use "Adicionar outro item" só para incluir mais uma linha; linhas deixadas em branco são ignoradas ao salvar.</p>
 
-            {canUseDescriptionAsItem && (
-              <button type="button" className="button-filled" onClick={handleUseDescriptionAsItem}>Usar a descrição geral como item</button>
+            {offersItemShortcuts && (
+              <div className="description-review-actions">
+                <button type="button" className="button-filled" onClick={handleSuggestItems} disabled={itemSuggestion.status === 'loading'}>
+                  {itemSuggestion.status === 'loading' ? 'Separando em itens...' : 'Separar a descrição em itens com IA'}
+                </button>
+                {canUseDescriptionAsItem && (
+                  <button type="button" className="button-filled" onClick={handleUseDescriptionAsItem}>Usar a descrição geral como item</button>
+                )}
+              </div>
             )}
+
+            {itemSuggestion.status === 'ready' && (
+              <article aria-labelledby="quote-item-suggestion-title">
+                <h3 id="quote-item-suggestion-title">Itens sugeridos pela IA</h3>
+                <ol className="item-suggestion-list">
+                  {itemSuggestion.items.map((item, index) => (
+                    <li key={`${index}-${item.description}`}>
+                      {item.description} <span className="item-suggestion-quantity">(quantidade: {formatQuoteQuantity(item.quantity)})</span>
+                    </li>
+                  ))}
+                </ol>
+                <div className="description-review-actions">
+                  <button type="button" className="button-primary" onClick={handleApplyItemSuggestion}>Usar itens</button>
+                  <button type="button" onClick={() => setItemSuggestion(idleItemSuggestion)}>Descartar</button>
+                </div>
+              </article>
+            )}
+
+            {itemSuggestion.status === 'error' && <p role="alert">{itemSuggestion.message}</p>}
+            {itemSuggestion.status === 'applied' && <p role="status">{itemSuggestion.message}</p>}
             {descriptionTooLongForItem && (
-              <p>A descrição geral tem mais de 500 caracteres e não cabe num item. Descreva o item de forma resumida.</p>
+              <p>A descrição geral tem mais de 500 caracteres e não cabe num item só. Separe em itens com IA ou descreva o item de forma resumida.</p>
             )}
 
             {formData.items.map((item, index) => (
@@ -413,9 +472,9 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
                         inputMode="decimal"
                         value={item.unitPrice}
                         onChange={(event) => handleItemChange(item.formId, event)}
-                        pattern="[0-9]{1,10}([.,][0-9]{1,2})?"
-                        maxLength={13}
-                        title="Informe um preço maior que zero, com até duas casas decimais e sem separadores de milhares."
+                        pattern="(R\$ ?)?[0-9]{1,3}(\.?[0-9]{3})*([.,][0-9]{1,2})?"
+                        maxLength={20}
+                        title="Informe um preço maior que zero, por exemplo 1.200,50 ou 1200,50."
                         required={!isOptionalItem(item)}
                       />
                     </div>
@@ -450,9 +509,9 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
                 inputMode="decimal"
                 value={formData.totalAmount}
                 onChange={handleChange}
-                pattern="[0-9]{1,10}([.,][0-9]{1,2})?"
-                maxLength={13}
-                title="Informe um valor maior que zero, com até duas casas decimais e sem separadores de milhares."
+                pattern="(R\$ ?)?[0-9]{1,3}(\.?[0-9]{3})*([.,][0-9]{1,2})?"
+                maxLength={20}
+                title="Informe um valor maior que zero, por exemplo 1.200,50 ou 1200,50."
                 required
               />
             </div>

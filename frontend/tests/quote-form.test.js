@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { buildDescriptionReviewRequest, buildQuoteRequest, calculateFormItemSubtotal, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, isBlankFormItem, normalizeDecimalInput } from '../src/utils/quote-form.js';
+import { buildDescriptionReviewRequest, buildQuoteRequest, calculateFormItemSubtotal, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, isBlankFormItem, normalizeDecimalInput, normalizeMoneyInput } from '../src/utils/quote-form.js';
 import { calculateItemSubtotal, calculateItemsTotal } from '../../backend/src/utils/quote-pricing.js';
 import { validateQuoteInput, validateQuoteUpdateInput } from '../../backend/src/validators/quote.js';
 import { validateQuoteDescriptionReviewInput } from '../../backend/src/validators/quote-description-review.js';
@@ -84,7 +84,7 @@ describe('Envio do formulário de orçamento', () => {
     ['quantidade acima do limite', (data) => { data.items[0].quantity = '1000000000'; }],
     ['valor global zero', (data) => { data.totalAmount = '0,00'; }],
     ['valor global com três casas', (data) => { data.totalAmount = '1,001'; }],
-    ['separadores de milhares', (data) => { data.totalAmount = '1.000,00'; }],
+    ['valor global com letras', (data) => { data.totalAmount = 'mil reais'; }],
   ]) {
     test(`rejeita ${scenario}`, () => {
       const data = buildFormData();
@@ -231,5 +231,46 @@ describe('Linhas de item em branco', () => {
     assert.equal(isBlankFormItem({ description: '', quantity: '1', unitPrice: '19,99' }, 'FIXED_TOTAL'), true);
     assert.equal(isBlankFormItem({ description: '', quantity: '1', unitPrice: '19,99' }, 'ITEMIZED'), false);
     assert.equal(isBlankFormItem({ description: '', quantity: '2', unitPrice: '' }, 'FIXED_TOTAL'), false);
+  });
+});
+
+describe('Valores em reais no formato brasileiro', () => {
+  for (const [typed, expected] of [
+    ['1.200,50', '1200.50'],
+    ['1200,50', '1200.50'],
+    ['1200.50', '1200.50'],
+    ['R$ 1.200,50', '1200.50'],
+    ['r$1.200', '1200'],
+    ['1.200', '1200'],
+    ['1.234.567,89', '1234567.89'],
+    ['1,234.56', '1234.56'],
+    [' 19,99 ', '19.99'],
+    ['50', '50'],
+  ]) {
+    test(`"${typed}" vira ${expected}`, () => {
+      assert.equal(normalizeMoneyInput(typed), expected);
+    });
+  }
+
+  test('o valor global e o preço por item aceitam separador de milhar', () => {
+    const fixedTotal = buildFormData();
+    fixedTotal.totalAmount = 'R$ 1.000,00';
+    assert.equal(buildQuoteRequest(fixedTotal).totalAmount, '1000.00');
+
+    const itemized = buildFormData('ITEMIZED');
+    itemized.items[0].unitPrice = '1.200,50';
+    const request = buildQuoteRequest(itemized);
+    assert.equal(request.items[0].unitPrice, '1200.50');
+    assert.deepEqual(validateQuoteInput(request, '2099-09-27'), []);
+  });
+
+  test('o subtotal da prévia usa o valor convertido', () => {
+    assert.equal(calculateFormItemSubtotal('2', '1.200,50'), '2401.00');
+  });
+
+  test('a mensagem de erro mostra um exemplo no formato brasileiro', () => {
+    const data = buildFormData();
+    data.totalAmount = '1,001';
+    assert.throws(() => buildQuoteRequest(data), /1\.200,50/);
   });
 });

@@ -689,8 +689,9 @@ paths:
         Envia a descrição e os itens informados no formulário a um modelo de IA
         (Claude, da Anthropic) e devolve um texto revisado. Nada é salvo: o prestador
         decide se usa a sugestão. Aceita somente descrição e itens, para que dados do
-        cliente não sejam enviados ao serviço de IA. Cada prestador pode pedir até 10
-        revisões a cada 10 minutos. Requer a variável ANTHROPIC_API_KEY no backend.
+        cliente não sejam enviados ao serviço de IA. Cada prestador pode fazer até 10
+        pedidos à IA a cada 10 minutos, somando revisões e separações em itens.
+        Requer a variável ANTHROPIC_API_KEY no backend.
       operationId: reviewQuoteDescription
       security:
         - Auth0Bearer: []
@@ -720,7 +721,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '429':
-          description: Limite de revisões do prestador atingido (AI_RATE_LIMITED).
+          description: Limite de uso da IA do prestador atingido (AI_RATE_LIMITED).
           content:
             application/json:
               schema:
@@ -734,6 +735,68 @@ paths:
         '503':
           description: >
             Revisão indisponível: chave não configurada (AI_NOT_CONFIGURED) ou falha
+            temporária do serviço de IA (AI_UNAVAILABLE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/v1/quotes/item-suggestions:
+    post:
+      tags:
+        - Orçamentos
+      summary: Sugere os itens do orçamento a partir da descrição, com IA
+      description: >
+        Envia somente a descrição do orçamento a um modelo de IA (Claude, da
+        Anthropic), que devolve uma lista de itens com descrição e quantidade, sem
+        preços. A resposta da IA segue um esquema JSON e é conferida pelo backend:
+        quantidade inválida vira 1 e itens vazios são descartados. Nada é salvo: o
+        prestador decide se usa os itens. Usa o mesmo limite da revisão da descrição
+        (10 pedidos à IA a cada 10 minutos por prestador).
+      operationId: suggestQuoteItems
+      security:
+        - Auth0Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteItemSuggestionRequest'
+      responses:
+        '200':
+          description: Itens sugeridos pela IA.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteItemSuggestionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: O modelo recusou separar o texto (AI_REFUSED).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Limite de uso da IA do prestador atingido (AI_RATE_LIMITED).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: A IA não devolveu itens válidos (AI_INVALID_RESPONSE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: >
+            Separação indisponível: chave não configurada (AI_NOT_CONFIGURED) ou falha
             temporária do serviço de IA (AI_UNAVAILABLE).
           content:
             application/json:
@@ -2121,6 +2184,44 @@ components:
           type: string
           maxLength: 10000
           description: Descrição revisada sugerida pela IA.
+
+    QuoteItemSuggestionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          minLength: 1
+          maxLength: 10000
+          description: Descrição do orçamento. Nenhum dado do cliente é aceito.
+
+    QuoteItemSuggestionResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - description
+              - quantity
+            properties:
+              description:
+                type: string
+                maxLength: 500
+              quantity:
+                type: string
+                pattern: '^\d{1,9}(\.\d)?$'
+                examples:
+                  - '2'
 
     ErrorResponse:
       type: object
