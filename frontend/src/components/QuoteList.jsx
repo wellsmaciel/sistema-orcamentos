@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { requestQuotesPage } from '../services/quote-list.js';
 import { requestCompany } from '../services/company.js';
+import { requestQuoteConfirmation } from '../services/quote-confirmation.js';
 import { buildEmailShareUrl, buildWhatsAppShareUrl } from '../utils/quote-share.js';
 import QuoteReview from './QuoteReview.jsx';
 import QuoteHistory from './QuoteHistory.jsx';
@@ -41,25 +42,6 @@ function buildPublicQuoteUrl(publicToken) {
   publicUrl.searchParams.set('quote', publicToken);
 
   return publicUrl.toString();
-}
-
-async function requestQuoteConfirmation(getAccessTokenSilently, quoteId) {
-  const accessToken = await getAccessTokenSilently();
-
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes/${quoteId}/confirm`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  const responseBody = await response.json();
-
-  if (!response.ok) {
-    throw new Error(responseBody.message ?? 'Não foi possível confirmar o orçamento.');
-  }
-
-  return responseBody;
 }
 
 async function requestQuoteCorrection(getAccessTokenSilently, quoteId) {

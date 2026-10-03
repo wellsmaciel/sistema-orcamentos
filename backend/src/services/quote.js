@@ -111,16 +111,6 @@ async function createQuote(userId, input, { transaction } = {}) {
     return savedQuote;
   });
 }
-async function listQuotes(userId, { transaction } = {}) {
-  return Quote.findAll({
-    where: {
-      userId,
-    },
-    order: [['created_at', 'DESC']],
-    include: buildQuoteItemsInclude(),
-    transaction,
-  });
-}
 async function updateQuote(userId, quoteId, input, { transaction } = {}) {
   return sequelize.transaction({ transaction }, async (writeTransaction) => {
     const quote = await Quote.findOne({
@@ -661,4 +651,4 @@ function buildQuoteItemsInclude() {
     },
   ];
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory };
+export { createQuote, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory };

@@ -2,7 +2,6 @@ import {
   confirmQuote as confirmQuoteService,
   createQuote as createQuoteService,
   getPublicQuote as getPublicQuoteService,
-  listQuotes as listQuotesService,
   respondToPublicQuote as respondToPublicQuoteService,
   updateQuote as updateQuoteService,
   createQuoteCorrection as createQuoteCorrectionService,
@@ -150,17 +149,6 @@ async function createQuote(request, response, next) {
     }
 
     return response.status(201).json(serializeQuote(quote));
-  } catch (error) {
-    return next(error);
-  }
-}
-async function listQuotes(request, response, next) {
-  try {
-    const quotes = await listQuotesService(request.authenticatedUser.id);
-
-    return response.status(200).json({
-      items: quotes.map(serializeQuote),
-    });
   } catch (error) {
     return next(error);
   }
@@ -358,4 +346,4 @@ async function getQuoteHistory(request, response, next) {
     return next(error);
   }
 }
-export { createQuote, listQuotes, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory };
+export { createQuote, updateQuote, confirmQuote, getPublicQuote, respondToPublicQuote, createQuoteCorrection, listQuotesPage, getQuoteHistory };

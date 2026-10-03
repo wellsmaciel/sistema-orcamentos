@@ -55,13 +55,13 @@ function isValidDate(value) {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
-function getCurrentDate() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
+// "Hoje" no horário de Brasília. O servidor roda em UTC: sem o fuso, das 21h à meia-noite
+// a data de hoje seria tratada como passada.
+function getCurrentDate(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
+  const value = (type) => parts.find((part) => part.type === type).value;
 
-  return `${year}-${month}-${day}`;
+  return `${value('year')}-${value('month')}-${value('day')}`;
 }
 
 function validateServiceAddress(address, errors) {
@@ -176,4 +176,4 @@ function validateQuoteResponseInput(input) {
 
   return errors;
 }
-export { validateQuoteInput, validateQuoteUpdateInput, validateQuoteId, validateQuoteResponseInput };
+export { getCurrentDate, validateQuoteInput, validateQuoteUpdateInput, validateQuoteId, validateQuoteResponseInput };
