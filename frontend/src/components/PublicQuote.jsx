@@ -1,65 +1,13 @@
 import { useEffect, useState } from 'react';
 import QuoteItems from './QuoteItems.jsx';
-import { fetchJsonWithTimeout } from '../services/request.js';
+import { requestPublicQuote, respondToPublicQuote } from '../services/public-quote.js';
+import { formatAmount, formatDate, formatQuoteNumber } from '../utils/format.js';
 
 const statusLabels = {
   SENT: 'Aguardando resposta',
   ACCEPTED: 'Aceito pelo cliente',
   REJECTED: 'Recusado pelo cliente',
 };
-
-function formatAmount(value) {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(Number(value));
-}
-
-function formatDate(value) {
-  const [year, month, day] = value.split('-');
-
-  return `${day}/${month}/${year}`;
-}
-
-function formatQuoteNumber(value) {
-  return String(value).padStart(6, '0');
-}
-
-async function requestPublicQuote(publicToken) {
-  const { response, responseBody } = await fetchJsonWithTimeout(`${import.meta.env.VITE_API_BASE_URL}/api/v1/public/quotes/${publicToken}`);
-
-  if (!response.ok) {
-    throw new Error(responseBody.message ?? 'Não foi possível consultar o orçamento.');
-  }
-
-  return responseBody;
-}
-
-async function requestQuoteResponse(publicToken, decision, reason) {
-  const requestBody = {
-    decision,
-  };
-
-  if (decision === 'REJECTED') {
-    requestBody.reason = reason;
-  }
-
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/public/quotes/${publicToken}/respond`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  const responseBody = await response.json();
-
-  if (!response.ok) {
-    throw new Error(responseBody.message ?? 'Não foi possível registrar a resposta.');
-  }
-
-  return responseBody;
-}
 
 function PublicQuote({ publicToken }) {
   const [quote, setQuote] = useState(null);
@@ -110,7 +58,7 @@ function PublicQuote({ publicToken }) {
       setResponseError('');
       setResponseMessage('');
 
-      const updatedQuote = await requestQuoteResponse(publicToken, pendingDecision, rejectionReason);
+      const updatedQuote = await respondToPublicQuote(publicToken, pendingDecision, rejectionReason);
 
       setQuote(updatedQuote);
       setResponseMessage(pendingDecision === 'ACCEPTED' ? 'Orçamento aceito com sucesso.' : 'Recusa registrada com sucesso.');

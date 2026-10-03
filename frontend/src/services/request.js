@@ -15,7 +15,8 @@ async function fetchJsonWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEO
 
   try {
     const response = await fetch(url, { ...options, signal: controller.signal });
-    const responseBody = await response.json();
+    // 204 (por exemplo, ao excluir) não tem corpo.
+    const responseBody = response.status === 204 ? null : await response.json();
     return { response, responseBody };
   } catch (error) {
     if (controller.signal.aborted) {
@@ -36,4 +37,21 @@ async function fetchJsonWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEO
   }
 }
 
-export { fetchJsonWithTimeout, withTimeout };
+// Chamada autenticada à API: busca o token, envia JSON e aplica o mesmo tempo limite e as mesmas
+// mensagens de erro de rede em todas as telas.
+async function requestApi(getAccessTokenSilently, path, { method = 'GET', body, timeoutMs } = {}) {
+  const accessToken = await withTimeout(getAccessTokenSilently());
+  const headers = { Authorization: `Bearer ${accessToken}` };
+
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  return fetchJsonWithTimeout(
+    `${import.meta.env.VITE_API_BASE_URL}${path}`,
+    { method, headers, body: body === undefined ? undefined : JSON.stringify(body) },
+    timeoutMs,
+  );
+}
+
+export { fetchJsonWithTimeout, requestApi, withTimeout };

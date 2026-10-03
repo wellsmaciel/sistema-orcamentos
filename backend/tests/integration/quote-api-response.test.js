@@ -238,6 +238,18 @@ describe('Contrato JSON de orçamento e itens', () => {
     expect(response.body).toEqual(expect.objectContaining({ code: 'QUOTE_ITEMS_INVALID', details }));
   });
 
+  test('POST confirm explica quando a data do serviço já passou', async () => {
+    services.confirmQuote.mockResolvedValue({ outcome: 'SERVICE_DATE_IN_PAST' });
+
+    const response = await request(app).post(`/api/v1/quotes/${QUOTE_ID}/confirm`);
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({
+      code: 'QUOTE_SERVICE_DATE_PAST',
+      message: 'A data do serviço já passou. Edite o rascunho e escolha uma nova data antes de confirmar.',
+    });
+  });
+
   test('GET histórico retorna eventos sem campos internos e trata orçamento inexistente', async () => {
     services.getQuoteHistory.mockResolvedValueOnce([{
       id: ITEM_ID,

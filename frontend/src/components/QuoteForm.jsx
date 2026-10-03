@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { requestQuoteDescriptionReview, requestQuoteItemSuggestions } from '../services/quote-description-review.js';
-import { describeApiError } from '../utils/validation-message.js';
+import { saveQuote } from '../services/quote-actions.js';
+import { formatQuoteNumber } from '../utils/format.js';
 import { buildDescriptionReviewRequest, buildQuoteRequest, formatQuoteMoney, formatQuoteQuantity, getItemsPricingPreview, isBlankFormItem } from '../utils/quote-form.js';
 
 const idleDescriptionReview = { status: 'idle', suggestion: '', message: '' };
@@ -97,7 +98,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
   const [itemSuggestion, setItemSuggestion] = useState(idleItemSuggestion);
 
   const isEditing = Boolean(quote);
-  const editTitle = isEditing ? `Editar orçamento nº ${String(quote.quoteNumber).padStart(6, '0')}` : '';
+  const editTitle = isEditing ? `Editar orçamento nº ${formatQuoteNumber(quote.quoteNumber)}` : '';
   const isItemized = formData.pricingMode === 'ITEMIZED';
   const trimmedDescription = formData.description.trim();
   const hasOnlyBlankItems = formData.items.every((item) => isBlankFormItem(item, formData.pricingMode));
@@ -245,24 +246,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
       setSavedQuote(null);
 
       const requestBody = buildQuoteRequest(formData, { isEditing });
-      const accessToken = await getAccessTokenSilently();
-
-      const endpoint = isEditing ? `${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes/${quote.id}` : `${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes`;
-
-      const response = await fetch(endpoint, {
-        method: isEditing ? 'PUT' : 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      const responseBody = await response.json();
-
-      if (!response.ok) {
-        throw new Error(describeApiError(responseBody, `Não foi possível ${isEditing ? 'alterar' : 'criar'} o orçamento.`));
-      }
+      const responseBody = await saveQuote(getAccessTokenSilently, requestBody, isEditing ? quote.id : null);
 
       setSavedQuote(responseBody);
 

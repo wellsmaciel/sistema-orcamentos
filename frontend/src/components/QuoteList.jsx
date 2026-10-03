@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { requestQuotesPage } from '../services/quote-list.js';
 import { requestCompany } from '../services/company.js';
-import { requestQuoteConfirmation } from '../services/quote-confirmation.js';
+import { confirmQuote, createQuoteCorrection } from '../services/quote-actions.js';
 import { buildEmailShareUrl, buildWhatsAppShareUrl } from '../utils/quote-share.js';
 import QuoteReview from './QuoteReview.jsx';
 import QuoteHistory from './QuoteHistory.jsx';
+import { formatAmount, formatDate, formatQuoteNumber } from '../utils/format.js';
 
 const statusLabels = {
   DRAFT: 'Rascunho',
@@ -19,48 +20,12 @@ const initialFilters = {
   serviceDateTo: '',
 };
 
-function formatAmount(value) {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(Number(value));
-}
-
-function formatDate(value) {
-  const [year, month, day] = value.split('-');
-
-  return `${day}/${month}/${year}`;
-}
-
-function formatQuoteNumber(value) {
-  return String(value).padStart(6, '0');
-}
-
 function buildPublicQuoteUrl(publicToken) {
   const publicUrl = new URL(window.location.origin);
 
   publicUrl.searchParams.set('quote', publicToken);
 
   return publicUrl.toString();
-}
-
-async function requestQuoteCorrection(getAccessTokenSilently, quoteId) {
-  const accessToken = await getAccessTokenSilently();
-
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/quotes/${quoteId}/corrections`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  const responseBody = await response.json();
-
-  if (!response.ok) {
-    throw new Error(responseBody.message ?? 'Não foi possível criar a correção.');
-  }
-
-  return responseBody;
 }
 
 function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null, focusQuote = null }) {
@@ -213,7 +178,7 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
       setConfirmingQuoteId(quote.id);
       setErrorMessage('');
 
-      await requestQuoteConfirmation(getAccessTokenSilently, quote.id);
+      await confirmQuote(getAccessTokenSilently, quote.id);
 
       setReviewQuoteId(null);
       setRefreshIndex((currentIndex) => currentIndex + 1);
@@ -240,7 +205,7 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
       setCreatingCorrectionQuoteId(quote.id);
       setErrorMessage('');
 
-      const correction = await requestQuoteCorrection(getAccessTokenSilently, quote.id);
+      const correction = await createQuoteCorrection(getAccessTokenSilently, quote.id);
 
       if (onEdit) {
         onEdit(correction);

@@ -1,9 +1,5 @@
 import QuoteItems from './QuoteItems.jsx';
-
-function formatDate(value) {
-  const [year, month, day] = value.split('-');
-  return `${day}/${month}/${year}`;
-}
+import { formatDate } from '../utils/format.js';
 
 function QuoteReview({ quote, company }) {
   const address = quote.serviceAddress;

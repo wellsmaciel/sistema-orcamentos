@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { markResponseNotificationsRead, requestResponseNotifications } from '../services/response-notification.js';
-import { countHiddenUnread, describeResponseNotification, formatQuoteNumber } from '../utils/response-notification.js';
+import { formatQuoteNumber } from '../utils/format.js';
+import { countHiddenUnread, describeResponseNotification } from '../utils/response-notification.js';
 
 // Enquanto o menu está aberto, a lista é atualizada a cada minuto.
 const REFRESH_INTERVAL_MS = 60000;

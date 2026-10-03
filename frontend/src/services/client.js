@@ -1,48 +1,12 @@
 import { describeApiError } from '../utils/validation-message.js';
-import { fetchJsonWithTimeout, withTimeout } from './request.js';
+import { requestApi } from './request.js';
 
-async function requestClientApi(getAccessTokenSilently, path, { method = 'GET', body } = {}) {
-  const accessToken = method === 'GET'
-    ? await withTimeout(getAccessTokenSilently())
-    : await getAccessTokenSilently();
-
-  const headers = {
-    Authorization: `Bearer ${accessToken}`,
-  };
-
-  if (body !== undefined) {
-    headers['Content-Type'] = 'application/json';
-  }
-
-  const requestOptions = {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  };
-
-  if (method === 'GET') {
-    const { response, responseBody } = await fetchJsonWithTimeout(`${import.meta.env.VITE_API_BASE_URL}${path}`, requestOptions);
-    if (!response.ok) {
-      const error = new Error(describeApiError(responseBody, 'Não foi possível concluir a operação com o cliente.'));
-      error.code = responseBody.code;
-      throw error;
-    }
-    return responseBody;
-  }
-
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, requestOptions);
-
-  if (response.status === 204) {
-    return null;
-  }
-
-  const responseBody = await response.json();
+async function requestClientApi(getAccessTokenSilently, path, options = {}) {
+  const { response, responseBody } = await requestApi(getAccessTokenSilently, path, options);
 
   if (!response.ok) {
     const error = new Error(describeApiError(responseBody, 'Não foi possível concluir a operação com o cliente.'));
-
-    error.code = responseBody.code;
-
+    error.code = responseBody?.code;
     throw error;
   }
 

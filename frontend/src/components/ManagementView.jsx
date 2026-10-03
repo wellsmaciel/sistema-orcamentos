@@ -2,10 +2,7 @@ import { useEffect, useState } from 'react';
 import { requestManagementSummary } from '../services/management.js';
 import { PERIOD_OPTIONS, STATUS_ROWS, formatAcceptanceRate, formatDaysWaiting, formatResponseTime } from '../utils/management.js';
 import { formatQuoteMoney } from '../utils/quote-form.js';
-
-function formatQuoteNumber(quoteNumber) {
-  return String(quoteNumber).padStart(6, '0');
-}
+import { formatQuoteNumber } from '../utils/format.js';
 
 function ManagementView({ getAccessTokenSilently, onOpenQuotes }) {
   const [period, setPeriod] = useState('month');

@@ -1,6 +1,4 @@
-function formatAmount(value) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value));
-}
+import { formatAmount } from '../utils/format.js';
 
 function QuoteItems({ quote }) {
   const items = [...(quote.items ?? [])].sort((first, second) => first.position - second.position);
