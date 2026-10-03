@@ -193,6 +193,12 @@ async function confirmQuote(request, response, next) {
         message: 'Somente orçamentos em rascunho podem ser confirmados.',
       });
     }
+    if (result.outcome === 'SERVICE_DATE_IN_PAST') {
+      return response.status(409).json({
+        code: 'QUOTE_SERVICE_DATE_PAST',
+        message: 'A data do serviço já passou. Edite o rascunho e escolha uma nova data antes de confirmar.',
+      });
+    }
     if (result.outcome === 'COMPANY_NOT_FOUND') {
       return response.status(409).json({
         code: 'COMPANY_PROFILE_REQUIRED',

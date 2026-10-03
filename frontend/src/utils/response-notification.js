@@ -1,6 +1,4 @@
-function formatQuoteNumber(quoteNumber) {
-  return String(quoteNumber).padStart(6, '0');
-}
+import { formatQuoteNumber } from './format.js';
 
 // Por exemplo: "Maria recusou o orçamento nº 000042 em 30/09/2026, 14:00. Motivo: valor alto".
 function describeResponseNotification(item, { timeZone } = {}) {
@@ -16,4 +14,4 @@ function countHiddenUnread({ unreadCount = 0, items = [] }) {
   return Math.max(0, unreadCount - items.filter((item) => item.unread).length);
 }
 
-export { countHiddenUnread, describeResponseNotification, formatQuoteNumber };
+export { countHiddenUnread, describeResponseNotification };

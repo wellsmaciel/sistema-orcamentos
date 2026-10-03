@@ -1,8 +1,5 @@
 import { normalizeBrazilianPhone } from './phone.js';
-
-function formatQuoteNumber(quoteNumber) {
-  return String(quoteNumber).padStart(6, '0');
-}
+import { formatQuoteNumber } from './format.js';
 
 // Usa a mesma regra de telefone dos cadastros e acrescenta o código do Brasil exigido pelo WhatsApp.
 function normalizeWhatsAppPhone(phone) {

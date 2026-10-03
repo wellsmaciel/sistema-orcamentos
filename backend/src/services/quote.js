@@ -11,6 +11,7 @@ import { normalizeStoredQuantity } from '../utils/quote-quantity.js';
 import { diffQuoteSnapshots, snapshotQuote } from '../utils/quote-history.js';
 import { parseQuoteNumberSearch } from '../utils/quote-search.js';
 import { validateQuoteItemsInput } from '../validators/quote-items.js';
+import { getCurrentDate } from '../validators/quote.js';
 
 const PUBLIC_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 
@@ -30,7 +31,37 @@ function normalizeAmount(value) {
   return `${integerPart}.${decimalPart.padEnd(2, '0')}`;
 }
 
-async function createQuote(userId, input, { transaction } = {}) {
+// Campos do orçamento vindos do formulário, iguais na criação e na edição.
+function buildQuoteFields(input) {
+  const { serviceAddress } = input;
+
+  return {
+    description: input.description.trim(),
+    pricingMode: input.pricingMode,
+    totalAmount: input.pricingMode === 'ITEMIZED' ? calculateItemsTotal(input.items) : normalizeAmount(input.totalAmount),
+    serviceDate: input.serviceDate,
+    serviceStreet: serviceAddress.street.trim(),
+    serviceNumber: serviceAddress.number.trim(),
+    serviceComplement: normalizeOptionalString(serviceAddress.complement),
+    servicePostalCode: serviceAddress.postalCode.trim(),
+    serviceDistrict: serviceAddress.district.trim(),
+    serviceCity: serviceAddress.city.trim(),
+    serviceState: serviceAddress.state.trim(),
+    locationNotes: normalizeOptionalString(input.locationNotes),
+  };
+}
+
+function buildItemRows(quoteId, input) {
+  return input.items.map((item, index) => ({
+    quoteId,
+    description: item.description.trim(),
+    quantity: item.quantity.trim(),
+    unitPrice: input.pricingMode === 'ITEMIZED' ? normalizeAmount(item.unitPrice) : null,
+    position: index + 1,
+  }));
+}
+
+function assertValidItemsInput(input) {
   const details = validateQuoteItemsInput(input);
 
   if (details.length > 0) {
@@ -38,8 +69,38 @@ async function createQuote(userId, input, { transaction } = {}) {
     error.details = details;
     throw error;
   }
+}
 
-  const totalAmount = input.pricingMode === 'ITEMIZED' ? calculateItemsTotal(input.items) : normalizeAmount(input.totalAmount);
+// Confere de novo os itens já salvos antes de enviar ou copiar um orçamento.
+// Registros antigos podem ter sido gravados com regras anteriores.
+function validateStoredPricing(quote, items) {
+  const pricingInput = {
+    pricingMode: quote.pricingMode,
+    items: items.map((item) => ({
+      description: item.description,
+      quantity: normalizeStoredQuantity(item.quantity),
+      unitPrice: item.unitPrice,
+    })),
+  };
+
+  if (quote.pricingMode === 'FIXED_TOTAL') {
+    pricingInput.totalAmount = quote.totalAmount;
+  }
+
+  const details = validateQuoteItemsInput(pricingInput);
+
+  if (details.length === 0 && quote.pricingMode === 'ITEMIZED' && calculateItemsTotal(pricingInput.items) !== normalizeAmount(quote.totalAmount)) {
+    details.push({
+      field: 'totalAmount',
+      message: 'O valor total não corresponde à soma dos itens.',
+    });
+  }
+
+  return details;
+}
+
+async function createQuote(userId, input, { transaction } = {}) {
+  assertValidItemsInput(input);
 
   return sequelize.transaction({ transaction }, async (writeTransaction) => {
     const client = await Client.findOne({
@@ -56,8 +117,6 @@ async function createQuote(userId, input, { transaction } = {}) {
       return null;
     }
 
-    const { serviceAddress } = input;
-
     const quote = await Quote.create(
       {
         userId,
@@ -65,33 +124,14 @@ async function createQuote(userId, input, { transaction } = {}) {
         clientName: client.name,
         clientEmail: client.email,
         clientPhone: client.phone,
-        description: input.description.trim(),
-        pricingMode: input.pricingMode,
-        totalAmount,
-        serviceDate: input.serviceDate,
-        serviceStreet: serviceAddress.street.trim(),
-        serviceNumber: serviceAddress.number.trim(),
-        serviceComplement: normalizeOptionalString(serviceAddress.complement),
-        servicePostalCode: serviceAddress.postalCode.trim(),
-        serviceDistrict: serviceAddress.district.trim(),
-        serviceCity: serviceAddress.city.trim(),
-        serviceState: serviceAddress.state.trim(),
-        locationNotes: normalizeOptionalString(input.locationNotes),
+        ...buildQuoteFields(input),
       },
       {
         transaction: writeTransaction,
       },
     );
 
-    const items = input.items.map((item, index) => ({
-      quoteId: quote.id,
-      description: item.description.trim(),
-      quantity: item.quantity.trim(),
-      unitPrice: input.pricingMode === 'ITEMIZED' ? normalizeAmount(item.unitPrice) : null,
-      position: index + 1,
-    }));
-
-    await QuoteItem.bulkCreate(items, {
+    await QuoteItem.bulkCreate(buildItemRows(quote.id, input), {
       transaction: writeTransaction,
       validate: true,
     });
@@ -134,15 +174,8 @@ async function updateQuote(userId, quoteId, input, { transaction } = {}) {
       };
     }
 
-    const details = validateQuoteItemsInput(input);
+    assertValidItemsInput(input);
 
-    if (details.length > 0) {
-      const error = new RangeError('Os itens ou a forma de cobrança são inválidos.');
-      error.details = details;
-      throw error;
-    }
-
-    const totalAmount = input.pricingMode === 'ITEMIZED' ? calculateItemsTotal(input.items) : normalizeAmount(input.totalAmount);
     const previousItems = await QuoteItem.findAll({
       where: { quoteId: quote.id },
       order: [['position', 'ASC']],
@@ -150,23 +183,8 @@ async function updateQuote(userId, quoteId, input, { transaction } = {}) {
     });
     const previousSnapshot = snapshotQuote(quote, previousItems);
 
-    const { serviceAddress } = input;
-
     const updatedQuote = await quote.update(
-      {
-        description: input.description.trim(),
-        pricingMode: input.pricingMode,
-        totalAmount,
-        serviceDate: input.serviceDate,
-        serviceStreet: serviceAddress.street.trim(),
-        serviceNumber: serviceAddress.number.trim(),
-        serviceComplement: normalizeOptionalString(serviceAddress.complement),
-        servicePostalCode: serviceAddress.postalCode.trim(),
-        serviceDistrict: serviceAddress.district.trim(),
-        serviceCity: serviceAddress.city.trim(),
-        serviceState: serviceAddress.state.trim(),
-        locationNotes: normalizeOptionalString(input.locationNotes),
-      },
+      buildQuoteFields(input),
       {
         transaction: writeTransaction,
       },
@@ -179,15 +197,7 @@ async function updateQuote(userId, quoteId, input, { transaction } = {}) {
       transaction: writeTransaction,
     });
 
-    const items = input.items.map((item, index) => ({
-      quoteId: quote.id,
-      description: item.description.trim(),
-      quantity: item.quantity.trim(),
-      unitPrice: input.pricingMode === 'ITEMIZED' ? normalizeAmount(item.unitPrice) : null,
-      position: index + 1,
-    }));
-
-    await QuoteItem.bulkCreate(items, {
+    await QuoteItem.bulkCreate(buildItemRows(quote.id, input), {
       transaction: writeTransaction,
       validate: true,
     });
@@ -236,6 +246,13 @@ async function confirmQuote(userId, quoteId, { transaction } = {}) {
       };
     }
 
+    // Um rascunho antigo pode ter uma data que já passou; o cliente não deve receber o orçamento assim.
+    if (quote.serviceDate < getCurrentDate()) {
+      return {
+        outcome: 'SERVICE_DATE_IN_PAST',
+      };
+    }
+
     const items = await QuoteItem.findAll({
       where: {
         quoteId: quote.id,
@@ -244,27 +261,7 @@ async function confirmQuote(userId, quoteId, { transaction } = {}) {
       transaction: writeTransaction,
     });
 
-    const pricingInput = {
-      pricingMode: quote.pricingMode,
-      items: items.map((item) => ({
-        description: item.description,
-        quantity: normalizeStoredQuantity(item.quantity),
-        unitPrice: item.unitPrice,
-      })),
-    };
-
-    if (quote.pricingMode === 'FIXED_TOTAL') {
-      pricingInput.totalAmount = quote.totalAmount;
-    }
-
-    const details = validateQuoteItemsInput(pricingInput);
-
-    if (details.length === 0 && quote.pricingMode === 'ITEMIZED' && calculateItemsTotal(pricingInput.items) !== normalizeAmount(quote.totalAmount)) {
-      details.push({
-        field: 'totalAmount',
-        message: 'O valor total não corresponde à soma dos itens.',
-      });
-    }
+    const details = validateStoredPricing(quote, items);
 
     if (details.length > 0) {
       return {
@@ -433,27 +430,7 @@ async function createQuoteCorrection(userId, quoteId, { transaction } = {}) {
       transaction: writeTransaction,
     });
 
-    const pricingInput = {
-      pricingMode: originalQuote.pricingMode,
-      items: originalItems.map((item) => ({
-        description: item.description,
-        quantity: normalizeStoredQuantity(item.quantity),
-        unitPrice: item.unitPrice,
-      })),
-    };
-
-    if (originalQuote.pricingMode === 'FIXED_TOTAL') {
-      pricingInput.totalAmount = originalQuote.totalAmount;
-    }
-
-    const details = validateQuoteItemsInput(pricingInput);
-
-    if (details.length === 0 && originalQuote.pricingMode === 'ITEMIZED' && calculateItemsTotal(pricingInput.items) !== normalizeAmount(originalQuote.totalAmount)) {
-      details.push({
-        field: 'totalAmount',
-        message: 'O valor total não corresponde à soma dos itens.',
-      });
-    }
+    const details = validateStoredPricing(originalQuote, originalItems);
 
     if (details.length > 0) {
       return {

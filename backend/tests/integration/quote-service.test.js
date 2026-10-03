@@ -280,6 +280,22 @@ describe('Serviço de orçamentos', () => {
     });
   });
 
+  test('não deve confirmar um rascunho cuja data do serviço já passou', async () => {
+    const user = await createUser('Prestador de Teste');
+    const client = await createClient(user.id);
+    const quote = await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+
+    // Simula um rascunho antigo, salvo quando a data ainda era futura.
+    await quote.update({ serviceDate: '2020-01-10' }, { transaction });
+
+    const result = await confirmQuote(user.id, quote.id, { transaction });
+
+    expect(result.outcome).toBe('SERVICE_DATE_IN_PAST');
+    await quote.reload({ transaction });
+    expect(quote.status).toBe('DRAFT');
+    expect(quote.publicToken).toBeNull();
+  });
+
   test('deve confirmar um orçamento em rascunho e gerar o token público', async () => {
     const user = await createUser('Prestador de Teste');
     const client = await createClient(user.id);

@@ -63,3 +63,17 @@ test('explica uma falha de rede e permite nova tentativa', async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test('resposta sem corpo (204) não é tratada como erro', async () => {
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async () => ({ status: 204, ok: true, json: async () => { throw new SyntaxError('Unexpected end of JSON input'); } });
+
+  try {
+    const { response, responseBody } = await fetchJsonWithTimeout('/api/v1/clients/1', { method: 'DELETE' });
+    assert.equal(response.status, 204);
+    assert.equal(responseBody, null);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

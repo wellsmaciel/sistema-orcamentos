@@ -1,14 +1,8 @@
 import { describeApiError } from '../utils/validation-message.js';
-import { fetchJsonWithTimeout, withTimeout } from './request.js';
+import { requestApi } from './request.js';
 
 async function requestCompany(getAccessTokenSilently) {
-  const accessToken = await withTimeout(getAccessTokenSilently());
-
-  const { response, responseBody } = await fetchJsonWithTimeout(`${import.meta.env.VITE_API_BASE_URL}/api/v1/company`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  const { response, responseBody } = await requestApi(getAccessTokenSilently, '/api/v1/company');
 
   if (response.status === 404) {
     return null;
@@ -22,18 +16,7 @@ async function requestCompany(getAccessTokenSilently) {
 }
 
 async function saveCompany(getAccessTokenSilently, company) {
-  const accessToken = await getAccessTokenSilently();
-
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/company`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(company),
-  });
-
-  const responseBody = await response.json();
+  const { response, responseBody } = await requestApi(getAccessTokenSilently, '/api/v1/company', { method: 'PUT', body: company });
 
   if (!response.ok) {
     throw new Error(describeApiError(responseBody, 'Não foi possível salvar os dados profissionais.'));

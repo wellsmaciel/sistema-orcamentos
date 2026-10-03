@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { requestQuoteHistory } from '../services/quote-history.js';
+import { formatQuoteNumber } from '../utils/format.js';
 
 const eventLabels = {
   CREATED: 'Rascunho criado',
@@ -97,8 +98,8 @@ function QuoteHistory({ quoteId, getAccessTokenSilently }) {
                   {' — '}
                   <time dateTime={event.createdAt}>{new Date(event.createdAt).toLocaleString('pt-BR')}</time>
                   {event.details.rejectionReason && <p>Motivo: {event.details.rejectionReason}</p>}
-                  {event.details.correctionQuoteNumber && <p>Orçamento corrigido: nº {String(event.details.correctionQuoteNumber).padStart(6, '0')}</p>}
-                  {event.details.originalQuoteNumber && <p>Orçamento original: nº {String(event.details.originalQuoteNumber).padStart(6, '0')}</p>}
+                  {event.details.correctionQuoteNumber && <p>Orçamento corrigido: nº {formatQuoteNumber(event.details.correctionQuoteNumber)}</p>}
+                  {event.details.originalQuoteNumber && <p>Orçamento original: nº {formatQuoteNumber(event.details.originalQuoteNumber)}</p>}
                   {event.details.changes?.length > 0 && (
                     <ul>
                       {event.details.changes.map((change) => (
