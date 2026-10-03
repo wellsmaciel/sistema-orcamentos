@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import helmet from 'helmet';
 import { InsufficientScopeError, InvalidTokenError, UnauthorizedError } from 'express-oauth2-jwt-bearer';
 import { getAuthenticatedUser } from './controllers/user.js';
 import { validateAccessToken } from './middlewares/auth.js';
@@ -22,6 +23,10 @@ import { listResponseNotifications, markResponseNotificationsRead } from './cont
 const app = express();
 
 app.use(requestLogger);
+
+// Cabeçalhos de segurança (HTTPS obrigatório, sem "sniffing" de tipo, sem exibição em frames de outros sites).
+// O site fica em outro domínio e exibe o logo servido pela API, por isso os recursos podem ser usados entre origens.
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
 app.use(
   cors({
