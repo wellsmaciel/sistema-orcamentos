@@ -58,8 +58,9 @@ function PrivacyPolicy() {
 
         <h2>Cookies e armazenamento no navegador</h2>
         <p>
-          O login usa um cookie de sessão do Auth0. As preferências de tamanho do texto e de alto contraste ficam salvas apenas no seu
-          navegador. Não usamos cookies de publicidade nem de rastreamento.
+          O login usa um cookie de sessão do Auth0 e guarda no seu navegador os códigos de acesso da sessão, para que você continue
+          conectado ao recarregar a página. Eles são apagados ao clicar em &quot;Sair&quot;. As preferências de tamanho do texto e de
+          alto contraste também ficam salvas apenas no seu navegador. Não usamos cookies de publicidade nem de rastreamento.
         </p>
 
         <h2>Dados de clientes</h2>

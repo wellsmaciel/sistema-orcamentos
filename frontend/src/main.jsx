@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { Auth0Provider } from '@auth0/auth0-react';
 import './index.css';
 import App from './App.jsx';
+import { buildAuth0Options } from './auth0-options.js';
 import AccessibilityControls from './components/AccessibilityControls.jsx';
 import HelpGuide from './components/HelpGuide.jsx';
 import PrivacyPolicy from './components/PrivacyPolicy.jsx';
@@ -24,17 +25,7 @@ createRoot(document.getElementById('root')).render(
         <SiteFooter />
       </>
     ) : (
-    <Auth0Provider
-      domain={import.meta.env.VITE_AUTH0_DOMAIN}
-      clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
-      authorizationParams={{
-        redirect_uri: window.location.origin,
-        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-        scope: 'openid profile email',
-        // A tela de login do Auth0 aparece sempre em português do Brasil, independentemente do navegador.
-        ui_locales: 'pt-BR',
-      }}
-    >
+    <Auth0Provider {...buildAuth0Options(import.meta.env, window.location.origin)}>
       <AccessibilityControls />
       <App />
       <SiteFooter />
