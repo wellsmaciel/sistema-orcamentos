@@ -61,6 +61,17 @@ function buildItemRows(quoteId, input) {
   }));
 }
 
+// Reserva o próximo número de orçamento do prestador. O UPDATE trava a linha do usuário até o fim da
+// transação, então dois orçamentos criados ao mesmo tempo nunca recebem o mesmo número.
+async function nextQuoteNumber(userId, transaction) {
+  const [rows] = await sequelize.query(
+    'UPDATE users SET last_quote_number = last_quote_number + 1 WHERE id = :userId RETURNING last_quote_number',
+    { replacements: { userId }, transaction },
+  );
+
+  return rows[0].last_quote_number;
+}
+
 function assertValidItemsInput(input) {
   const details = validateQuoteItemsInput(input);
 
@@ -120,6 +131,7 @@ async function createQuote(userId, input, { transaction } = {}) {
     const quote = await Quote.create(
       {
         userId,
+        quoteNumber: await nextQuoteNumber(userId, writeTransaction),
         clientId: client.id,
         clientName: client.name,
         clientEmail: client.email,
@@ -442,6 +454,7 @@ async function createQuoteCorrection(userId, quoteId, { transaction } = {}) {
     const correction = await Quote.create(
       {
         userId: originalQuote.userId,
+        quoteNumber: await nextQuoteNumber(originalQuote.userId, writeTransaction),
         clientId: originalQuote.clientId,
         clientName: originalQuote.clientName,
         clientEmail: originalQuote.clientEmail,

@@ -61,6 +61,7 @@ describe('Modelo Quote', () => {
     const quote = await Quote.create(
       {
         userId: user.id,
+        quoteNumber: 1,
         clientId: client.id,
         clientName: client.name,
         clientEmail: client.email,
