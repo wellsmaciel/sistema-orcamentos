@@ -99,7 +99,7 @@ sistema-orcamentos/
 
 - Node.js e npm
 - Docker e Docker Compose
-- Uma aplicação do tipo Single Page Application configurada no Auth0, com **Refresh Token Rotation** ativada, e a API do Auth0 com **Allow Offline Access** ligado. O frontend usa refresh tokens guardados no navegador para manter a sessão ao recarregar a página, inclusive no Safari, que bloqueia cookies de outros domínios.
+- Uma aplicação do tipo Single Page Application configurada no Auth0, com **Refresh Token Rotation** ativada, e a API do Auth0 com **Allow Offline Access** ligado. O frontend usa refresh tokens guardados no navegador para manter a sessão ao recarregar a página, inclusive no Safari, que bloqueia cookies de outros domínios. Em produção, **Application Login URI** e **Tenant Login URI** apontam para `/entrar`, rota do frontend que abre o login: assim, se a pessoa voltar com o botão Voltar até uma tela de login já usada, o Auth0 a devolve ao app em vez de mostrar um erro.
 
 ### Banco de dados local
 

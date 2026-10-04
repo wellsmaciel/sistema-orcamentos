@@ -124,7 +124,7 @@ function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
           label="Telefone"
           value={formData.phone}
           onChange={handleChange}
-          hint="Também é usado para enviar o orçamento pelo WhatsApp."
+          hint="Se for celular, também permite enviar o orçamento pelo WhatsApp."
           errorMessage={fieldErrors.phone}
           announceError={announceFieldErrors}
         />

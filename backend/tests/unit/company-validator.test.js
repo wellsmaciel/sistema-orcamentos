@@ -114,7 +114,7 @@ describe('Validação dos dados profissionais', () => {
 describe('telefone comercial', () => {
   test('rejeita telefone sem DDD, com exemplo do formato', () => {
     expect(validateCompanyInput({ ...buildValidInput(), phone: '3333-4444' })).toEqual([
-      { field: 'phone', message: 'Informe o telefone com DDD, por exemplo 21999998888.' },
+      { field: 'phone', message: 'Informe o telefone com DDD: celular, por exemplo 21999998888, ou fixo, por exemplo 2133334444.' },
     ]);
   });
 

@@ -15,7 +15,8 @@ function buildQuote(overrides = {}) {
 
 test('normaliza telefones brasileiros para o WhatsApp', () => {
   assert.equal(normalizeWhatsAppPhone('(11) 99999-8888'), '5511999998888');
-  assert.equal(normalizeWhatsAppPhone('1133334444'), '551133334444');
+  // Fixo não tem WhatsApp: o botão não aparece.
+  assert.equal(normalizeWhatsAppPhone('1133334444'), null);
   assert.equal(normalizeWhatsAppPhone('+55 11 99999-8888'), '5511999998888');
   assert.equal(normalizeWhatsAppPhone('9999-8888'), null);
   assert.equal(normalizeWhatsAppPhone(''), null);

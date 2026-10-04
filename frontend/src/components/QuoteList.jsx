@@ -28,7 +28,7 @@ function buildPublicQuoteUrl(publicToken) {
   return publicUrl.toString();
 }
 
-function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null, focusQuote = null }) {
+function QuoteList({ getAccessTokenSilently, onEdit, onOpenProfile, initialReviewQuoteId = null, focusQuote = null }) {
   // Rascunho recém-criado cuja revisão deve abrir assim que a lista carregar.
   const initialReviewRef = useRef(initialReviewQuoteId);
   // Orçamento aberto por um aviso ou recém-editado: a lista já vem filtrada pelo número dele.
@@ -310,7 +310,12 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
                   {quote.status === 'DRAFT' && reviewQuoteId === quote.id && (
                     <div>
                       <QuoteReview quote={quote} company={reviewCompany} />
-                      {!reviewCompany && <p role="alert">Cadastre seus dados profissionais antes de confirmar o orçamento.</p>}
+                      {!reviewCompany && (
+                        <div>
+                          <p role="alert">Cadastre seus dados profissionais antes de confirmar o orçamento.</p>
+                          {onOpenProfile && <button type="button" className="button-primary" onClick={onOpenProfile}>Preencher perfil</button>}
+                        </div>
+                      )}
                       <button type="button" className="button-primary" onClick={() => handleConfirm(quote)} disabled={isBusy || !quote.items?.length || !reviewCompany}>
                         {isConfirming ? 'Confirmando...' : 'Confirmar e gerar link'}
                       </button>
@@ -344,7 +349,7 @@ function QuoteList({ getAccessTokenSilently, onEdit, initialReviewQuoteId = null
 
                       {quote.status === 'SENT' && !buildWhatsAppShareUrl(quote, buildPublicQuoteUrl(quote.publicToken)) && (
                         <p className="share-hint">
-                          O telefone deste orçamento não está num formato válido para o WhatsApp. Use &quot;Copiar link&quot; ou &quot;Enviar por e-mail&quot;.
+                          O envio pelo WhatsApp só fica disponível quando o telefone do cliente é celular. Use &quot;Copiar link&quot; ou &quot;Enviar por e-mail&quot;.
                         </p>
                       )}
                     </div>

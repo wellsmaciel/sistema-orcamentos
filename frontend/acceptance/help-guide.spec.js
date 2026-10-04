@@ -17,6 +17,7 @@ test('o guia de ajuda é público e o rodapé leva até ele', async ({ page }) =
   await expect(page.getByRole('button', { name: 'Entrar no sistema' })).toHaveCount(0);
   await expect(page.getByText('Usar a descrição geral como item')).toBeVisible();
   await expect(page.getByText(/No telefone e no CPF ou CNPJ, você pode digitar somente números/)).toBeVisible();
+  await expect(page.getByText(/O botão do WhatsApp aparece só quando o telefone do cliente é celular/)).toBeVisible();
 
   // O índice leva até a seção.
   await page.getByRole('navigation', { name: 'Tópicos da ajuda' }).getByRole('link', { name: 'Perguntas frequentes' }).click();

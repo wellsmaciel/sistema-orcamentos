@@ -1,4 +1,4 @@
-import { PHONE_EXAMPLE, normalizeBrazilianPhone } from '../utils/phone.js';
+import { PHONE_ERROR_MESSAGE, normalizeBrazilianPhone } from '../utils/phone.js';
 import { TAX_ID_ERROR_MESSAGE, normalizeBrazilianTaxId } from '../utils/tax-id.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -122,7 +122,7 @@ function validateCompanyInput(input) {
   });
 
   if (typeof input.phone === 'string' && input.phone.trim().length > 0 && input.phone.trim().length <= 30 && !normalizeBrazilianPhone(input.phone)) {
-    addError(errors, 'phone', `Informe o telefone com DDD, por exemplo ${PHONE_EXAMPLE}.`);
+    addError(errors, 'phone', PHONE_ERROR_MESSAGE);
   }
 
   validateOptionalString(input.taxId, 'taxId', errors, 20);

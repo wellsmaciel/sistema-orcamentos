@@ -150,7 +150,7 @@ test('telefone do cliente é padronizado e validado antes de salvar', async ({ p
 
   await phone.fill('9999-8888');
   await page.getByRole('button', { name: 'Salvar alterações' }).click();
-  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD, por exemplo 21999998888.');
+  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD: celular, por exemplo 21999998888, ou fixo, por exemplo 2133334444.');
   await expect(phone).toHaveAttribute('aria-invalid', 'true');
   await expect(phone).toHaveCSS('border-color', 'rgb(185, 28, 28)');
   expect(submittedBody).toBeUndefined();
@@ -180,7 +180,7 @@ test('telefone comercial sem DDD não é enviado', async ({ page }) => {
   await page.getByRole('button', { name: 'Salvar dados profissionais' }).click();
 
   const phone = page.getByLabel('Telefone comercial');
-  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD, por exemplo 21999998888.');
+  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD: celular, por exemplo 21999998888, ou fixo, por exemplo 2133334444.');
   await expect(phone).toHaveAttribute('aria-invalid', 'true');
   await expect(phone).toHaveCSS('border-color', 'rgb(185, 28, 28)');
   expect(saveRequests).toBe(0);
