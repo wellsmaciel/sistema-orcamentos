@@ -57,7 +57,7 @@ test('explica uma falha de rede e permite nova tentativa', async () => {
   };
 
   try {
-    await assert.rejects(fetchJsonWithTimeout('/api/v1/quotes/search'), /Não foi possível conectar ao servidor/);
+    await assert.rejects(fetchJsonWithTimeout('/api/v1/quotes/search'), /Não foi possível se comunicar com o sistema/);
     assert.deepEqual((await fetchJsonWithTimeout('/api/v1/quotes/search')).responseBody, { items: [] });
   } finally {
     globalThis.fetch = originalFetch;

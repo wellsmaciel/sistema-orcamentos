@@ -112,7 +112,7 @@ test('lista de orçamentos permite tentar novamente após falha de rede', async 
   });
 
   await page.goto('/acceptance/fixture.html');
-  await expect(page.getByRole('alert')).toContainText('Não foi possível conectar ao servidor');
+  await expect(page.getByRole('alert')).toContainText('Não foi possível se comunicar com o sistema');
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
   await expect(page.getByText('Orçamento nº 000042')).toBeVisible();
   expect(attempts).toBe(2);
@@ -129,7 +129,7 @@ test('orçamento público permite tentar novamente após falha de rede', async (
   });
 
   await page.goto('/acceptance/fixture.html?mode=public');
-  await expect(page.getByRole('alert')).toContainText('Não foi possível conectar ao servidor');
+  await expect(page.getByRole('alert')).toContainText('Não foi possível se comunicar com o sistema');
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
   await expect(page.getByRole('heading', { name: 'Itens do orçamento' })).toBeVisible();
   expect(attempts).toBe(2);
@@ -189,6 +189,6 @@ test('orçamento anterior ao histórico informa que não há eventos recuperáve
   await page.goto('/acceptance/fixture.html');
   await page.getByRole('button', { name: 'Ver histórico' }).click();
   await expect(page.getByRole('region', { name: 'Histórico do orçamento' })).toContainText(
-    'Alterações anteriores à ativação do histórico não podem ser recuperadas.',
+    'Ainda não há registros no histórico deste orçamento.',
   );
 });

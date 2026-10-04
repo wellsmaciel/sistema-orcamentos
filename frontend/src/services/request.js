@@ -24,11 +24,11 @@ async function fetchJsonWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEO
     }
 
     if (error instanceof TypeError) {
-      throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+      throw new Error('Não foi possível se comunicar com o sistema. Verifique sua conexão ou tente novamente em alguns minutos.');
     }
 
     if (error instanceof SyntaxError) {
-      throw new Error('O servidor enviou uma resposta inválida. Tente novamente.');
+      throw new Error('Algo deu errado ao receber os dados. Tente novamente.');
     }
 
     throw error;

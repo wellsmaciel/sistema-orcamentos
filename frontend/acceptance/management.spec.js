@@ -53,12 +53,12 @@ test('falha ao carregar os indicadores permite tentar novamente', async ({ page 
   await page.route('**/api/v1/management/summary?*', (route) => {
     attempts += 1;
     return attempts === 1
-      ? route.fulfill({ status: 500, json: { code: 'INTERNAL_SERVER_ERROR', message: 'Ocorreu um erro interno inesperado.' } })
+      ? route.fulfill({ status: 500, json: { code: 'INTERNAL_SERVER_ERROR', message: 'Ocorreu um erro inesperado. Tente novamente em alguns minutos.' } })
       : route.fulfill({ json: monthSummary });
   });
 
   await page.goto('/acceptance/fixture.html?mode=management');
-  await expect(page.getByRole('alert')).toHaveText('Ocorreu um erro interno inesperado.');
+  await expect(page.getByRole('alert')).toHaveText('Ocorreu um erro inesperado. Tente novamente em alguns minutos.');
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
   await expect(page.getByRole('list', { name: 'Indicadores do período' })).toContainText('Orçamentos criados6');
 });

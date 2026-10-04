@@ -9,7 +9,7 @@ describe('Rotas de orçamentos', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
   test('GET /api/v1/quotes/search deve responder 401 sem token', async () => {
@@ -18,7 +18,7 @@ describe('Rotas de orçamentos', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
   test('PUT /api/v1/quotes/:quoteId deve responder 401 sem token', async () => {
@@ -27,7 +27,7 @@ describe('Rotas de orçamentos', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
   test('POST /api/v1/quotes/:quoteId/confirm deve responder 401 sem token', async () => {
@@ -38,7 +38,7 @@ describe('Rotas de orçamentos', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
   test('GET /api/v1/public/quotes/:publicToken deve ser público', async () => {
@@ -87,7 +87,7 @@ describe('Rotas de orçamentos', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
   test('GET /api/v1/quotes/search deve responder 401 sem token', async () => {
@@ -102,7 +102,7 @@ describe('Rotas de orçamentos', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
   test('GET /api/v1/quotes/:quoteId/history deve responder 401 sem token', async () => {

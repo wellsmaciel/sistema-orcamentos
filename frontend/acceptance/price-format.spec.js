@@ -33,3 +33,13 @@ for (const [pricingMode, field, typed, expected] of [
     }
   });
 }
+
+test('o total calculado é explicado sem termos técnicos', async ({ page }) => {
+  await page.goto('/acceptance/fixture.html?mode=quote-form&client=client-1');
+  await page.getByLabel('Forma de cobrança').selectOption('ITEMIZED');
+  await page.getByLabel('Descrição do item').fill('Fonte 800W');
+  await page.getByLabel('Preço unitário (R$)').fill('450');
+
+  await expect(page.getByText('Este é o total que aparecerá para o cliente.')).toBeVisible();
+  await expect(page.getByText(/backend/i)).toHaveCount(0);
+});

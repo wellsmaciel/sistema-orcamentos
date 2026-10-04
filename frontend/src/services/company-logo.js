@@ -21,7 +21,7 @@ async function requestWithToken(getAccessTokenSilently, options = {}) {
     }));
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.');
+      throw new Error('Não foi possível se comunicar com o sistema. Verifique sua conexão ou tente novamente em alguns minutos.');
     }
 
     throw error;

@@ -2239,7 +2239,7 @@ components:
           type: string
           description: Mensagem compreensível sobre o erro.
           examples:
-            - 'É necessário apresentar um token de acesso válido.'
+            - 'Não foi possível confirmar seu acesso. Entre novamente.'
         details:
           type: array
           description: Detalhes adicionais, principalmente sobre validações.
