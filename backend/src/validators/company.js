@@ -1,7 +1,7 @@
 import { PHONE_EXAMPLE, normalizeBrazilianPhone } from '../utils/phone.js';
+import { TAX_ID_ERROR_MESSAGE, normalizeBrazilianTaxId } from '../utils/tax-id.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const TAX_ID_PATTERN = /^(?:\d{11}|\d{14})$/;
 
 function addError(errors, field, message) {
   errors.push({
@@ -127,12 +127,8 @@ function validateCompanyInput(input) {
 
   validateOptionalString(input.taxId, 'taxId', errors, 20);
 
-  if (typeof input.taxId === 'string' && input.taxId.trim().length > 0) {
-    const normalizedTaxId = input.taxId.replace(/[.\-/\s]/g, '');
-
-    if (!TAX_ID_PATTERN.test(normalizedTaxId)) {
-      addError(errors, 'taxId', 'Informe um CPF ou CNPJ com 11 ou 14 dígitos.');
-    }
+  if (typeof input.taxId === 'string' && input.taxId.trim().length > 0 && !normalizeBrazilianTaxId(input.taxId)) {
+    addError(errors, 'taxId', TAX_ID_ERROR_MESSAGE);
   }
 
   validateAddress(input.address, errors);

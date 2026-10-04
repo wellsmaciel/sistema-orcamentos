@@ -49,4 +49,29 @@ function describeApiError(responseBody, fallbackMessage) {
   return responseBody?.message || fallbackMessage;
 }
 
-export { describeApiError, labelField };
+// Campos recusados pela API, pelo nome usado nos formulários: "address.postalCode" vira "postalCode".
+function toFieldErrors(responseBody) {
+  const details = Array.isArray(responseBody?.details) ? responseBody.details : [];
+  const fieldErrors = {};
+
+  for (const detail of details) {
+    const fieldName = typeof detail.field === 'string' ? detail.field.split('.').at(-1) : '';
+
+    if (fieldName && !fieldErrors[fieldName]) {
+      fieldErrors[fieldName] = detail.message;
+    }
+  }
+
+  return fieldErrors;
+}
+
+// Erro com a mensagem geral e os campos recusados, para o formulário destacar cada campo.
+function createApiError(responseBody, fallbackMessage) {
+  const error = new Error(describeApiError(responseBody, fallbackMessage));
+  error.code = responseBody?.code;
+  error.fieldErrors = toFieldErrors(responseBody);
+
+  return error;
+}
+
+export { createApiError, describeApiError, labelField, toFieldErrors };

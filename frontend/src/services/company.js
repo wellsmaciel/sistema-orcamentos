@@ -1,4 +1,4 @@
-import { describeApiError } from '../utils/validation-message.js';
+import { createApiError } from '../utils/validation-message.js';
 import { requestApi } from './request.js';
 
 async function requestCompany(getAccessTokenSilently) {
@@ -19,7 +19,7 @@ async function saveCompany(getAccessTokenSilently, company) {
   const { response, responseBody } = await requestApi(getAccessTokenSilently, '/api/v1/company', { method: 'PUT', body: company });
 
   if (!response.ok) {
-    throw new Error(describeApiError(responseBody, 'Não foi possível salvar os dados profissionais.'));
+    throw createApiError(responseBody, 'Não foi possível salvar os dados profissionais.');
   }
 
   return responseBody;

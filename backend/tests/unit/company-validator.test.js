@@ -67,6 +67,18 @@ describe('Validação dos dados profissionais', () => {
     });
   });
 
+  test('deve aceitar CPF e CNPJ somente com números ou já formatados', () => {
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: '12345678901' })).toEqual([]);
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: '12.345.678/0001-90' })).toEqual([]);
+  });
+
+  test('deve rejeitar letras no CPF ou CNPJ', () => {
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: 'CNPJ 12345678901234' })).toContainEqual({
+      field: 'taxId',
+      message: 'Informe um CPF ou CNPJ com 11 ou 14 dígitos.',
+    });
+  });
+
   test('deve exigir o endereço completo quando ele for informado', () => {
     const errors = validateCompanyInput({
       ...buildValidInput(),
@@ -102,7 +114,7 @@ describe('Validação dos dados profissionais', () => {
 describe('telefone comercial', () => {
   test('rejeita telefone sem DDD, com exemplo do formato', () => {
     expect(validateCompanyInput({ ...buildValidInput(), phone: '3333-4444' })).toEqual([
-      { field: 'phone', message: 'Informe o telefone com DDD, por exemplo (21) 99999-8888.' },
+      { field: 'phone', message: 'Informe o telefone com DDD, por exemplo 21999998888.' },
     ]);
   });
 

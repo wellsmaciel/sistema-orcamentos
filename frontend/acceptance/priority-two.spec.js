@@ -71,6 +71,30 @@ test('dados profissionais podem ser atualizados', async ({ page }) => {
   expect(submittedBody.email).toBe('empresa@example.com');
 });
 
+test('CPF ou CNPJ pode ser digitado somente com números no celular', async ({ page }) => {
+  let submittedBody;
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('**/api/v1/company', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: { name: 'Empresa Original', email: 'empresa@example.com', phone: '1133334444' } });
+    }
+    submittedBody = route.request().postDataJSON();
+    return route.fulfill({ json: submittedBody });
+  });
+
+  await page.goto('/acceptance/fixture.html?mode=company');
+  const taxId = page.getByLabel('CPF ou CNPJ');
+
+  await expect(taxId).toHaveAttribute('inputmode', 'numeric');
+  await taxId.fill('12345678000190');
+  await taxId.blur();
+  await expect(taxId).toHaveValue('12.345.678/0001-90');
+  await page.getByRole('button', { name: 'Salvar dados profissionais' }).click();
+
+  await expect(page.getByText('Dados profissionais salvos com sucesso.')).toBeVisible();
+  expect(submittedBody.taxId).toBe('12.345.678/0001-90');
+});
+
 test('cliente pode ser editado', async ({ page }) => {
   let submittedBody;
   await page.route('**/api/v1/clients/client-1', (route) => {
@@ -126,10 +150,13 @@ test('telefone do cliente é padronizado e validado antes de salvar', async ({ p
 
   await phone.fill('9999-8888');
   await page.getByRole('button', { name: 'Salvar alterações' }).click();
-  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD, por exemplo (21) 99999-8888.');
+  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD, por exemplo 21999998888.');
+  await expect(phone).toHaveAttribute('aria-invalid', 'true');
+  await expect(phone).toHaveCSS('border-color', 'rgb(185, 28, 28)');
   expect(submittedBody).toBeUndefined();
 
   await phone.fill('+55 21 999998888');
+  await expect(phone).toHaveAttribute('aria-invalid', 'false');
   await phone.blur();
   await expect(phone).toHaveValue('(21) 99999-8888');
   await page.getByRole('button', { name: 'Salvar alterações' }).click();
@@ -152,6 +179,9 @@ test('telefone comercial sem DDD não é enviado', async ({ page }) => {
   await page.getByLabel('Telefone comercial').fill('3333-4444');
   await page.getByRole('button', { name: 'Salvar dados profissionais' }).click();
 
-  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD, por exemplo (21) 99999-8888.');
+  const phone = page.getByLabel('Telefone comercial');
+  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD, por exemplo 21999998888.');
+  await expect(phone).toHaveAttribute('aria-invalid', 'true');
+  await expect(phone).toHaveCSS('border-color', 'rgb(185, 28, 28)');
   expect(saveRequests).toBe(0);
 });

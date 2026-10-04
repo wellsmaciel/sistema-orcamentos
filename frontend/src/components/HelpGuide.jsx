@@ -27,8 +27,9 @@ function HelpGuide() {
         <ol>
           <li>Clique em <strong>Entrar no sistema</strong> e use sua conta Google ou um e-mail e senha.</li>
           <li>
-            Abra o <strong>Perfil profissional</strong> e preencha nome, e-mail e telefone. CPF ou CNPJ e endereço são opcionais. Esses dados
-            aparecem para o cliente no orçamento.
+            Abra o <strong>Perfil profissional</strong> e preencha nome, e-mail e telefone. CPF ou CNPJ e endereço são opcionais. No telefone
+            e no CPF ou CNPJ, você pode digitar somente números; o sistema acrescenta a pontuação. Nome, e-mail, telefone e, quando informados,
+            CPF ou CNPJ e endereço aparecem para o cliente no orçamento.
           </li>
           <li>Se quiser, envie o <strong>logo da empresa</strong> na mesma tela. Ele aparece no topo do orçamento que o cliente abre.</li>
         </ol>

@@ -1,5 +1,5 @@
 const CONTACT_EMAIL = 'wellsvelasquezmaciel@gmail.com';
-const LAST_UPDATED = '2 de outubro de 2026';
+const LAST_UPDATED = '4 de outubro de 2026';
 
 // Página pública em /privacidade, aberta sem login. O texto descreve o que o sistema faz de fato.
 function PrivacyPolicy() {
@@ -86,6 +86,11 @@ function PrivacyPolicy() {
         <p>
           O acesso é feito por conexão segura (HTTPS), cada prestador só acessa os próprios dados e as senhas são guardadas pelo Auth0, nunca
           pelo sistema. Nenhum sistema é totalmente imune a falhas; se ocorrer um incidente que afete seus dados, você será avisado.
+        </p>
+        <p>
+          O responsável pelo projeto recebe um aviso automático quando uma nova conta é criada, para acompanhar quem usa o sistema. O aviso
+          informa apenas a forma de acesso (Google ou e-mail e senha) e não contém nome, e-mail nem outros dados pessoais; os detalhes ficam
+          somente no Auth0.
         </p>
 
         <p><a href="/">Voltar ao Sistema de Orçamentos</a></p>

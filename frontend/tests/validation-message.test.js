@@ -33,3 +33,40 @@ test('sem detalhes, usa a mensagem da API ou a mensagem padrão', () => {
 test('campo desconhecido aparece como veio da API', () => {
   assert.equal(labelField('campoNovo'), 'campoNovo');
 });
+
+test('erro da API leva os campos recusados pelo nome usado no formulário', async () => {
+  const { createApiError, toFieldErrors } = await import('../src/utils/validation-message.js');
+  const responseBody = {
+    code: 'VALIDATION_ERROR',
+    details: [
+      { field: 'address.postalCode', message: 'Este campo é obrigatório.' },
+      { field: 'address.postalCode', message: 'Outro motivo do mesmo campo.' },
+      { field: 'taxId', message: 'Informe um CPF ou CNPJ com 11 ou 14 dígitos.' },
+    ],
+  };
+
+  assert.deepEqual(toFieldErrors(responseBody), {
+    postalCode: 'Este campo é obrigatório.',
+    taxId: 'Informe um CPF ou CNPJ com 11 ou 14 dígitos.',
+  });
+
+  const error = createApiError(responseBody, 'Falhou.');
+  assert.equal(error.code, 'VALIDATION_ERROR');
+  assert.equal(error.fieldErrors.postalCode, 'Este campo é obrigatório.');
+  assert.deepEqual(createApiError({ message: 'Cliente não encontrado.' }, 'Falhou.').fieldErrors, {});
+});
+
+test('campo com erro fica marcado e descrito pela dica e pelo erro', async () => {
+  const { fieldErrorProps } = await import('../src/utils/form-errors.js');
+
+  assert.deepEqual(fieldErrorProps('company-postal-code', 'Este campo é obrigatório.'), {
+    'aria-invalid': true,
+    'aria-describedby': 'company-postal-code-error',
+    'aria-errormessage': 'company-postal-code-error',
+  });
+  assert.deepEqual(fieldErrorProps('company-phone', '', 'company-phone-help'), {
+    'aria-invalid': false,
+    'aria-describedby': 'company-phone-help',
+    'aria-errormessage': undefined,
+  });
+});

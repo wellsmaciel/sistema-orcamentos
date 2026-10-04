@@ -1,5 +1,6 @@
 import Company from '../models/company.js';
 import { standardizeBrazilianPhone } from '../utils/phone.js';
+import { normalizeBrazilianTaxId, standardizeBrazilianTaxId } from '../utils/tax-id.js';
 import { recordActivity, toChangedFields, withTransaction } from './activity-log.js';
 
 function normalizeOptionalString(value) {
@@ -19,7 +20,7 @@ function buildCompanyData(input) {
     name: input.name.trim(),
     email: input.email.trim().toLowerCase(),
     phone: standardizeBrazilianPhone(input.phone),
-    taxId: normalizeOptionalString(input.taxId),
+    taxId: standardizeBrazilianTaxId(input.taxId),
     street: normalizeOptionalString(address?.street),
     number: normalizeOptionalString(address?.number),
     complement: normalizeOptionalString(address?.complement),
@@ -56,9 +57,15 @@ async function saveCompany(userId, input, { transaction } = {}) {
   });
 
   if (existingCompany) {
+    const previousTaxIdDigits = normalizeBrazilianTaxId(existingCompany.taxId ?? '');
+
     existingCompany.set(companyData);
 
-    const changedFields = toChangedFields(existingCompany.changed()).filter((field) => field !== 'active');
+    // CPF/CNPJ salvo antes sem pontuação passa a ser gravado formatado; só a pontuação mudar não é uma alteração do prestador.
+    // Só vale quando os dois valores são válidos: apagar um valor antigo inválido continua sendo registrado.
+    const onlyTaxIdFormatChanged = previousTaxIdDigits !== null && previousTaxIdDigits === normalizeBrazilianTaxId(companyData.taxId ?? '');
+    const changedFields = toChangedFields(existingCompany.changed())
+      .filter((field) => field !== 'active' && !(field === 'taxId' && onlyTaxIdFormatChanged));
 
     await existingCompany.save({
       transaction,

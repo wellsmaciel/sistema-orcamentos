@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import sequelize from '../../src/config/database.js';
 import Company from '../../src/models/company.js';
 import User from '../../src/models/user.js';
+import ActivityLog from '../../src/models/activity-log.js';
 import { getCompany, saveCompany } from '../../src/services/company.js';
 
 describe('Serviço de dados profissionais', () => {
@@ -49,7 +50,7 @@ describe('Serviço de dados profissionais', () => {
         name: '  Prestador de Teste Serviços  ',
         email: '  CONTATO@EXAMPLE.COM  ',
         phone: '  (11) 99999-9999  ',
-        taxId: '  12.345.678/0001-90  ',
+        taxId: '12345678000190',
       },
       {
         transaction,
@@ -63,6 +64,50 @@ describe('Serviço de dados profissionais', () => {
     expect(company.taxId).toBe('12.345.678/0001-90');
     expect(company.street).toBeNull();
     expect(company.active).toBe(true);
+  });
+
+  test('formata o CPF ou CNPJ antigo sem registrar uma alteração do prestador', async () => {
+    const user = await createUser('company-legacy-tax-id');
+    await Company.create(
+      { ownerUserId: user.id, name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444', taxId: '12345678000190' },
+      { transaction },
+    );
+
+    const company = await saveCompany(
+      user.id,
+      { name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444', taxId: '12345678000190' },
+      { transaction },
+    );
+
+    expect(company.taxId).toBe('12.345.678/0001-90');
+    expect(await ActivityLog.count({ where: { userId: user.id, action: 'COMPANY_UPDATED' }, transaction })).toBe(0);
+
+    await saveCompany(
+      user.id,
+      { name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444', taxId: '12345678901' },
+      { transaction },
+    );
+
+    const [activity] = await ActivityLog.findAll({ where: { userId: user.id, action: 'COMPANY_UPDATED' }, transaction });
+    expect(activity.details).toEqual({ changedFields: ['taxId'] });
+  });
+
+  test('registra a remoção de um CPF ou CNPJ antigo inválido', async () => {
+    const user = await createUser('company-invalid-tax-id');
+    await Company.create(
+      { ownerUserId: user.id, name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444', taxId: 'valor antigo' },
+      { transaction },
+    );
+
+    const company = await saveCompany(
+      user.id,
+      { name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444' },
+      { transaction },
+    );
+
+    expect(company.taxId).toBeNull();
+    const [activity] = await ActivityLog.findAll({ where: { userId: user.id, action: 'COMPANY_UPDATED' }, transaction });
+    expect(activity.details).toEqual({ changedFields: ['taxId'] });
   });
 
   test('deve atualizar o perfil existente sem criar outro registro', async () => {

@@ -1,6 +1,6 @@
 // Mesma regra de backend/src/utils/phone.js. O frontend é publicado sem a pasta do backend,
 // por isso a regra é repetida aqui; tests/phone.test.js garante que as duas concordam.
-const PHONE_EXAMPLE = '(21) 99999-8888';
+const PHONE_EXAMPLE = '21999998888';
 const PHONE_ERROR_MESSAGE = `Informe o telefone com DDD, por exemplo ${PHONE_EXAMPLE}.`;
 
 function normalizeBrazilianPhone(value) {

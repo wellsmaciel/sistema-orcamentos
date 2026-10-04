@@ -409,6 +409,19 @@ textarea {
   background-color: #ffffff;
 }
 
+/* Dentro de :is(), um navegador que não conhece :user-invalid (iOS anterior ao 16.5) ignora só esse seletor
+   e continua mostrando a borda dos erros indicados pelo app. */
+:is(input, select, textarea):is([aria-invalid='true'], :user-invalid) {
+  border-color: #b91c1c;
+  box-shadow: 0 0 0 1px #b91c1c;
+}
+
+.field-error {
+  margin-top: 6px;
+  color: #b91c1c;
+  font-weight: 700;
+}
+
 textarea {
   min-height: 120px;
   resize: vertical;

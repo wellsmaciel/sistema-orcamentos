@@ -186,7 +186,7 @@ As verificações também são executadas automaticamente pelo GitHub Actions em
 ## Cabeçalhos de segurança
 
 - **API:** `helmet` envia HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options` e `Referrer-Policy: no-referrer`, e remove `X-Powered-By`. `Cross-Origin-Resource-Policy` fica `cross-origin` porque o site exibe o logo servido pela API.
-- **Site:** `frontend/public/serve.json` configura o `serve` usado no Railway: o site não pode ser exibido dentro de frames de outros sites (`frame-ancestors 'none'`, proteção contra clickjacking no link do orçamento), além de HSTS, `nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` (o token do link público não vai para outros sites) e `Permissions-Policy`.
+- **Site:** `frontend/public/serve.json` configura o `serve` usado no Railway: o site não pode ser exibido dentro de frames de outros sites (`frame-ancestors 'none'`, proteção contra clickjacking no link do orçamento), além de HSTS, `nosniff`, `Referrer-Policy: no-referrer` (o endereço da página, que pode conter o token do link público, nunca é enviado a outros sites) e `Permissions-Policy`.
 
 ## Variáveis de ambiente
 
