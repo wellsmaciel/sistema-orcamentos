@@ -159,6 +159,18 @@ describe('Contrato JSON de orçamento e itens', () => {
     expect(response.body).toEqual(expect.objectContaining({ total: 1, page: 1, pageSize: 20, totalPages: 1 }));
   });
 
+  test('GET search inclui os dados do prestador dos orçamentos enviados, para a mensagem de envio', async () => {
+    const sentQuote = { ...buildQuote(), providerName: 'Oficina Exemplo', providerEmail: 'oficina@example.com', providerPhone: '(11) 3333-4444' };
+    const draft = { ...buildQuote(), id: CLIENT_ID, status: 'DRAFT', publicToken: null, sentAt: null };
+    services.listQuotesPage.mockResolvedValue({ items: [sentQuote, draft], relatedQuotes: [], total: 2, page: 1, pageSize: 20, totalPages: 1 });
+
+    const response = await request(app).get('/api/v1/quotes/search').query({ page: '1' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.items[0].provider).toEqual({ name: 'Oficina Exemplo', email: 'oficina@example.com', phone: '(11) 3333-4444' });
+    expect(response.body.items[1]).not.toHaveProperty('provider');
+  });
+
   test('PUT deve incluir itens após a edição', async () => {
     const input = buildInput();
     delete input.clientId;

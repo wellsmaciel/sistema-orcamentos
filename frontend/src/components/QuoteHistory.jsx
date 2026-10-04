@@ -88,7 +88,7 @@ function QuoteHistory({ quoteId, getAccessTokenSilently }) {
             </div>
           )}
           {!isLoading && !error && events?.length === 0 && (
-            <p>Não há eventos registrados. Alterações anteriores à ativação do histórico não podem ser recuperadas.</p>
+            <p>Ainda não há registros no histórico deste orçamento.</p>
           )}
           {!isLoading && !error && events?.length > 0 && (
             <ol>

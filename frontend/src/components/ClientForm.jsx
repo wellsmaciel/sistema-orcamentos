@@ -131,7 +131,7 @@ function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
         <fieldset>
           <legend>Endereço principal</legend>
 
-          <FormField id="client-street" label="Rua" name="street" type="text" value={formData.street} onChange={handleChange} maxLength={200} required errorMessage={fieldErrors.street} />
+          <FormField id="client-street" label="Logradouro (rua, avenida...)" name="street" type="text" value={formData.street} onChange={handleChange} maxLength={200} required errorMessage={fieldErrors.street} />
 
           <FormField id="client-number" label="Número" name="number" type="text" value={formData.number} onChange={handleChange} maxLength={30} required errorMessage={fieldErrors.number} />
 

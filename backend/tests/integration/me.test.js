@@ -39,7 +39,7 @@ describe('GET /api/v1/me', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
 });

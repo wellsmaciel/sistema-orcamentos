@@ -12,7 +12,7 @@ function QuoteItems({ quote }) {
       </p>
 
       {items.length === 0 ? (
-        <p>Este orçamento anterior não possui itens discriminados.</p>
+        <p>Este orçamento não tem itens listados.</p>
       ) : (
         <ol className="quote-item-list">
           {items.map((item) => (

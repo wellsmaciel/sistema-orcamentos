@@ -9,7 +9,7 @@ describe('Rotas de clientes', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
 
@@ -19,7 +19,7 @@ describe('Rotas de clientes', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
   test('PUT /api/v1/clients/:clientId deve responder 401 sem token', async () => {
@@ -28,7 +28,7 @@ describe('Rotas de clientes', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
   test('DELETE /api/v1/clients/:clientId deve responder 401 sem token', async () => {
@@ -37,7 +37,7 @@ describe('Rotas de clientes', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
 
@@ -47,7 +47,7 @@ describe('Rotas de clientes', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
   test('POST /api/v1/clients/:clientId/reactivate deve responder 401 sem token', async () => {
@@ -56,7 +56,7 @@ describe('Rotas de clientes', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
   test('GET /api/v1/clients/search deve responder 401 sem token', async () => {
@@ -69,7 +69,7 @@ describe('Rotas de clientes', () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   });
 });

@@ -26,12 +26,12 @@ test('falha ao carregar atividades permite tentar novamente', async ({ page }) =
   await page.route('**/api/v1/activities?page=1', (route) => {
     attempts += 1;
     return attempts === 1
-      ? route.fulfill({ status: 500, json: { code: 'INTERNAL_SERVER_ERROR', message: 'Ocorreu um erro interno inesperado.' } })
+      ? route.fulfill({ status: 500, json: { code: 'INTERNAL_SERVER_ERROR', message: 'Ocorreu um erro inesperado. Tente novamente em alguns minutos.' } })
       : route.fulfill({ json: { items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 } });
   });
 
   await page.goto('/acceptance/fixture.html?mode=activities');
-  await expect(page.getByRole('alert')).toHaveText('Ocorreu um erro interno inesperado.');
+  await expect(page.getByRole('alert')).toHaveText('Ocorreu um erro inesperado. Tente novamente em alguns minutos.');
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
   await expect(page.getByText('Nenhuma atividade registrada ainda.')).toBeVisible();
 });

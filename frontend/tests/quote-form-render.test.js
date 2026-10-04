@@ -107,7 +107,7 @@ test('preserva quantidade histórica significativa e pede revisão, sem arredond
   const markup = renderForm({ quote });
 
   assert.match(markup, /value="1,25"/);
-  assert.match(markup, /nenhum valor foi arredondado automaticamente/);
+  assert.match(markup, /Algumas quantidades deste rascunho têm mais de uma casa decimal/);
 });
 
 test('revisão com IA só fica disponível quando há descrição', () => {

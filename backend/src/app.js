@@ -82,7 +82,7 @@ app.use((error, request, response, _next) => {
   if (error instanceof UnauthorizedError || error instanceof InvalidTokenError) {
     return response.status(401).json({
       code: 'UNAUTHORIZED',
-      message: 'É necessário apresentar um token de acesso válido.',
+      message: 'Não foi possível confirmar seu acesso. Entre novamente.',
     });
   }
 
@@ -97,7 +97,7 @@ app.use((error, request, response, _next) => {
   if (error?.type === 'entity.too.large') {
     return response.status(413).json({
       code: 'PAYLOAD_TOO_LARGE',
-      message: 'O corpo da requisição é maior que o permitido.',
+      message: 'Os dados enviados são grandes demais.',
     });
   }
 
@@ -113,7 +113,7 @@ app.use((error, request, response, _next) => {
 
   return response.status(500).json({
     code: 'INTERNAL_SERVER_ERROR',
-    message: 'Ocorreu um erro interno inesperado.',
+    message: 'Ocorreu um erro inesperado. Tente novamente em alguns minutos.',
   });
 });
 

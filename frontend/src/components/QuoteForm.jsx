@@ -279,7 +279,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
     return (
       <section>
         <h2>Novo orçamento</h2>
-        <p>Carregue a lista de clientes antes de criar um orçamento.</p>
+        <p>Cadastre um cliente antes de criar um orçamento.</p>
       </section>
     );
   }
@@ -288,7 +288,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
     <section>
       <h2>{isEditing ? editTitle : 'Novo orçamento'}</h2>
 
-      {hasLegacyQuantityPrecision && <p role="alert">Este rascunho contém quantidades antigas com mais de uma casa decimal. Revise-as antes de salvar; nenhum valor foi arredondado automaticamente.</p>}
+      {hasLegacyQuantityPrecision && <p role="alert">Algumas quantidades deste rascunho têm mais de uma casa decimal, o que não é mais aceito. Ajuste-as antes de salvar.</p>}
 
       <form onSubmit={handleSubmit}>
         <fieldset className="quote-form-fields" disabled={isSubmitting}>
@@ -481,7 +481,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
               <p><strong>Total calculado (prévia):</strong> {formatQuoteMoney(previewTotalAmount)}</p>
               <p>{previewTotalAmount === null
                 ? 'Preencha quantidades e preços válidos para calcular um total positivo.'
-                : 'O backend recalculará e validará os valores ao salvar. Cada subtotal é arredondado para centavos antes da soma.'}</p>
+                : 'Este é o total que aparecerá para o cliente.'}</p>
             </div>
           ) : (
             <div>
@@ -510,7 +510,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
             <legend>Endereço do serviço</legend>
 
             <div>
-              <label htmlFor="quote-street">Rua</label>
+              <label htmlFor="quote-street">Logradouro (rua, avenida...)</label>
               <input id="quote-street" name="street" value={formData.street} onChange={handleChange} maxLength={200} required />
             </div>
 

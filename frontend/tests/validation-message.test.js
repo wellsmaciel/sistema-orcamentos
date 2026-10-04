@@ -21,7 +21,7 @@ test('mostra o motivo de cada campo recusado com o nome usado na tela', () => {
 test('nomeia os campos dos itens do orçamento pela posição', () => {
   assert.equal(labelField('items[0].quantity'), 'Item 1 – Quantidade');
   assert.equal(labelField('items[2]'), 'Item 3');
-  assert.equal(labelField('serviceAddress.street'), 'Rua');
+  assert.equal(labelField('serviceAddress.street'), 'Logradouro (rua, avenida...)');
 });
 
 test('sem detalhes, usa a mensagem da API ou a mensagem padrão', () => {
