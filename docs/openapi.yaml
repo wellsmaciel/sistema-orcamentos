@@ -1758,6 +1758,10 @@ components:
           type: string
           format: uuid
           description: Identificador do orçamento recusado que originou esta correção.
+        provider:
+          description: Dados do prestador fotografados no envio. Ausente em rascunhos.
+          allOf:
+            - $ref: '#/components/schemas/QuoteProviderSnapshot'
         originalQuoteNumber:
           type: integer
           minimum: 1

@@ -27,7 +27,9 @@ test('orçamento enviado pode ser compartilhado pelo WhatsApp ou por e-mail', as
   const sentCard = page.locator('article').filter({ hasText: 'Orçamento nº 000042' });
   const whatsApp = new URL(await sentCard.getByRole('link', { name: 'Enviar pelo WhatsApp' }).getAttribute('href'));
   expect(whatsApp.origin + whatsApp.pathname).toBe('https://wa.me/5511999998888');
-  expect(whatsApp.searchParams.get('text')).toContain('Olá, Maria! Segue o orçamento nº 000042 de Oficina do Rafael:');
+  expect(whatsApp.searchParams.get('text')).toContain('Olá, Maria!');
+  expect(whatsApp.searchParams.get('text')).toContain('Segue o orçamento nº 000042 de Oficina do Rafael.');
+  expect(whatsApp.searchParams.get('text')).toContain('Serviço: Troca de escapamento');
   expect(whatsApp.searchParams.get('text')).toContain('?quote=token-123');
 
   const email = await sentCard.getByRole('link', { name: 'Enviar por e-mail' }).getAttribute('href');

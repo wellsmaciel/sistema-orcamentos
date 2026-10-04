@@ -11,6 +11,38 @@ import {
 import { hasCompanyLogo } from '../services/company-logo.js';
 import { serializeQuoteItems } from '../utils/quote-items-response.js';
 
+// Dados do prestador fotografados no envio do orçamento (os do cadastro na época).
+function serializeProvider(quote) {
+  const provider = {
+    name: quote.providerName,
+    email: quote.providerEmail,
+    phone: quote.providerPhone,
+  };
+
+  if (quote.providerTaxId) {
+    provider.taxId = quote.providerTaxId;
+  }
+
+  if (quote.providerStreet) {
+    const address = {
+      street: quote.providerStreet,
+      number: quote.providerNumber,
+      postalCode: quote.providerPostalCode,
+      district: quote.providerDistrict,
+      city: quote.providerCity,
+      state: quote.providerState,
+    };
+
+    if (quote.providerComplement) {
+      address.complement = quote.providerComplement;
+    }
+
+    provider.address = address;
+  }
+
+  return provider;
+}
+
 function serializeQuote(quote) {
   const serviceAddress = {
     street: quote.serviceStreet,
@@ -65,6 +97,9 @@ function serializeQuote(quote) {
   if (quote.correctedFromId) {
     responseBody.correctedFromId = quote.correctedFromId;
   }
+  if (quote.providerName) {
+    responseBody.provider = serializeProvider(quote);
+  }
   return responseBody;
 }
 function serializePublicQuote(quote, hasProviderLogo = false) {
@@ -106,34 +141,7 @@ function serializePublicQuote(quote, hasProviderLogo = false) {
     responseBody.rejectionReason = quote.rejectionReason;
   }
   if (quote.providerName) {
-    const provider = {
-      name: quote.providerName,
-      email: quote.providerEmail,
-      phone: quote.providerPhone,
-    };
-
-    if (quote.providerTaxId) {
-      provider.taxId = quote.providerTaxId;
-    }
-
-    if (quote.providerStreet) {
-      const address = {
-        street: quote.providerStreet,
-        number: quote.providerNumber,
-        postalCode: quote.providerPostalCode,
-        district: quote.providerDistrict,
-        city: quote.providerCity,
-        state: quote.providerState,
-      };
-
-      if (quote.providerComplement) {
-        address.complement = quote.providerComplement;
-      }
-
-      provider.address = address;
-    }
-
-    responseBody.provider = provider;
+    responseBody.provider = serializeProvider(quote);
   }
   return responseBody;
 }
