@@ -510,7 +510,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
             <legend>Endereço do serviço</legend>
 
             <div>
-              <label htmlFor="quote-street">Rua</label>
+              <label htmlFor="quote-street">Logradouro (rua, avenida...)</label>
               <input id="quote-street" name="street" value={formData.street} onChange={handleChange} maxLength={200} required />
             </div>
 

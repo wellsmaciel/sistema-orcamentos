@@ -204,7 +204,7 @@ function CompanyForm({ getAccessTokenSilently }) {
 
           <p>Se você começar a preencher o endereço, os campos principais serão obrigatórios.</p>
 
-          <FormField id="company-street" label="Rua" name="street" type="text" value={formData.street} onChange={handleChange} maxLength={200} required={hasAddress} errorMessage={fieldErrors.street} />
+          <FormField id="company-street" label="Logradouro (rua, avenida...)" name="street" type="text" value={formData.street} onChange={handleChange} maxLength={200} required={hasAddress} errorMessage={fieldErrors.street} />
 
           <FormField id="company-number" label="Número" name="number" type="text" value={formData.number} onChange={handleChange} maxLength={30} required={hasAddress} errorMessage={fieldErrors.number} />
 

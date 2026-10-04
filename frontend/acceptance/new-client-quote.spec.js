@@ -14,7 +14,7 @@ test('o orçamento aberto pelo atalho já vem com o cliente e o endereço preenc
   await page.goto('/acceptance/fixture.html?mode=quote-form&client=client-1');
 
   await expect(page.getByLabel('Cliente', { exact: true })).toHaveValue('client-1');
-  await expect(page.getByLabel('Rua')).toHaveValue('Rua Principal');
+  await expect(page.getByLabel('Logradouro (rua, avenida...)')).toHaveValue('Rua Principal');
   await expect(page.getByLabel('CEP')).toHaveValue('01001-000');
 });
 
@@ -22,4 +22,18 @@ test('sem atalho, o orçamento novo começa sem cliente escolhido', async ({ pag
   await page.goto('/acceptance/fixture.html?mode=quote-form');
 
   await expect(page.getByLabel('Cliente', { exact: true })).toHaveValue('');
+});
+
+test('o endereço aceita avenida e outros logradouros, não só rua', async ({ page }) => {
+  let submittedBody;
+  await page.route('**/api/v1/clients/client-1', (route) => {
+    submittedBody = route.request().postDataJSON();
+    return route.fulfill({ json: { ...submittedBody, id: 'client-1', active: true } });
+  });
+
+  await page.goto('/acceptance/fixture.html?mode=client-edit');
+  await page.getByLabel('Logradouro (rua, avenida...)').fill('Avenida Paulista');
+  await page.getByRole('button', { name: 'Salvar alterações' }).click();
+
+  await expect.poll(() => submittedBody?.address?.street).toBe('Avenida Paulista');
 });

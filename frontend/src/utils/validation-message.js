@@ -5,7 +5,7 @@ const FIELD_LABELS = {
   phone: 'Telefone',
   taxId: 'CPF ou CNPJ',
   address: 'Endereço',
-  street: 'Rua',
+  street: 'Logradouro (rua, avenida...)',
   number: 'Número',
   complement: 'Complemento',
   postalCode: 'CEP',
