@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { saveClient } from '../services/client.js';
 import { PHONE_ERROR_MESSAGE, normalizeBrazilianPhone } from '../utils/phone.js';
+import { focusFirstFieldWithError } from '../utils/form-errors.js';
+import FormField from './FormField.jsx';
 import PhoneField from './PhoneField.jsx';
 
 const initialFormData = {
@@ -35,6 +37,9 @@ function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
   );
   const [createdClient, setCreatedClient] = useState(null);
   const [submitError, setSubmitError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  // Erros encontrados pela tela são anunciados no próprio campo; os do servidor, pela mensagem geral.
+  const [announceFieldErrors, setAnnounceFieldErrors] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleChange(event) {
@@ -44,19 +49,27 @@ function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
       ...currentFormData,
       [name]: value,
     }));
+
+    setFieldErrors((currentErrors) => (currentErrors[name] ? { ...currentErrors, [name]: '' } : currentErrors));
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
+    const form = event.currentTarget;
+
     if (!normalizeBrazilianPhone(formData.phone)) {
-      setSubmitError(PHONE_ERROR_MESSAGE);
+      setFieldErrors({ phone: PHONE_ERROR_MESSAGE });
+      setAnnounceFieldErrors(true);
+      setSubmitError('');
+      focusFirstFieldWithError(form, { phone: PHONE_ERROR_MESSAGE });
       return;
     }
 
     try {
       setIsSubmitting(true);
       setSubmitError('');
+      setFieldErrors({});
       setCreatedClient(null);
 
       const savedClient = await saveClient(
@@ -86,7 +99,12 @@ function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
 
       onSaved?.(savedClient);
     } catch (requestError) {
+      const serverFieldErrors = requestError.fieldErrors ?? {};
+
       setSubmitError(requestError.message);
+      setFieldErrors(serverFieldErrors);
+      setAnnounceFieldErrors(false);
+      focusFirstFieldWithError(form, serverFieldErrors);
     } finally {
       setIsSubmitting(false);
     }
@@ -97,54 +115,35 @@ function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
       <h2>{client ? 'Editar cliente' : 'Novo cliente'}</h2>
 
       <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="client-name">Nome</label>
-          <input id="client-name" name="name" type="text" value={formData.name} onChange={handleChange} maxLength={150} required />
-        </div>
+        <FormField id="client-name" label="Nome" name="name" type="text" value={formData.name} onChange={handleChange} maxLength={150} required errorMessage={fieldErrors.name} />
 
-        <div>
-          <label htmlFor="client-email">E-mail</label>
-          <input id="client-email" name="email" type="email" value={formData.email} onChange={handleChange} maxLength={320} required />
-        </div>
+        <FormField id="client-email" label="E-mail" name="email" type="email" value={formData.email} onChange={handleChange} maxLength={320} required errorMessage={fieldErrors.email} />
 
-        <PhoneField id="client-phone" label="Telefone" value={formData.phone} onChange={handleChange} hint="Também é usado para enviar o orçamento pelo WhatsApp." />
+        <PhoneField
+          id="client-phone"
+          label="Telefone"
+          value={formData.phone}
+          onChange={handleChange}
+          hint="Também é usado para enviar o orçamento pelo WhatsApp."
+          errorMessage={fieldErrors.phone}
+          announceError={announceFieldErrors}
+        />
         <fieldset>
           <legend>Endereço principal</legend>
 
-          <div>
-            <label htmlFor="client-street">Rua</label>
-            <input id="client-street" name="street" type="text" value={formData.street} onChange={handleChange} maxLength={200} required />
-          </div>
+          <FormField id="client-street" label="Rua" name="street" type="text" value={formData.street} onChange={handleChange} maxLength={200} required errorMessage={fieldErrors.street} />
 
-          <div>
-            <label htmlFor="client-number">Número</label>
-            <input id="client-number" name="number" type="text" value={formData.number} onChange={handleChange} maxLength={30} required />
-          </div>
+          <FormField id="client-number" label="Número" name="number" type="text" value={formData.number} onChange={handleChange} maxLength={30} required errorMessage={fieldErrors.number} />
 
-          <div>
-            <label htmlFor="client-complement">Complemento</label>
-            <input id="client-complement" name="complement" type="text" value={formData.complement} onChange={handleChange} maxLength={150} />
-          </div>
+          <FormField id="client-complement" label="Complemento" name="complement" type="text" value={formData.complement} onChange={handleChange} maxLength={150} errorMessage={fieldErrors.complement} />
 
-          <div>
-            <label htmlFor="client-postal-code">CEP</label>
-            <input id="client-postal-code" name="postalCode" type="text" value={formData.postalCode} onChange={handleChange} maxLength={20} required />
-          </div>
+          <FormField id="client-postal-code" label="CEP" name="postalCode" type="text" value={formData.postalCode} onChange={handleChange} maxLength={20} required errorMessage={fieldErrors.postalCode} />
 
-          <div>
-            <label htmlFor="client-district">Bairro</label>
-            <input id="client-district" name="district" type="text" value={formData.district} onChange={handleChange} maxLength={100} required />
-          </div>
+          <FormField id="client-district" label="Bairro" name="district" type="text" value={formData.district} onChange={handleChange} maxLength={100} required errorMessage={fieldErrors.district} />
 
-          <div>
-            <label htmlFor="client-city">Cidade</label>
-            <input id="client-city" name="city" type="text" value={formData.city} onChange={handleChange} maxLength={100} required />
-          </div>
+          <FormField id="client-city" label="Cidade" name="city" type="text" value={formData.city} onChange={handleChange} maxLength={100} required errorMessage={fieldErrors.city} />
 
-          <div>
-            <label htmlFor="client-state">Estado</label>
-            <input id="client-state" name="state" type="text" value={formData.state} onChange={handleChange} maxLength={100} required />
-          </div>
+          <FormField id="client-state" label="Estado" name="state" type="text" value={formData.state} onChange={handleChange} maxLength={100} required errorMessage={fieldErrors.state} />
         </fieldset>
 
         <button type="submit" className="button-primary" disabled={isSubmitting}>

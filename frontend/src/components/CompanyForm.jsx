@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react';
 
 import { requestCompany, saveCompany } from '../services/company.js';
 import { PHONE_ERROR_MESSAGE, normalizeBrazilianPhone } from '../utils/phone.js';
+import { TAX_ID_ERROR_MESSAGE, normalizeBrazilianTaxId, standardizeBrazilianTaxId } from '../utils/tax-id.js';
+import { focusFirstFieldWithError } from '../utils/form-errors.js';
 import CompanyLogoField from './CompanyLogoField.jsx';
+import FormField from './FormField.jsx';
 import PhoneField from './PhoneField.jsx';
+import TaxIdField from './TaxIdField.jsx';
 
 const initialFormData = {
   name: '',
@@ -27,7 +31,7 @@ function companyToFormData(company) {
     name: company.name,
     email: company.email,
     phone: company.phone,
-    taxId: company.taxId ?? '',
+    taxId: standardizeBrazilianTaxId(company.taxId) ?? company.taxId ?? '',
     street: company.address?.street ?? '',
     number: company.address?.number ?? '',
     complement: company.address?.complement ?? '',
@@ -44,6 +48,9 @@ function CompanyForm({ getAccessTokenSilently }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  // Erros encontrados pela tela são anunciados no próprio campo; os do servidor, pela mensagem geral.
+  const [announceFieldErrors, setAnnounceFieldErrors] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
   const [savedCompany, setSavedCompany] = useState(null);
 
@@ -88,21 +95,43 @@ function CompanyForm({ getAccessTokenSilently }) {
       [name]: value,
     }));
 
+    setFieldErrors((currentErrors) => {
+      if (!currentErrors[name]) {
+        return currentErrors;
+      }
+
+      return { ...currentErrors, [name]: '' };
+    });
     setSuccessMessage('');
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
+    const form = event.currentTarget;
+    const nextFieldErrors = {};
+
     if (!normalizeBrazilianPhone(formData.phone)) {
-      setSubmitError(PHONE_ERROR_MESSAGE);
+      nextFieldErrors.phone = PHONE_ERROR_MESSAGE;
+    }
+
+    if (formData.taxId.trim() && !normalizeBrazilianTaxId(formData.taxId)) {
+      nextFieldErrors.taxId = TAX_ID_ERROR_MESSAGE;
+    }
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setFieldErrors(nextFieldErrors);
+      setAnnounceFieldErrors(true);
+      setSubmitError('');
       setSuccessMessage('');
+      focusFirstFieldWithError(form, nextFieldErrors);
       return;
     }
 
     try {
       setIsSubmitting(true);
       setSubmitError('');
+      setFieldErrors({});
       setSuccessMessage('');
 
       const companyInput = {
@@ -130,7 +159,12 @@ function CompanyForm({ getAccessTokenSilently }) {
       setSavedCompany(company);
       setSuccessMessage('Dados profissionais salvos com sucesso.');
     } catch (requestError) {
+      const serverFieldErrors = requestError.fieldErrors ?? {};
+
       setSubmitError(requestError.message);
+      setFieldErrors(serverFieldErrors);
+      setAnnounceFieldErrors(false);
+      focusFirstFieldWithError(form, serverFieldErrors);
     } finally {
       setIsSubmitting(false);
     }
@@ -149,63 +183,40 @@ function CompanyForm({ getAccessTokenSilently }) {
       {loadError && <p role="alert">{loadError}</p>}
 
       <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="company-name">Nome profissional ou da empresa</label>
-          <input id="company-name" name="name" type="text" value={formData.name} onChange={handleChange} maxLength={150} required />
-        </div>
+        <FormField id="company-name" label="Nome profissional ou da empresa" name="name" type="text" value={formData.name} onChange={handleChange} maxLength={150} required errorMessage={fieldErrors.name} />
 
-        <div>
-          <label htmlFor="company-email">E-mail comercial</label>
-          <input id="company-email" name="email" type="email" value={formData.email} onChange={handleChange} maxLength={320} required />
-        </div>
+        <FormField id="company-email" label="E-mail comercial" name="email" type="email" value={formData.email} onChange={handleChange} maxLength={320} required errorMessage={fieldErrors.email} />
 
-        <PhoneField id="company-phone" label="Telefone comercial" value={formData.phone} onChange={handleChange} hint="Aparece no orçamento enviado ao cliente." />
+        <PhoneField
+          id="company-phone"
+          label="Telefone comercial"
+          value={formData.phone}
+          onChange={handleChange}
+          hint="Aparece no orçamento enviado ao cliente."
+          errorMessage={fieldErrors.phone}
+          announceError={announceFieldErrors}
+        />
 
-        <div>
-          <label htmlFor="company-tax-id">CPF ou CNPJ</label>
-          <input id="company-tax-id" name="taxId" type="text" value={formData.taxId} onChange={handleChange} maxLength={20} aria-describedby="company-tax-id-hint" />
-          <p id="company-tax-id-hint">CPF com 11 dígitos ou CNPJ com 14, com ou sem pontuação, por exemplo 11.222.333/0001-81.</p>
-        </div>
+        <TaxIdField value={formData.taxId} onChange={handleChange} errorMessage={fieldErrors.taxId} announceError={announceFieldErrors} />
 
         <fieldset>
           <legend>Endereço profissional (opcional)</legend>
 
           <p>Se você começar a preencher o endereço, os campos principais serão obrigatórios.</p>
 
-          <div>
-            <label htmlFor="company-street">Rua</label>
-            <input id="company-street" name="street" type="text" value={formData.street} onChange={handleChange} maxLength={200} required={hasAddress} />
-          </div>
+          <FormField id="company-street" label="Rua" name="street" type="text" value={formData.street} onChange={handleChange} maxLength={200} required={hasAddress} errorMessage={fieldErrors.street} />
 
-          <div>
-            <label htmlFor="company-number">Número</label>
-            <input id="company-number" name="number" type="text" value={formData.number} onChange={handleChange} maxLength={30} required={hasAddress} />
-          </div>
+          <FormField id="company-number" label="Número" name="number" type="text" value={formData.number} onChange={handleChange} maxLength={30} required={hasAddress} errorMessage={fieldErrors.number} />
 
-          <div>
-            <label htmlFor="company-complement">Complemento</label>
-            <input id="company-complement" name="complement" type="text" value={formData.complement} onChange={handleChange} maxLength={150} />
-          </div>
+          <FormField id="company-complement" label="Complemento" name="complement" type="text" value={formData.complement} onChange={handleChange} maxLength={150} errorMessage={fieldErrors.complement} />
 
-          <div>
-            <label htmlFor="company-postal-code">CEP</label>
-            <input id="company-postal-code" name="postalCode" type="text" value={formData.postalCode} onChange={handleChange} maxLength={20} required={hasAddress} />
-          </div>
+          <FormField id="company-postal-code" label="CEP" name="postalCode" type="text" value={formData.postalCode} onChange={handleChange} maxLength={20} required={hasAddress} errorMessage={fieldErrors.postalCode} />
 
-          <div>
-            <label htmlFor="company-district">Bairro</label>
-            <input id="company-district" name="district" type="text" value={formData.district} onChange={handleChange} maxLength={100} required={hasAddress} />
-          </div>
+          <FormField id="company-district" label="Bairro" name="district" type="text" value={formData.district} onChange={handleChange} maxLength={100} required={hasAddress} errorMessage={fieldErrors.district} />
 
-          <div>
-            <label htmlFor="company-city">Cidade</label>
-            <input id="company-city" name="city" type="text" value={formData.city} onChange={handleChange} maxLength={100} required={hasAddress} />
-          </div>
+          <FormField id="company-city" label="Cidade" name="city" type="text" value={formData.city} onChange={handleChange} maxLength={100} required={hasAddress} errorMessage={fieldErrors.city} />
 
-          <div>
-            <label htmlFor="company-state">Estado</label>
-            <input id="company-state" name="state" type="text" value={formData.state} onChange={handleChange} maxLength={100} required={hasAddress} />
-          </div>
+          <FormField id="company-state" label="Estado" name="state" type="text" value={formData.state} onChange={handleChange} maxLength={100} required={hasAddress} errorMessage={fieldErrors.state} />
         </fieldset>
 
         <button type="submit" className="button-primary" disabled={isSubmitting}>

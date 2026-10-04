@@ -1,7 +1,7 @@
 // Telefone brasileiro com DDD: celular com 11 dígitos (começa com 9) ou fixo com 10 dígitos
 // (começa de 2 a 5). Aceita pontuação, espaços e o código do país +55.
 // A mesma regra existe em frontend/src/utils/phone.js; um teste do frontend garante que as duas concordam.
-const PHONE_EXAMPLE = '(21) 99999-8888';
+const PHONE_EXAMPLE = '21999998888';
 
 function normalizeBrazilianPhone(value) {
   if (typeof value !== 'string') {

@@ -63,6 +63,15 @@ textarea:focus-visible {
   border-color: #ffffff;
 }
 
+:root[data-contrast='high'] :is(input, select, textarea):is([aria-invalid='true'], :user-invalid) {
+  border-color: #ffff00;
+  box-shadow: 0 0 0 1px #ffff00;
+}
+
+:root[data-contrast='high'] .field-error {
+  color: #ffff00;
+}
+
 :root[data-contrast='high'] :is(h1, h2, h3, h4, h5, h6, label) {
   color: #ffffff;
 }

@@ -1,13 +1,11 @@
-import { describeApiError } from '../utils/validation-message.js';
+import { createApiError } from '../utils/validation-message.js';
 import { requestApi } from './request.js';
 
 async function requestClientApi(getAccessTokenSilently, path, options = {}) {
   const { response, responseBody } = await requestApi(getAccessTokenSilently, path, options);
 
   if (!response.ok) {
-    const error = new Error(describeApiError(responseBody, 'Não foi possível concluir a operação com o cliente.'));
-    error.code = responseBody?.code;
-    throw error;
+    throw createApiError(responseBody, 'Não foi possível concluir a operação com o cliente.');
   }
 
   return responseBody;
