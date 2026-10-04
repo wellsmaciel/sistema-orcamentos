@@ -1,7 +1,8 @@
 // Mesma regra de backend/src/utils/phone.js. O frontend é publicado sem a pasta do backend,
 // por isso a regra é repetida aqui; tests/phone.test.js garante que as duas concordam.
 const PHONE_EXAMPLE = '21999998888';
-const PHONE_ERROR_MESSAGE = `Informe o telefone com DDD, por exemplo ${PHONE_EXAMPLE}.`;
+const PHONE_LANDLINE_EXAMPLE = '2133334444';
+const PHONE_ERROR_MESSAGE = `Informe o telefone com DDD: celular, por exemplo ${PHONE_EXAMPLE}, ou fixo, por exemplo ${PHONE_LANDLINE_EXAMPLE}.`;
 
 function normalizeBrazilianPhone(value) {
   if (typeof value !== 'string') {
@@ -33,4 +34,4 @@ function standardizeBrazilianPhone(value) {
   return `(${digits.slice(0, 2)}) ${number.slice(0, splitAt)}-${number.slice(splitAt)}`;
 }
 
-export { PHONE_ERROR_MESSAGE, PHONE_EXAMPLE, normalizeBrazilianPhone, standardizeBrazilianPhone };
+export { PHONE_ERROR_MESSAGE, PHONE_EXAMPLE, PHONE_LANDLINE_EXAMPLE, normalizeBrazilianPhone, standardizeBrazilianPhone };

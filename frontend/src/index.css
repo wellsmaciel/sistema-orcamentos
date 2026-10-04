@@ -163,6 +163,11 @@ textarea:focus-visible {
   border-color: #ffffff;
 }
 
+:root[data-contrast='high'] .profile-reminder {
+  background: #000000;
+  border-color: #ffff00;
+}
+
 :root[data-contrast='high'] .created-client-notice {
   background: #000000;
   border-color: #ffffff;

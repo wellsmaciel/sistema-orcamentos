@@ -70,7 +70,7 @@ describe('telefone do cliente', () => {
   test('rejeita telefone sem DDD ou com dígitos a mais, com exemplo do formato', () => {
     for (const phone of ['99999-8888', '21-999999-99999']) {
       expect(validateClientInput({ ...validClient, phone })).toEqual([
-        { field: 'phone', message: 'Informe o telefone com DDD, por exemplo 21999998888.' },
+        { field: 'phone', message: 'Informe o telefone com DDD: celular, por exemplo 21999998888, ou fixo, por exemplo 2133334444.' },
       ]);
     }
   });

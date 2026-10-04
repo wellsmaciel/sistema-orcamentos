@@ -12,7 +12,9 @@ import AccountView from '../src/components/AccountView.jsx';
 import TopNav from '../src/components/TopNav.jsx';
 import Dashboard from '../src/components/Dashboard.jsx';
 import ResponseNotifications from '../src/components/ResponseNotifications.jsx';
+import NavigationFixture from './navigation-fixture.jsx';
 import ScrollFixture from './scroll-fixture.jsx';
+import ProfileReminder from '../src/components/ProfileReminder.jsx';
 import { installPortugueseValidation } from '../src/utils/form-validation-messages.js';
 import '../src/index.css';
 import '../src/App.css';
@@ -47,9 +49,20 @@ const draftQuote = {
   totalAmount: '500.00', serviceDate: '2099-10-15', serviceAddress: client.address, locationNotes: '',
 };
 
-let content = <QuoteList getAccessTokenSilently={getAccessTokenSilently} initialReviewQuoteId={parameters.get('review')} focusQuote={focusQuote} />;
+const openProfile = () => { document.body.dataset.openedProfile = 'true'; };
+
+let content = (
+  <QuoteList
+    getAccessTokenSilently={getAccessTokenSilently}
+    initialReviewQuoteId={parameters.get('review')}
+    focusQuote={focusQuote}
+    onOpenProfile={openProfile}
+  />
+);
 if (mode === 'public') content = <PublicQuote publicToken="test-public-token" />;
 if (mode === 'scroll') content = <ScrollFixture />;
+if (mode === 'navigation') content = <NavigationFixture owner={parameters.get('user') ?? 'auth0|usuario-a'} />;
+if (mode === 'profile-reminder') content = <ProfileReminder getAccessTokenSilently={getAccessTokenSilently} onOpenProfile={openProfile} />;
 if (mode === 'quote-edit') {
   content = <QuoteForm quote={draftQuote} getAccessTokenSilently={getAccessTokenSilently} onSaved={(saved) => { document.body.dataset.savedQuote = `${saved.id}:${saved.quoteNumber}`; }} />;
 }

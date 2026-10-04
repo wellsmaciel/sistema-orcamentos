@@ -38,8 +38,9 @@ function HelpGuide() {
         <h2 id="clientes">Clientes</h2>
         <ol>
           <li>
-            Em <strong>Clientes</strong>, clique em <strong>Novo cliente</strong> e informe nome, e-mail, telefone e endereço. Depois de salvar,
-            o botão <strong>Criar orçamento para…</strong> abre um orçamento novo com esse cliente já escolhido.
+            Em <strong>Clientes</strong>, clique em <strong>Novo cliente</strong> e informe nome, e-mail, telefone e endereço. O telefone pode
+            ser celular ou fixo; se for celular, o orçamento também poderá ser enviado pelo WhatsApp. Depois de salvar, o botão{' '}
+            <strong>Criar orçamento para…</strong> abre um orçamento novo com esse cliente já escolhido.
           </li>
           <li>Use <strong>Editar cliente</strong> para corrigir dados. Os orçamentos já enviados guardam os dados da época em que foram criados.</li>
           <li>
@@ -78,7 +79,8 @@ function HelpGuide() {
           </li>
           <li>
             Envie o link pelo <strong>WhatsApp</strong> ou por <strong>e-mail</strong>, com a mensagem já pronta, ou use{' '}
-            <strong>Copiar link</strong> para mandar por outro canal. O sistema não envia mensagens sozinho.
+            <strong>Copiar link</strong> para mandar por outro canal. O botão do WhatsApp aparece só quando o telefone do cliente é celular.
+            O sistema não envia mensagens sozinho.
           </li>
         </ol>
         <p>O cliente abre o link, vê o orçamento e escolhe <strong>Aceitar orçamento</strong> ou <strong>Recusar orçamento</strong>, podendo explicar o motivo.</p>

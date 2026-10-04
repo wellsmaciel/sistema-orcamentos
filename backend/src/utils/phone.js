@@ -2,6 +2,8 @@
 // (começa de 2 a 5). Aceita pontuação, espaços e o código do país +55.
 // A mesma regra existe em frontend/src/utils/phone.js; um teste do frontend garante que as duas concordam.
 const PHONE_EXAMPLE = '21999998888';
+const PHONE_LANDLINE_EXAMPLE = '2133334444';
+const PHONE_ERROR_MESSAGE = `Informe o telefone com DDD: celular, por exemplo ${PHONE_EXAMPLE}, ou fixo, por exemplo ${PHONE_LANDLINE_EXAMPLE}.`;
 
 function normalizeBrazilianPhone(value) {
   if (typeof value !== 'string') {
@@ -35,4 +37,4 @@ function standardizeBrazilianPhone(value) {
   return digits ? formatBrazilianPhone(digits) : null;
 }
 
-export { PHONE_EXAMPLE, normalizeBrazilianPhone, standardizeBrazilianPhone };
+export { PHONE_ERROR_MESSAGE, PHONE_EXAMPLE, PHONE_LANDLINE_EXAMPLE, normalizeBrazilianPhone, standardizeBrazilianPhone };

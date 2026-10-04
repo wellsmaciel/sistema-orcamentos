@@ -18,8 +18,9 @@ test('orçamento enviado pode ser compartilhado pelo WhatsApp ou por e-mail', as
     buildQuote(),
     buildQuote({ id: 'quote-accepted', quoteNumber: 41, status: 'ACCEPTED', publicToken: 'token-accepted' }),
     buildQuote({ id: 'quote-no-phone', quoteNumber: 40, publicToken: 'token-no-phone', client: { id: 'client-2', name: 'João', email: 'joao@example.com', phone: '123' } }),
+    buildQuote({ id: 'quote-landline', quoteNumber: 39, publicToken: 'token-landline', client: { id: 'client-3', name: 'Ana', email: 'ana@example.com', phone: '(11) 3333-4444' } }),
   ];
-  await page.route('**/api/v1/quotes/search?*', (route) => route.fulfill({ json: { items: quotes, total: 3, page: 1, pageSize: 20, totalPages: 1 } }));
+  await page.route('**/api/v1/quotes/search?*', (route) => route.fulfill({ json: { items: quotes, total: 4, page: 1, pageSize: 20, totalPages: 1 } }));
 
   await page.goto('/acceptance/fixture.html');
 
@@ -39,6 +40,12 @@ test('orçamento enviado pode ser compartilhado pelo WhatsApp ou por e-mail', as
   const noPhoneCard = page.locator('article').filter({ hasText: 'Orçamento nº 000040' });
   await expect(noPhoneCard.getByRole('link', { name: 'Enviar pelo WhatsApp' })).toHaveCount(0);
   await expect(noPhoneCard.getByRole('link', { name: 'Enviar por e-mail' })).toBeVisible();
-  await expect(noPhoneCard.getByText('O telefone deste orçamento não está num formato válido para o WhatsApp.')).toBeVisible();
-  await expect(sentCard.getByText(/não está num formato válido/)).toHaveCount(0);
+  await expect(noPhoneCard.getByText(/só fica disponível quando o telefone do cliente é celular/)).toBeVisible();
+  await expect(sentCard.getByText(/só fica disponível quando o telefone do cliente é celular/)).toHaveCount(0);
+
+  // Telefone fixo é válido no cadastro, mas não tem WhatsApp: o botão não aparece e a dica explica o motivo.
+  const landlineCard = page.locator('article').filter({ hasText: 'Orçamento nº 000039' });
+  await expect(landlineCard.getByRole('link', { name: 'Enviar pelo WhatsApp' })).toHaveCount(0);
+  await expect(landlineCard.getByRole('link', { name: 'Enviar por e-mail' })).toBeVisible();
+  await expect(landlineCard.getByText(/só fica disponível quando o telefone do cliente é celular/)).toBeVisible();
 });

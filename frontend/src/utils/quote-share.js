@@ -2,10 +2,11 @@ import { normalizeBrazilianPhone } from './phone.js';
 import { formatQuoteNumber } from './format.js';
 
 // Usa a mesma regra de telefone dos cadastros e acrescenta o código do Brasil exigido pelo WhatsApp.
+// Só celular (DDD + 9 dígitos): telefone fixo normalmente não tem WhatsApp, e o link levaria a um número inexistente no aplicativo.
 function normalizeWhatsAppPhone(phone) {
   const digits = normalizeBrazilianPhone(phone);
 
-  return digits ? `55${digits}` : null;
+  return digits?.length === 11 ? `55${digits}` : null;
 }
 
 function buildShareMessage(quote, publicUrl) {
