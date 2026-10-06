@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { requestQuoteDescriptionReview, requestQuoteItemSuggestions } from '../services/quote-description-review.js';
 import { saveQuote } from '../services/quote-actions.js';
 import { formatQuoteNumber } from '../utils/format.js';
@@ -92,6 +92,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
     return initialClient ? withClientAddress(initialFormData, initialClient) : initialFormData;
   });
   const [savedQuote, setSavedQuote] = useState(null);
+  const savedHeadingRef = useRef(null);
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [descriptionReview, setDescriptionReview] = useState(idleDescriptionReview);
@@ -237,6 +238,16 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
     });
   }
 
+  // Rascunho novo salvo: o resumo substitui o formulário; a tela vai para o topo dele e o foco, para o título.
+  const showsSavedDraft = !isEditing && savedQuote !== null;
+
+  useEffect(() => {
+    if (showsSavedDraft) {
+      savedHeadingRef.current?.scrollIntoView({ block: 'start' });
+      savedHeadingRef.current?.focus();
+    }
+  }, [showsSavedDraft]);
+
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -280,6 +291,51 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
       <section>
         <h2>Novo orçamento</h2>
         <p>Cadastre um cliente antes de criar um orçamento.</p>
+      </section>
+    );
+  }
+
+  // Um formulário novo, sem os campos já tocados, para não aparecerem vermelhos depois de salvar.
+  if (showsSavedDraft) {
+    return (
+      <section className="saved-draft" aria-labelledby="saved-draft-title">
+        <h2 id="saved-draft-title" ref={savedHeadingRef} tabIndex={-1}>
+          Rascunho salvo
+        </h2>
+        <p role="status">Orçamento nº {formatQuoteNumber(savedQuote.quoteNumber)} criado com sucesso. Ele ainda pode ser editado.</p>
+        <p>
+          <strong>Cliente:</strong> {savedQuote.client?.name}
+        </p>
+        <p>
+          <strong>Situação:</strong> Rascunho
+        </p>
+        <p>
+          <strong>Forma de cobrança:</strong> {savedQuote.pricingMode === 'ITEMIZED' ? 'Preço por item' : 'Valor global'}
+        </p>
+        <ul>
+          {savedQuote.items.map((item) => (
+            <li key={item.id}>
+              {item.description} — quantidade: {formatQuoteQuantity(item.quantity)}
+              {savedQuote.pricingMode === 'ITEMIZED' && (
+                <> — preço unitário: {formatQuoteMoney(item.unitPrice)} — subtotal: {formatQuoteMoney(item.subtotal)}</>
+              )}
+            </li>
+          ))}
+        </ul>
+        <p>
+          <strong>Valor:</strong> {formatQuoteMoney(savedQuote.totalAmount)}
+        </p>
+
+        <div className="description-review-actions">
+          {onReview && (
+            <button type="button" className="button-primary" onClick={() => onReview(savedQuote)}>
+              Revisar e confirmar orçamento
+            </button>
+          )}
+          <button type="button" onClick={() => setSavedQuote(null)}>
+            Criar outro orçamento
+          </button>
+        </div>
       </section>
     );
   }
@@ -557,34 +613,7 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
 
         {submitError && <p role="alert">{submitError}</p>}
 
-        {savedQuote && (
-          <div role="status">
-            <p>{isEditing ? 'Orçamento alterado com sucesso.' : 'Orçamento criado com sucesso.'}</p>
-            <p>
-              <strong>Status:</strong> {savedQuote.status}
-            </p>
-            <p>
-              <strong>Forma de cobrança:</strong> {savedQuote.pricingMode === 'ITEMIZED' ? 'Preço por item' : 'Valor global'}
-            </p>
-            <ul>
-              {savedQuote.items.map((item) => (
-                <li key={item.id}>
-                  {item.description} — quantidade: {formatQuoteQuantity(item.quantity)}
-                  {savedQuote.pricingMode === 'ITEMIZED' && (
-                    <> — preço unitário: {formatQuoteMoney(item.unitPrice)} — subtotal: {formatQuoteMoney(item.subtotal)}</>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <p><strong>Valor:</strong> {formatQuoteMoney(savedQuote.totalAmount)}</p>
-          </div>
-        )}
-
-        {savedQuote && onReview && savedQuote.status === 'DRAFT' && (
-          <button type="button" className="button-primary" onClick={() => onReview(savedQuote)}>
-            Revisar e confirmar orçamento
-          </button>
-        )}
+        {savedQuote && <p role="status">Orçamento alterado com sucesso.</p>}
       </form>
     </section>
   );

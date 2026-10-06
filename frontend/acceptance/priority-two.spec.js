@@ -37,7 +37,7 @@ for (const pricingMode of ['ITEMIZED', 'FIXED_TOTAL']) {
     await page.getByLabel('Data do serviço').fill('2099-10-15');
     await page.getByRole('button', { name: 'Salvar rascunho' }).click();
 
-    await expect(page.getByText('Orçamento criado com sucesso.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Rascunho salvo' })).toBeVisible();
     expect(submittedBody.clientId).toBe('client-1');
     expect(submittedBody.pricingMode).toBe(pricingMode);
     expect(submittedBody.items).toEqual([{
@@ -134,7 +134,7 @@ test('linha extra em branco é ignorada ao salvar o orçamento', async ({ page }
   await page.getByLabel('Data do serviço').fill('2099-10-15');
   await page.getByRole('button', { name: 'Salvar rascunho' }).click();
 
-  await expect(page.getByText('Orçamento criado com sucesso.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Rascunho salvo' })).toBeVisible();
   expect(submittedBody.items).toEqual([{ description: 'Escapamento', quantity: '1' }]);
 });
 
