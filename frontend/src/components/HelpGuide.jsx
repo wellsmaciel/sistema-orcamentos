@@ -51,7 +51,19 @@ function HelpGuide() {
 
         <h2 id="novo-orcamento">Criar um orçamento</h2>
         <ol>
-          <li>Em <strong>Novo orçamento</strong>, escolha o cliente e escreva a descrição geral do serviço.</li>
+          <li>
+            Em <strong>Novo orçamento</strong>, escolha o cliente e escreva a descrição geral do serviço. No celular, você também pode ditar
+            o texto pelo microfone do teclado e depois corrigir o que precisar.
+            <ul>
+              <li>
+                <strong>iPhone:</strong> toque no microfone do teclado. Se ele não aparecer, ative em <em>Ajustes &gt; Geral &gt; Teclado
+                &gt; Ditado</em>.
+              </li>
+              <li>
+                <strong>Android:</strong> toque no microfone do teclado. A posição e os nomes podem variar conforme o aparelho.
+              </li>
+            </ul>
+          </li>
           <li>
             Escolha a forma de cobrança: <strong>Preço por item</strong> (o total é calculado pelos itens) ou <strong>Valor global</strong>{' '}
             (você informa o total).
