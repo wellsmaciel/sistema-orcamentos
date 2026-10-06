@@ -67,12 +67,18 @@ function HelpGuide() {
             Opcional: clique em <strong>Revisar descrição com IA</strong> para receber uma sugestão de texto mais claro. Nada muda até você
             clicar em <strong>Usar sugestão</strong>.
           </li>
-          <li>Clique em <strong>Salvar rascunho</strong>. O rascunho ainda pode ser editado à vontade.</li>
+          <li>
+            Clique em <strong>Salvar rascunho</strong>. Aparece um resumo do rascunho, que ainda pode ser editado à vontade. Dali você pode
+            seguir para a revisão ou clicar em <strong>Criar outro orçamento</strong>.
+          </li>
         </ol>
 
         <h2 id="enviar">Revisar, confirmar e enviar</h2>
         <ol>
-          <li>Em <strong>Meus orçamentos</strong>, clique em <strong>Revisar orçamento</strong> no rascunho e confira todos os dados.</li>
+          <li>
+            Logo depois de salvar, clique em <strong>Revisar e confirmar orçamento</strong>. Para um rascunho salvo antes, vá em{' '}
+            <strong>Meus orçamentos</strong> e clique em <strong>Revisar orçamento</strong>. Confira todos os dados.
+          </li>
           <li>
             Clique em <strong>Confirmar e gerar link</strong>. A partir daqui o orçamento não pode mais ser alterado, para o cliente ver
             exatamente o que foi combinado.

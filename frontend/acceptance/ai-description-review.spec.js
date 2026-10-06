@@ -47,7 +47,7 @@ test('prestador revisa a descrição com IA e salva o texto sugerido', async ({ 
   await page.getByLabel('Data do serviço').fill('2099-10-15');
   await page.getByRole('button', { name: 'Salvar rascunho' }).click();
 
-  await expect(page.getByText('Orçamento criado com sucesso.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Rascunho salvo' })).toBeVisible();
   expect(savedBody.description).toBe(suggestion);
 });
 

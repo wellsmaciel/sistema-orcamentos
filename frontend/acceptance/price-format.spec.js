@@ -25,7 +25,7 @@ for (const [pricingMode, field, typed, expected] of [
     await page.getByLabel('Data do serviço').fill('2099-10-15');
     await page.getByRole('button', { name: 'Salvar rascunho' }).click();
 
-    await expect(page.getByText('Orçamento criado com sucesso.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Rascunho salvo' })).toBeVisible();
     if (expected.unitPrice) {
       expect(submittedBody.items[0].unitPrice).toBe(expected.unitPrice);
     } else {
