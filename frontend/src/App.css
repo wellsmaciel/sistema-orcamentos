@@ -134,6 +134,31 @@ a + button {
   font-size: 0.9rem;
 }
 
+.dictation-hint {
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+
+.dictation-hint summary {
+  padding: 8px 0;
+  color: #1d4ed8;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dictation-hint p,
+.dictation-hint ul {
+  margin: 4px 0 8px;
+}
+
+/* No computador (mouse) a dica não serve: o ditado é do teclado do celular. */
+@media (hover: hover) and (pointer: fine) {
+  .dictation-hint {
+    display: none;
+  }
+}
+
 /* Em grades, o espaçamento vem do gap; no celular o botão ocupa a largura toda. */
 form > button,
 .quote-items > button,
