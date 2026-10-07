@@ -407,6 +407,21 @@ function QuoteForm({ clients = [], getAccessTokenSilently, quote = null, initial
           <div>
             <label htmlFor="quote-description">Descrição geral do serviço</label>
             <textarea id="quote-description" name="description" value={formData.description} onChange={handleChange} maxLength={10000} required />
+            {/* Recolhida e só em telas de toque (ver App.css): ajuda quem não conhece o ditado sem atrapalhar quem já usa. */}
+            <details className="dictation-hint">
+              <summary>
+                <span aria-hidden="true">🎤 </span>Dica: ditar a descrição pelo celular
+              </summary>
+              <p>Você pode falar em vez de digitar, usando o microfone do teclado, e depois corrigir o que precisar.</p>
+              <ul>
+                <li>
+                  <strong>iPhone:</strong> toque no microfone do teclado. Se não aparecer, ative em <em>Ajustes &gt; Geral &gt; Teclado &gt; Ditado</em>.
+                </li>
+                <li>
+                  <strong>Android:</strong> toque no microfone do teclado. A posição pode variar conforme o aparelho.
+                </li>
+              </ul>
+            </details>
           </div>
 
           <div className="description-review">

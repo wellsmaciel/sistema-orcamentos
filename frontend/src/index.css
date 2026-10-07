@@ -76,7 +76,8 @@ textarea:focus-visible {
   color: #ffffff;
 }
 
-:root[data-contrast='high'] a {
+:root[data-contrast='high'] a,
+:root[data-contrast='high'] .dictation-hint summary {
   color: #ffff00;
 }
 
