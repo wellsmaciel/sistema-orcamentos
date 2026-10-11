@@ -1,5 +1,5 @@
 const CONTACT_EMAIL = 'wellsvelasquezmaciel@gmail.com';
-const LAST_UPDATED = '4 de outubro de 2026';
+const LAST_UPDATED = '11 de outubro de 2026';
 
 // Página pública em /privacidade, aberta sem login. O texto descreve o que o sistema faz de fato.
 function PrivacyPolicy() {
@@ -52,9 +52,24 @@ function PrivacyPolicy() {
 
         <h2>Mensagens e e-mails</h2>
         <p>
-          O sistema não envia e-mails nem mensagens aos clientes por conta própria. Os botões de WhatsApp e de e-mail abrem o aplicativo do
-          próprio prestador, que decide se envia a mensagem. Os e-mails de conta, como a troca de senha, são enviados pelo Auth0.
+          O sistema não envia e-mails nem mensagens aos clientes por conta própria. Os botões abaixo só funcionam quando o prestador clica
+          neles, e cada um abre outro serviço com os dados já preenchidos. A partir daí, esses dados ficam sujeitos às regras desse serviço.
         </p>
+        <ul>
+          <li>
+            <strong>WhatsApp:</strong> o telefone do cliente e a mensagem com o link do orçamento vão para o WhatsApp quando o botão é
+            aberto. A mensagem só é enviada ao cliente se o prestador tocar em enviar.
+          </li>
+          <li>
+            <strong>E-mail:</strong> abre o aplicativo de e-mail do aparelho com destinatário, assunto e mensagem. Nada é enviado sem o
+            prestador confirmar.
+          </li>
+          <li>
+            <strong>Adicionar ao Google Agenda:</strong> o nome do cliente, o resumo do serviço, o número e o valor do orçamento e o
+            endereço vão para o Google no momento em que o link é aberto. O evento só é salvo na agenda se o prestador confirmar.
+          </li>
+        </ul>
+        <p>Os e-mails de conta, como a troca de senha, são enviados pelo Auth0.</p>
 
         <h2>Cookies e armazenamento no navegador</h2>
         <p>

@@ -310,6 +310,42 @@ form {
   padding: 6px 0;
 }
 
+/* Próximos serviços: um por linha, com as ações embaixo; o serviço de hoje ganha o selo "Hoje". */
+.upcoming-services-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.upcoming-services-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.upcoming-services-list li:last-child {
+  border-bottom: 0;
+}
+
+.upcoming-today-badge {
+  margin-left: 0;
+}
+
+.upcoming-service-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-top: 4px;
+}
+
+.upcoming-service-actions a {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.upcoming-service-actions .inline-link-button {
+  padding-inline: 0;
+}
+
 /* Área de gestão: cartões de indicadores e barras por situação. */
 .management-cards {
   display: grid;

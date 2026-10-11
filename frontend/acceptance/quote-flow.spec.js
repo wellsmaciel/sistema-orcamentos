@@ -192,3 +192,21 @@ test('orçamento anterior ao histórico informa que não há eventos recuperáve
     'Ainda não há registros no histórico deste orçamento.',
   );
 });
+
+test('o cartão do orçamento mostra o endereço do serviço, sem repetir durante a revisão', async ({ page }) => {
+  const accepted = { ...buildQuote('FIXED_TOTAL'), id: 'quote-9', quoteNumber: 9, status: 'ACCEPTED', publicToken: 'token-9' };
+  const draft = buildQuote('FIXED_TOTAL');
+  await page.route('**/api/v1/quotes/search?*', (route) => route.fulfill({ json: { items: [accepted, draft], total: 2, page: 1, pageSize: 20, totalPages: 1 } }));
+  await page.route('**/api/v1/company', (route) => route.fulfill({ json: { name: 'Empresa Exemplo', email: 'empresa@example.com', phone: '1133334444' } }));
+
+  await page.goto('/acceptance/fixture.html');
+
+  const acceptedCard = page.locator('#quote-quote-9');
+  await expect(acceptedCard).toContainText('Endereço do serviço: Rua Principal, 10 · Centro, São Paulo – SP · CEP 01001-000');
+  await expect(acceptedCard).toContainText('Observações do local: Portaria lateral');
+
+  const draftCard = page.locator('#quote-quote-1');
+  await draftCard.getByRole('button', { name: 'Revisar orçamento' }).click();
+  await expect(draftCard.getByRole('region', { name: 'Confira todos os dados antes de confirmar' })).toContainText('Rua Principal');
+  await expect(draftCard.getByText(/Endereço do serviço:/)).toHaveCount(1);
+});

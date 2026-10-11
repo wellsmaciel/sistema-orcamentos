@@ -18,6 +18,7 @@ import { validateCompany } from './middlewares/validate-company.js';
 import { requestLogger } from './middlewares/request-logger.js';
 import { listActivities } from './controllers/activity.js';
 import { getManagementSummary } from './controllers/management.js';
+import { listUpcomingServices } from './controllers/agenda.js';
 import { listResponseNotifications, markResponseNotificationsRead } from './controllers/response-notification.js';
 
 const app = express();
@@ -52,6 +53,7 @@ app.put('/api/v1/company/logo', validateAccessToken, loadAuthenticatedUser, expr
 app.delete('/api/v1/company/logo', validateAccessToken, loadAuthenticatedUser, deleteMyCompanyLogo);
 app.get('/api/v1/activities', validateAccessToken, loadAuthenticatedUser, listActivities);
 app.get('/api/v1/management/summary', validateAccessToken, loadAuthenticatedUser, getManagementSummary);
+app.get('/api/v1/agenda', validateAccessToken, loadAuthenticatedUser, listUpcomingServices);
 app.get('/api/v1/notifications/responses', validateAccessToken, loadAuthenticatedUser, listResponseNotifications);
 app.post('/api/v1/notifications/responses/read', validateAccessToken, loadAuthenticatedUser, markResponseNotificationsRead);
 app.post('/api/v1/clients', validateAccessToken, loadAuthenticatedUser, validateClient, createClient);

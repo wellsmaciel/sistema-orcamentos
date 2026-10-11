@@ -17,4 +17,11 @@ function formatDate(value) {
   return `${day}/${month}/${year}`;
 }
 
-export { formatAmount, formatDate, formatQuoteNumber };
+// Endereço do serviço numa linha, como o prestador confere: "Rua A, 10, fundos · Centro, São Paulo – SP · CEP 01001-000".
+function formatServiceAddressLine(address) {
+  const street = [address.street, address.number, address.complement].filter(Boolean).join(', ');
+
+  return `${street} · ${address.district}, ${address.city} – ${address.state} · CEP ${address.postalCode}`;
+}
+
+export { formatAmount, formatDate, formatQuoteNumber, formatServiceAddressLine };

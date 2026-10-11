@@ -17,6 +17,7 @@ function HelpGuide() {
             <li><a href="#novo-orcamento">Criar um orçamento</a></li>
             <li><a href="#enviar">Revisar, confirmar e enviar</a></li>
             <li><a href="#respostas">Acompanhar as respostas</a></li>
+            <li><a href="#proximos-servicos">Próximos serviços</a></li>
             <li><a href="#gestao">Gestão</a></li>
             <li><a href="#conta">Minha conta e acessibilidade</a></li>
             <li><a href="#duvidas">Perguntas frequentes</a></li>
@@ -28,8 +29,9 @@ function HelpGuide() {
           <li>Clique em <strong>Entrar no sistema</strong> e use sua conta Google ou um e-mail e senha.</li>
           <li>
             Abra o <strong>Perfil profissional</strong> e preencha nome, e-mail e telefone. CPF ou CNPJ e endereço são opcionais. No telefone
-            e no CPF ou CNPJ, você pode digitar somente números; o sistema acrescenta a pontuação. Nome, e-mail, telefone e, quando informados,
-            CPF ou CNPJ e endereço aparecem para o cliente no orçamento.
+            e no CPF ou CNPJ, você pode digitar somente números; o sistema acrescenta a pontuação e confere se o número é válido. O CNPJ pode
+            ter letras, como os emitidos pela Receita Federal a partir de julho de 2026. Nome, e-mail, telefone e, quando informados, CPF ou
+            CNPJ e endereço aparecem para o cliente no orçamento.
           </li>
           <li>Se quiser, envie o <strong>logo da empresa</strong> na mesma tela. Ele aparece no topo do orçamento que o cliente abre.</li>
         </ol>
@@ -43,6 +45,10 @@ function HelpGuide() {
             <strong>Criar orçamento para…</strong> abre um orçamento novo com esse cliente já escolhido.
           </li>
           <li>Use <strong>Editar cliente</strong> para corrigir dados. Os orçamentos já enviados guardam os dados da época em que foram criados.</li>
+          <li>
+            <strong>Ver orçamentos</strong> mostra todos os orçamentos daquele cliente. Para voltar à lista completa, clique em{' '}
+            <strong>Remover filtro do cliente</strong>.
+          </li>
           <li>
             <strong>Inativar cliente</strong> tira o cliente da lista de novos orçamentos sem apagar o histórico.{' '}
             <strong>Excluir cliente</strong> só é possível quando ele não tem orçamentos.
@@ -120,11 +126,20 @@ function HelpGuide() {
           </li>
         </ul>
 
+        <h2 id="proximos-servicos">Próximos serviços</h2>
+        <p>
+          A tela inicial mostra os serviços já aceitos pelos clientes, do mais próximo para o mais distante, a partir de hoje. Os de hoje
+          aparecem com o selo <strong>Hoje</strong>. Em cada serviço, <strong>Abrir orçamento</strong> leva ao orçamento, e{' '}
+          <strong>Adicionar ao Google Agenda</strong> abre o Google Agenda com o evento já preenchido (cliente, serviço, valor e endereço).
+          Nada é salvo na sua agenda até você confirmar lá.
+        </p>
+
         <h2 id="gestao">Gestão</h2>
         <p>
           A tela <strong>Gestão</strong> mostra os números do período escolhido (mês, trimestre, ano ou todo o período): orçamentos por
           situação, taxa de aceite, valores aceitos e em aberto, tempo médio de resposta, orçamentos aguardando resposta há mais tempo e
-          principais clientes.
+          principais clientes. Em cada orçamento aguardando resposta, <strong>Abrir orçamento</strong> leva direto a ele; em cada cliente,{' '}
+          <strong>Ver orçamentos</strong> mostra os orçamentos dele.
         </p>
 
         <h2 id="conta">Minha conta e acessibilidade</h2>

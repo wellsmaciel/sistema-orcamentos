@@ -19,12 +19,13 @@ Ao criar ou editar um rascunho, o prestador pode pedir uma revisão da descriç�
 - Preços aceitos no formato brasileiro, como "1.200,50" ou "R$ 1.200".
 - Envio do link pelo WhatsApp ou por e-mail do próprio prestador, com mensagem pronta; o app não envia mensagens sozinho.
 - Aviso na tela inicial quando um cliente aceita ou recusa um orçamento, com atalho para abrir cada orçamento respondido.
-- Busca de orçamentos pelo nome do cliente ou pelo número do orçamento.
+- Próximos serviços na tela inicial: orçamentos aceitos em ordem de data, com atalho para o orçamento e para adicionar o serviço ao Google Agenda.
+- Busca de orçamentos pelo nome do cliente ou pelo número do orçamento, e lista dos orçamentos de cada cliente.
 - Guia de uso público em `/ajuda`, com link no rodapé e na tela de entrada.
 - Área de gestão com indicadores do período: orçamentos por situação, taxa de aceite, valores aceito e em aberto, tempo médio de resposta, orçamentos aguardando resposta e principais clientes.
 - Registro das ações do prestador sobre clientes e perfil profissional.
 - Minha conta: dados do usuário, forma de acesso e troca de senha para contas de e-mail e senha.
-- Telefones brasileiros validados e padronizados no formato "(21) 99999-8888".
+- Telefones brasileiros validados e padronizados no formato "(21) 99999-8888"; CPF e CNPJ com dígitos verificadores conferidos, incluindo o CNPJ alfanumérico.
 - Interface mobile first: menu em blocos no celular e barra de navegação, listas em duas colunas e formulários em duas colunas a partir de 1024 px.
 - Acessibilidade: ajuste do tamanho do texto e modo de alto contraste.
 

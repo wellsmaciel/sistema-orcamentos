@@ -1,5 +1,5 @@
 import QuoteItems from './QuoteItems.jsx';
-import { formatDate } from '../utils/format.js';
+import { formatDate, formatServiceAddressLine } from '../utils/format.js';
 
 function QuoteReview({ quote, company }) {
   const address = quote.serviceAddress;
@@ -28,8 +28,7 @@ function QuoteReview({ quote, company }) {
         <strong>Data do serviço:</strong> {formatDate(quote.serviceDate)}
       </p>
       <p>
-        <strong>Endereço do serviço:</strong> {address.street}, {address.number}
-        {address.complement ? `, ${address.complement}` : ''} · {address.district}, {address.city} – {address.state} · CEP {address.postalCode}
+        <strong>Endereço do serviço:</strong> {formatServiceAddressLine(address)}
       </p>
       {quote.locationNotes && (
         <p>

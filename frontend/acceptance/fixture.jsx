@@ -6,6 +6,7 @@ import QuoteForm from '../src/components/QuoteForm.jsx';
 import CompanyForm from '../src/components/CompanyForm.jsx';
 import ClientForm from '../src/components/ClientForm.jsx';
 import ClientList from '../src/components/ClientList.jsx';
+import UpcomingServices from '../src/components/UpcomingServices.jsx';
 import ActivityList from '../src/components/ActivityList.jsx';
 import ManagementView from '../src/components/ManagementView.jsx';
 import AccountView from '../src/components/AccountView.jsx';
@@ -84,6 +85,14 @@ if (mode === 'clients-created') {
   );
 }
 if (mode === 'company') content = <CompanyForm getAccessTokenSilently={getAccessTokenSilently} />;
+if (mode === 'agenda') {
+  content = (
+    <UpcomingServices
+      getAccessTokenSilently={getAccessTokenSilently}
+      onOpenQuote={(service) => { document.body.dataset.openedQuote = `${service.quoteId}:${service.quoteNumber}`; }}
+    />
+  );
+}
 if (mode === 'client-edit') content = <ClientForm client={client} getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'activities') content = <ActivityList getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'management') {
