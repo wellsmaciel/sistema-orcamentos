@@ -1247,7 +1247,7 @@ components:
         taxId:
           type: string
           maxLength: 20
-          description: CPF ou CNPJ opcional, com 11 ou 14 dígitos.
+          description: CPF ou CNPJ opcional, com ou sem pontuação. Os dígitos verificadores são conferidos. O CNPJ pode ser alfanumérico (letras nas 12 primeiras posições, regra da Receita Federal a partir de julho de 2026) e é salvo em maiúsculas.
         address:
           $ref: '#/components/schemas/Address'
 

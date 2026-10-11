@@ -50,7 +50,7 @@ describe('Serviço de dados profissionais', () => {
         name: '  Prestador de Teste Serviços  ',
         email: '  CONTATO@EXAMPLE.COM  ',
         phone: '  (11) 99999-9999  ',
-        taxId: '12345678000190',
+        taxId: '12345678000195',
       },
       {
         transaction,
@@ -61,7 +61,7 @@ describe('Serviço de dados profissionais', () => {
     expect(company.name).toBe('Prestador de Teste Serviços');
     expect(company.email).toBe('contato@example.com');
     expect(company.phone).toBe('(11) 99999-9999');
-    expect(company.taxId).toBe('12.345.678/0001-90');
+    expect(company.taxId).toBe('12.345.678/0001-95');
     expect(company.street).toBeNull();
     expect(company.active).toBe(true);
   });
@@ -69,22 +69,22 @@ describe('Serviço de dados profissionais', () => {
   test('formata o CPF ou CNPJ antigo sem registrar uma alteração do prestador', async () => {
     const user = await createUser('company-legacy-tax-id');
     await Company.create(
-      { ownerUserId: user.id, name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444', taxId: '12345678000190' },
+      { ownerUserId: user.id, name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444', taxId: '12345678000195' },
       { transaction },
     );
 
     const company = await saveCompany(
       user.id,
-      { name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444', taxId: '12345678000190' },
+      { name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444', taxId: '12345678000195' },
       { transaction },
     );
 
-    expect(company.taxId).toBe('12.345.678/0001-90');
+    expect(company.taxId).toBe('12.345.678/0001-95');
     expect(await ActivityLog.count({ where: { userId: user.id, action: 'COMPANY_UPDATED' }, transaction })).toBe(0);
 
     await saveCompany(
       user.id,
-      { name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444', taxId: '12345678901' },
+      { name: 'Oficina', email: 'oficina@example.com', phone: '(11) 3333-4444', taxId: '12345678909' },
       { transaction },
     );
 

@@ -5,6 +5,8 @@ async function fillCompanyProfile(page, taxId) {
   await page.getByLabel('E-mail comercial').fill('empresa@example.com');
   await page.getByLabel('Telefone comercial').fill('(11) 99999-8888');
   await page.getByLabel('CPF ou CNPJ').fill(taxId);
+  // Sai do campo antes de salvar, como uma pessoa faz: um valor inválido já mostra o aviso ao sair.
+  await page.getByLabel('CPF ou CNPJ').blur();
   await page.getByRole('button', { name: 'Salvar dados profissionais' }).click();
 }
 
@@ -19,11 +21,11 @@ test('perfil recusa CPF ou CNPJ inválido antes de enviar, junto ao campo', asyn
   });
 
   await page.goto('/acceptance/fixture.html?mode=company');
-  await expect(page.getByText('CPF com 11 dígitos ou CNPJ com 14')).toBeVisible();
+  await expect(page.getByText('CPF com 11 números ou CNPJ com 14 caracteres')).toBeVisible();
   await fillCompanyProfile(page, '11112222333-0001-00');
 
   const taxId = page.getByLabel('CPF ou CNPJ');
-  await expect(page.getByRole('alert')).toHaveText('Informe um CPF ou CNPJ com 11 ou 14 dígitos.');
+  await expect(page.getByRole('alert')).toHaveText('Informe um CPF com 11 números ou um CNPJ com 14 caracteres.');
   await expect(taxId).toHaveAttribute('aria-invalid', 'true');
   await expect(taxId).toHaveCSS('border-color', 'rgb(185, 28, 28)');
   await expect(taxId).toBeFocused();
@@ -46,7 +48,7 @@ test('perfil mostra o motivo quando o servidor recusa um campo', async ({ page }
   });
 
   await page.goto('/acceptance/fixture.html?mode=company');
-  await fillCompanyProfile(page, '12345678000190');
+  await fillCompanyProfile(page, '12345678000195');
 
   // A mensagem geral anuncia o erro; o campo fica vermelho, com o motivo logo abaixo e o foco nele.
   const postalCode = page.getByLabel('CEP');

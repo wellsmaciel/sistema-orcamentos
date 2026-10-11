@@ -53,7 +53,7 @@ describe('Serviço de orçamentos', () => {
         name: `${name} Serviços`,
         email: 'profissional@example.com',
         phone: '11988887777',
-        taxId: '12345678901',
+        taxId: '12345678909',
         street: 'Rua Profissional',
         number: '200',
         complement: 'Sala 1',
@@ -315,7 +315,7 @@ describe('Serviço de orçamentos', () => {
     expect(result.quote.providerName).toBe('Prestador de Teste Serviços');
     expect(result.quote.providerEmail).toBe('profissional@example.com');
     expect(result.quote.providerPhone).toBe('11988887777');
-    expect(result.quote.providerTaxId).toBe('12345678901');
+    expect(result.quote.providerTaxId).toBe('12345678909');
     expect(result.quote.providerStreet).toBe('Rua Profissional');
     expect(result.quote.providerNumber).toBe('200');
     expect(result.quote.providerComplement).toBe('Sala 1');

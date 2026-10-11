@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { requestCompany, saveCompany } from '../services/company.js';
-import { PHONE_ERROR_MESSAGE, normalizeBrazilianPhone } from '../utils/phone.js';
-import { TAX_ID_ERROR_MESSAGE, normalizeBrazilianTaxId, standardizeBrazilianTaxId } from '../utils/tax-id.js';
+import { normalizeBrazilianPhone, phoneErrorMessage } from '../utils/phone.js';
+import { normalizeBrazilianTaxId, standardizeBrazilianTaxId, taxIdErrorMessage } from '../utils/tax-id.js';
 import { focusFirstFieldWithError } from '../utils/form-errors.js';
 import CompanyLogoField from './CompanyLogoField.jsx';
 import FormField from './FormField.jsx';
@@ -112,11 +112,11 @@ function CompanyForm({ getAccessTokenSilently }) {
     const nextFieldErrors = {};
 
     if (!normalizeBrazilianPhone(formData.phone)) {
-      nextFieldErrors.phone = PHONE_ERROR_MESSAGE;
+      nextFieldErrors.phone = phoneErrorMessage(formData.phone);
     }
 
     if (formData.taxId.trim() && !normalizeBrazilianTaxId(formData.taxId)) {
-      nextFieldErrors.taxId = TAX_ID_ERROR_MESSAGE;
+      nextFieldErrors.taxId = taxIdErrorMessage(formData.taxId);
     }
 
     if (Object.keys(nextFieldErrors).length > 0) {

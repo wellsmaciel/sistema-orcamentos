@@ -70,8 +70,14 @@ describe('telefone do cliente', () => {
   test('rejeita telefone sem DDD ou com dígitos a mais, com exemplo do formato', () => {
     for (const phone of ['99999-8888', '21-999999-99999']) {
       expect(validateClientInput({ ...validClient, phone })).toEqual([
-        { field: 'phone', message: 'Informe o telefone com DDD: celular, por exemplo 21999998888, ou fixo, por exemplo 2133334444.' },
+        { field: 'phone', message: 'Informe o telefone com DDD. Celular: 9 dígitos depois do DDD, começando com 9, por exemplo 21999998888. Fixo: 8 dígitos depois do DDD, começando com 2, 3, 4 ou 5, por exemplo 2133334444.' },
       ]);
     }
+  });
+
+  test('celular sem o 9 na frente recebe uma mensagem própria, com o número corrigido de exemplo', () => {
+    expect(validateClientInput({ ...validClient, phone: '1165648484' })).toEqual([
+      { field: 'phone', message: 'Parece um celular sem o 9 na frente. Celulares têm 9 dígitos depois do DDD, por exemplo (11) 96564-8484.' },
+    ]);
   });
 });
