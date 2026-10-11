@@ -52,12 +52,39 @@ test('sem os dados do prestador, a mensagem continua completa sem a assinatura',
   assert.ok(message.endsWith(publicUrl));
 });
 
-test('descrição longa vira um resumo curto', () => {
-  const message = buildShareMessage(buildQuote({ description: 'x'.repeat(300) }), publicUrl);
-  const serviceLine = message.split('\n').find((line) => line.startsWith('Serviço: '));
+function serviceLineOf(description) {
+  return buildShareMessage(buildQuote({ description }), publicUrl)
+    .split('\n')
+    .find((line) => line.startsWith('Serviço: '));
+}
 
-  assert.equal(serviceLine.length, 'Serviço: '.length + 120);
+test('descrição longa sem espaços vira um resumo curto', () => {
+  const serviceLine = serviceLineOf('x'.repeat(300));
+
+  assert.equal(serviceLine.length, 'Serviço: '.length + 160);
   assert.ok(serviceLine.endsWith('...'));
+});
+
+test('o resumo termina numa palavra inteira, sem conectivo nem vírgula sobrando', () => {
+  const serviceLine = serviceLineOf(
+    'Troca de 3 tomadas com mau contato, instalação de 2 luminárias na cozinha, passagem de 8 metros de cabo no corredor e '
+      + 'revisão completa do quadro de distribuição do apartamento',
+  );
+
+  assert.equal(
+    serviceLine,
+    'Serviço: Troca de 3 tomadas com mau contato, instalação de 2 luminárias na cozinha, passagem de 8 metros de cabo no corredor e revisão completa do quadro...',
+  );
+  assert.ok(serviceLine.length <= 'Serviço: '.length + 160);
+
+  assert.equal(
+    serviceLineOf(`${'palavra '.repeat(18)}cozinha, e de mais coisas que não cabem no resumo de jeito nenhum`),
+    `Serviço: ${'palavra '.repeat(18)}cozinha...`,
+  );
+});
+
+test('descrição curta vai inteira', () => {
+  assert.equal(serviceLineOf('Instalação de 2 luminárias'), 'Serviço: Instalação de 2 luminárias');
 });
 
 test('o link do WhatsApp leva o número e a mensagem codificada', () => {

@@ -674,6 +674,11 @@ main > button:last-child:hover:not(:disabled) {
     align-items: start;
   }
 
+  /* Cartão em revisão: a conferência tem muitos dados e precisa da largura toda. */
+  .card-grid > .card-grid-wide {
+    grid-column: 1 / -1;
+  }
+
   /* Formulário de orçamento: campos curtos lado a lado; textos longos, itens e endereço na largura toda. */
   .quote-form-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
