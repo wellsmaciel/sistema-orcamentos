@@ -17,6 +17,20 @@ describe('Validação dos filtros de orçamentos', () => {
     expect(errors).toEqual([]);
   });
 
+  test('deve aceitar o filtro por cliente com um identificador válido', () => {
+    expect(validateQuoteListInput({ clientId: '1b4e28ba-2fa1-41d2-883f-0016d3cca427' })).toEqual([]);
+  });
+
+  test.each(['abc', '1b4e28ba-2fa1-41d2-883f', ' 1b4e28ba-2fa1-41d2-883f-0016d3cca427'])('deve rejeitar o cliente inválido "%s"', (clientId) => {
+    expect(validateQuoteListInput({ clientId })).toContainEqual(expect.objectContaining({ field: 'clientId' }));
+  });
+
+  test('deve rejeitar o cliente repetido na consulta', () => {
+    expect(validateQuoteListInput({ clientId: ['1b4e28ba-2fa1-41d2-883f-0016d3cca427', '1b4e28ba-2fa1-41d2-883f-0016d3cca427'] })).toContainEqual(
+      expect.objectContaining({ field: 'clientId' }),
+    );
+  });
+
   test('deve aceitar uma data válida em ano bissexto', () => {
     expect(
       validateQuoteListInput({

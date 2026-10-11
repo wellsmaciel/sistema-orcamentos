@@ -1,3 +1,5 @@
+import { UUID_PATTERN } from './quote.js';
+
 const allowedStatuses = ['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED'];
 
 function isValidDate(value) {
@@ -13,7 +15,7 @@ function isValidDate(value) {
 function validateQuoteListInput(query) {
   const errors = [];
 
-  const { page = '1', search = '', status = '', serviceDateFrom = '', serviceDateTo = '' } = query;
+  const { page = '1', search = '', status = '', serviceDateFrom = '', serviceDateTo = '', clientId = '' } = query;
 
   const pageNumber = Number(page);
 
@@ -28,6 +30,13 @@ function validateQuoteListInput(query) {
     errors.push({
       field: 'search',
       message: 'A busca deve ser um texto com até 150 caracteres.',
+    });
+  }
+
+  if (clientId !== '' && (typeof clientId !== 'string' || !UUID_PATTERN.test(clientId))) {
+    errors.push({
+      field: 'clientId',
+      message: 'Informe um cliente válido.',
     });
   }
 

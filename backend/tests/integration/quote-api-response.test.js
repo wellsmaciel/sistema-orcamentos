@@ -159,6 +159,20 @@ describe('Contrato JSON de orçamento e itens', () => {
     expect(response.body).toEqual(expect.objectContaining({ total: 1, page: 1, pageSize: 20, totalPages: 1 }));
   });
 
+  test('GET search repassa o filtro por cliente e rejeita um cliente inválido', async () => {
+    services.listQuotesPage.mockResolvedValue({ items: [], relatedQuotes: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
+
+    const response = await request(app).get('/api/v1/quotes/search').query({ clientId: CLIENT_ID });
+
+    expect(response.status).toBe(200);
+    expect(services.listQuotesPage).toHaveBeenCalledWith(USER_ID, expect.objectContaining({ clientId: CLIENT_ID }));
+
+    const invalid = await request(app).get('/api/v1/quotes/search').query({ clientId: 'nao-e-um-id' });
+
+    expect(invalid.status).toBe(400);
+    expect(invalid.body.details).toContainEqual(expect.objectContaining({ field: 'clientId' }));
+  });
+
   test('GET search inclui os dados do prestador dos orçamentos enviados, para a mensagem de envio', async () => {
     const sentQuote = { ...buildQuote(), providerName: 'Oficina Exemplo', providerEmail: 'oficina@example.com', providerPhone: '(11) 3333-4444' };
     const draft = { ...buildQuote(), id: CLIENT_ID, status: 'DRAFT', publicToken: null, sentAt: null };

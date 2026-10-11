@@ -176,4 +176,4 @@ function validateQuoteResponseInput(input) {
 
   return errors;
 }
-export { getCurrentDate, validateQuoteInput, validateQuoteUpdateInput, validateQuoteId, validateQuoteResponseInput };
+export { UUID_PATTERN, getCurrentDate, validateQuoteInput, validateQuoteUpdateInput, validateQuoteId, validateQuoteResponseInput };

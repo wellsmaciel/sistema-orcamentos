@@ -64,7 +64,7 @@ function validateQuoteListQuery(request, response, next) {
     });
   }
 
-  const { page = '1', search = '', status = '', serviceDateFrom = '', serviceDateTo = '' } = request.query;
+  const { page = '1', search = '', status = '', serviceDateFrom = '', serviceDateTo = '', clientId = '' } = request.query;
 
   request.quoteListOptions = {
     page: Number(page),
@@ -73,6 +73,7 @@ function validateQuoteListQuery(request, response, next) {
     status: status || undefined,
     serviceDateFrom: serviceDateFrom || undefined,
     serviceDateTo: serviceDateTo || undefined,
+    clientId: clientId || undefined,
   };
 
   return next();

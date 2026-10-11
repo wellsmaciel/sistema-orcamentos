@@ -730,6 +730,28 @@ describe('Serviço de orçamentos', () => {
     expect(noMatches.total).toBe(0);
   });
 
+  test('deve filtrar pelo cliente, só entre os orçamentos do prestador', async () => {
+    const user = await createUser('Prestador do Filtro por Cliente');
+    const otherUser = await createUser('Outro Prestador do Filtro por Cliente');
+    const client = await createClient(user.id);
+    const otherClientOfSameUser = await createClient(user.id);
+    const foreignClient = await createClient(otherUser.id);
+    const first = await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+    const second = await createQuote(user.id, buildQuoteInput(client.id), { transaction });
+    await createQuote(user.id, buildQuoteInput(otherClientOfSameUser.id), { transaction });
+    await createQuote(otherUser.id, buildQuoteInput(foreignClient.id), { transaction });
+
+    const result = await listQuotesPage(user.id, { clientId: client.id, transaction });
+
+    expect(result.items.map((quote) => quote.id).sort()).toEqual([first.id, second.id].sort());
+    expect(result.total).toBe(2);
+
+    // O id de um cliente de outro prestador não revela os orçamentos dele.
+    const foreign = await listQuotesPage(user.id, { clientId: foreignClient.id, transaction });
+    expect(foreign.items).toEqual([]);
+    expect(foreign.total).toBe(0);
+  });
+
   test('deve buscar pelo número do orçamento, com ou sem zeros e prefixo, só entre os do prestador', async () => {
     const user = await createUser('Prestador da Busca por Número');
     const otherUser = await createUser('Outro Prestador da Busca por Número');
