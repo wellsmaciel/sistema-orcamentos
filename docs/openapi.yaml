@@ -1092,6 +1092,12 @@ paths:
           schema:
             type: string
             format: date
+        - name: clientId
+          in: query
+          description: Mostra só os orçamentos deste cliente do prestador autenticado. O id de um cliente de outro prestador não retorna orçamentos.
+          schema:
+            type: string
+            format: uuid
         - name: page
           in: query
           description: Número da página solicitada.

@@ -80,7 +80,7 @@ function App() {
 function AuthenticatedApp() {
   const { getAccessTokenSilently, logout, user } = useAuth0();
   const { navigation, navigate, goBackTo } = useAppNavigation(user?.sub);
-  const { view: currentView, selectedQuote, selectedClient, reviewQuoteId, focusQuote, createdClient, quoteClientId } = navigation;
+  const { view: currentView, selectedQuote, selectedClient, reviewQuoteId, focusQuote, listClientId, listClientName, createdClient, quoteClientId } = navigation;
   // Clientes do formulário de novo orçamento, recarregados a cada vez que a tela é aberta.
   const [quoteClients, setQuoteClients] = useState({ key: null, items: [], error: '' });
   const isLoadingQuoteClients = currentView === 'new-quote' && quoteClients.key !== navigation.key;
@@ -134,6 +134,11 @@ function AuthenticatedApp() {
 
   function handleOpenQuote(item) {
     navigate({ view: 'quotes', focusQuote: { quoteId: item.quoteId, quoteNumber: item.quoteNumber } });
+  }
+
+  // O id do cliente vai para o histórico; o nome fica só na memória da página (some ao recarregar).
+  function handleOpenClientQuotes(clientId, clientName) {
+    navigate({ view: 'quotes', listClientId: clientId, listClientName: clientName });
   }
 
   // Depois de salvar, a tela do formulário é substituída: o Voltar não reabre um formulário já enviado.
@@ -204,6 +209,7 @@ function AuthenticatedApp() {
               getAccessTokenSilently={getAccessTokenSilently}
               onOpenQuotes={() => handleNavigate('quotes')}
               onOpenQuote={handleOpenQuote}
+              onOpenClientQuotes={handleOpenClientQuotes}
             />
           )}
 
@@ -217,6 +223,7 @@ function AuthenticatedApp() {
                 onNewClient={() => handleNavigate('new-client')}
                 createdClient={createdClient}
                 onCreateQuote={(client) => handleNavigate('new-quote', { clientId: client.id })}
+                onOpenQuotes={(client) => handleOpenClientQuotes(client.id, client.name)}
               />
             </section>
           )}
@@ -268,11 +275,13 @@ function AuthenticatedApp() {
               <h2>Meus orçamentos</h2>
 
               <QuoteList
-                key={focusQuote?.quoteId ?? 'todos'}
+                key={focusQuote?.quoteId ?? listClientId ?? 'todos'}
                 getAccessTokenSilently={getAccessTokenSilently}
                 onEdit={handleEditQuote}
                 initialReviewQuoteId={reviewQuoteId}
                 focusQuote={focusQuote}
+                clientId={listClientId}
+                clientName={listClientName}
                 onOpenProfile={() => handleNavigate('company')}
               />
             </section>

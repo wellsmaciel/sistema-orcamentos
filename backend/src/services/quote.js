@@ -535,7 +535,7 @@ async function getQuoteHistory(userId, quoteId, { transaction } = {}) {
     transaction,
   });
 }
-async function listQuotesPage(userId, { search = '', status, serviceDateFrom, serviceDateTo, page = 1, pageSize = 20, transaction } = {}) {
+async function listQuotesPage(userId, { search = '', status, serviceDateFrom, serviceDateTo, clientId, page = 1, pageSize = 20, transaction } = {}) {
   const where = {
     userId,
   };
@@ -562,6 +562,12 @@ async function listQuotesPage(userId, { search = '', status, serviceDateFrom, se
 
   if (status) {
     where.status = status;
+  }
+
+  // Pelo id, e não pelo nome: pega todos os orçamentos do cliente, mesmo os criados antes de o nome ser corrigido.
+  // Como o filtro por userId continua, o id de um cliente de outro prestador não traz nada.
+  if (clientId) {
+    where.clientId = clientId;
   }
 
   if (serviceDateFrom || serviceDateTo) {

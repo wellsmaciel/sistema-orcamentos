@@ -4,7 +4,7 @@ import { PERIOD_OPTIONS, STATUS_ROWS, formatAcceptanceRate, formatDaysWaiting, f
 import { formatQuoteMoney } from '../utils/quote-form.js';
 import { formatQuoteNumber } from '../utils/format.js';
 
-function ManagementView({ getAccessTokenSilently, onOpenQuotes, onOpenQuote }) {
+function ManagementView({ getAccessTokenSilently, onOpenQuotes, onOpenQuote, onOpenClientQuotes }) {
   const [period, setPeriod] = useState('month');
   const [summary, setSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -124,6 +124,19 @@ function ManagementView({ getAccessTokenSilently, onOpenQuotes, onOpenQuote }) {
               {summary.topClients.map((client) => (
                 <li key={client.clientId}>
                   {client.clientName} — {formatQuoteMoney(client.acceptedAmount)} ({client.acceptedCount === 1 ? '1 orçamento aceito' : `${client.acceptedCount} orçamentos aceitos`})
+                  {onOpenClientQuotes && (
+                    <>
+                      {' '}
+                      <button
+                        type="button"
+                        className="inline-link-button"
+                        onClick={() => onOpenClientQuotes(client.clientId, client.clientName)}
+                        aria-label={`Ver orçamentos de ${client.clientName}`}
+                      >
+                        Ver orçamentos
+                      </button>
+                    </>
+                  )}
                 </li>
               ))}
             </ol>

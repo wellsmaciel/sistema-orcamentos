@@ -1,6 +1,6 @@
 import { fetchJsonWithTimeout, withTimeout } from './request.js';
 
-async function requestQuotesPage(getAccessTokenSilently, { search = '', status = '', serviceDateFrom = '', serviceDateTo = '', page = 1 } = {}) {
+async function requestQuotesPage(getAccessTokenSilently, { search = '', status = '', serviceDateFrom = '', serviceDateTo = '', clientId = '', page = 1 } = {}) {
   const accessToken = await withTimeout(getAccessTokenSilently());
 
   const parameters = new URLSearchParams({
@@ -12,6 +12,7 @@ async function requestQuotesPage(getAccessTokenSilently, { search = '', status =
     ['status', status],
     ['serviceDateFrom', serviceDateFrom],
     ['serviceDateTo', serviceDateTo],
+    ['clientId', clientId],
   ]) {
     if (value) {
       parameters.set(name, value);

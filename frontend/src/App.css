@@ -534,6 +534,15 @@ article p + p {
   margin: 0;
 }
 
+/* Lista aberta pelos orçamentos de um cliente: o aviso deixa claro que há um filtro e como tirá-lo. */
+.client-filter-notice {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border: 2px solid #1d4ed8;
+  border-radius: 12px;
+  background-color: #eff6ff;
+}
+
 .response-notifications-more {
   margin: 8px 0 12px;
   font-weight: 700;
@@ -674,8 +683,9 @@ main > button:last-child:hover:not(:disabled) {
     align-items: start;
   }
 
-  /* Cartão em revisão: a conferência tem muitos dados e precisa da largura toda. */
-  .card-grid > .card-grid-wide {
+  /* Cartão em revisão (a conferência tem muitos dados) ou único resultado (não fica num canto da tela): largura toda. */
+  .card-grid > .card-grid-wide,
+  .card-grid > li:only-child {
     grid-column: 1 / -1;
   }
 

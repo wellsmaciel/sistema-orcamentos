@@ -14,7 +14,7 @@ const successLabels = {
   reactivate: 'reativado',
 };
 
-function ClientList({ getAccessTokenSilently, onEdit, onNewClient, createdClient = null, onCreateQuote }) {
+function ClientList({ getAccessTokenSilently, onEdit, onNewClient, createdClient = null, onCreateQuote, onOpenQuotes }) {
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState('true');
   const [query, setQuery] = useState({
@@ -197,6 +197,12 @@ function ClientList({ getAccessTokenSilently, onEdit, onNewClient, createdClient
                 <strong>{client.name}</strong>
                 <p>{client.email}</p>
                 <p>{client.active ? 'Ativo' : 'Inativo'}</p>
+
+                {onOpenQuotes && (
+                  <button type="button" onClick={() => onOpenQuotes(client)} disabled={controlsDisabled} aria-label={`Ver orçamentos de ${client.name}`}>
+                    Ver orçamentos
+                  </button>
+                )}
 
                 <button type="button" onClick={() => onEdit(client)} disabled={controlsDisabled}>
                   Editar cliente

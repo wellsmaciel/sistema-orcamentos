@@ -78,8 +78,12 @@ async function getManagementSummary(userId, { period = 'month', now = new Date()
     { replacements, type: QueryTypes.SELECT, transaction },
   );
 
+  // Ranking de clientes: o nome é o atual, do cadastro, e não a cópia guardada em cada orçamento (que pode ser
+  // de antes de uma correção). A cópia só fica como reserva.
   const clientRows = await sequelize.query(
-    `SELECT client_id, MAX(client_name) AS client_name, COUNT(*)::int AS accepted_count, SUM(total_amount) AS accepted_amount
+    `SELECT client_id,
+            COALESCE((SELECT name FROM clients WHERE clients.id = quotes.client_id), MAX(client_name)) AS client_name,
+            COUNT(*)::int AS accepted_count, SUM(total_amount) AS accepted_amount
        FROM quotes
       WHERE user_id = :userId AND status = 'ACCEPTED' ${periodFilter}
       GROUP BY client_id

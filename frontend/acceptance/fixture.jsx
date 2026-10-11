@@ -56,6 +56,8 @@ let content = (
     getAccessTokenSilently={getAccessTokenSilently}
     initialReviewQuoteId={parameters.get('review')}
     focusQuote={focusQuote}
+    clientId={parameters.get('clientId')}
+    clientName={parameters.get('clientName')}
     onOpenProfile={openProfile}
   />
 );
@@ -77,6 +79,7 @@ if (mode === 'clients-created') {
       onNewClient={() => {}}
       createdClient={client}
       onCreateQuote={(created) => { document.body.dataset.quoteForClient = created.id; }}
+      onOpenQuotes={(selected) => { document.body.dataset.quotesOfClient = selected.id; }}
     />
   );
 }
@@ -88,6 +91,7 @@ if (mode === 'management') {
     <ManagementView
       getAccessTokenSilently={getAccessTokenSilently}
       onOpenQuote={(item) => { document.body.dataset.openedQuote = `${item.quoteId}:${item.quoteNumber}`; }}
+      onOpenClientQuotes={(clientId, clientName) => { document.body.dataset.quotesOfClient = `${clientId}:${clientName}`; }}
     />
   );
 }

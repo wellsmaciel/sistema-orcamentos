@@ -151,6 +151,20 @@ describe('Resumo da área de gestão', () => {
     expect(month.acceptedAmount).toBe('0.00');
   });
 
+  test('os principais clientes aparecem com o nome atual do cadastro; os pendentes, com o nome do envio', async () => {
+    const user = await createProvider();
+    const client = await createClient(user.id, 'Rafael');
+
+    await createQuoteWith(user.id, client.id, { amount: '100', status: 'ACCEPTED', createdAt: '2026-10-02T10:00:00-03:00' });
+    await createQuoteWith(user.id, client.id, { amount: '200', status: 'SENT', createdAt: '2026-10-03T10:00:00-03:00', sentAt: '2026-10-03T10:00:00-03:00' });
+    await client.update({ name: 'Rafael Varjão' }, { transaction });
+
+    const summary = await getManagementSummary(user.id, { now: NOW, transaction });
+
+    expect(summary.topClients).toEqual([{ clientId: client.id, clientName: 'Rafael Varjão', acceptedCount: 1, acceptedAmount: '100.00' }]);
+    expect(summary.awaitingResponse.map((item) => item.clientName)).toEqual(['Rafael']);
+  });
+
   test('cada prestador vê somente os próprios números', async () => {
     const owner = await createProvider();
     const other = await createProvider();

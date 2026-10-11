@@ -169,7 +169,7 @@ textarea:focus-visible {
   border-color: #ffff00;
 }
 
-:root[data-contrast='high'] .created-client-notice {
+:root[data-contrast='high'] :is(.created-client-notice, .client-filter-notice) {
   background: #000000;
   border-color: #ffffff;
 }

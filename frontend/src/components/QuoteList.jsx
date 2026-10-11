@@ -28,7 +28,7 @@ function buildPublicQuoteUrl(publicToken) {
   return publicUrl.toString();
 }
 
-function QuoteList({ getAccessTokenSilently, onEdit, onOpenProfile, initialReviewQuoteId = null, focusQuote = null }) {
+function QuoteList({ getAccessTokenSilently, onEdit, onOpenProfile, initialReviewQuoteId = null, focusQuote = null, clientId = null, clientName = null }) {
   // Rascunho recém-criado cuja revisão deve abrir assim que a lista carregar.
   const initialReviewRef = useRef(initialReviewQuoteId);
   // Orçamento aberto por um aviso ou recém-editado: a lista já vem filtrada pelo número dele.
@@ -46,7 +46,9 @@ function QuoteList({ getAccessTokenSilently, onEdit, onOpenProfile, initialRevie
   const [reviewError, setReviewError] = useState('');
   const [copiedQuoteId, setCopiedQuoteId] = useState(null);
   const [creatingCorrectionQuoteId, setCreatingCorrectionQuoteId] = useState(null);
-  const [query, setQuery] = useState(focusSearch ? { page: 1, search: focusSearch } : { page: 1 });
+  // Aberta pelos orçamentos de um cliente: o filtro vale junto com os demais até "Mostrar todos" ou "Limpar filtros".
+  const [clientFilterId, setClientFilterId] = useState(clientId);
+  const [query, setQuery] = useState({ page: 1, ...(focusSearch && { search: focusSearch }), ...(clientId && { clientId }) });
   const [refreshIndex, setRefreshIndex] = useState(0);
   const [pagination, setPagination] = useState({
     total: 0,
@@ -162,14 +164,22 @@ function QuoteList({ getAccessTokenSilently, onEdit, onOpenProfile, initialRevie
     setQuery({
       ...filters,
       search: filters.search.trim(),
+      ...(clientFilterId && { clientId: clientFilterId }),
       page: 1,
     });
   }
 
   function handleClearFilters() {
     setHighlightQuoteId(null);
+    setClientFilterId(null);
     setFilters({ ...initialFilters });
     setQuery({ page: 1 });
+  }
+
+  // Tira só o filtro do cliente: busca, situação e datas continuam valendo.
+  function handleRemoveClientFilter() {
+    setClientFilterId(null);
+    setQuery(({ clientId: _removed, ...currentQuery }) => ({ ...currentQuery, page: 1 }));
   }
 
   function handleRefresh() {
@@ -279,7 +289,30 @@ function QuoteList({ getAccessTokenSilently, onEdit, onOpenProfile, initialRevie
 
       {reviewError && <p role="alert">{reviewError}</p>}
 
-      {!isLoading && !errorMessage && quotes.length === 0 && <p>Nenhum orçamento encontrado com esses filtros.</p>}
+      {clientFilterId && (
+        <p className="client-filter-notice">
+          {/* O nome vem de quem abriu a lista; depois de recarregar a página só sobra o id, e o texto fica genérico.
+              Não usa o nome gravado nos orçamentos, que pode ser de antes de o cliente ser renomeado. */}
+          {clientName ? (
+            <>
+              Mostrando os orçamentos de <strong>{clientName}</strong>.
+            </>
+          ) : (
+            'Mostrando os orçamentos do cliente selecionado.'
+          )}{' '}
+          <button type="button" className="inline-link-button" onClick={handleRemoveClientFilter} disabled={isBusy}>
+            Remover filtro do cliente
+          </button>
+        </p>
+      )}
+
+      {!isLoading && !errorMessage && quotes.length === 0 && (
+        <p>
+          {clientFilterId && !query.search && !query.status && !query.serviceDateFrom && !query.serviceDateTo
+            ? 'Este cliente ainda não tem orçamentos.'
+            : 'Nenhum orçamento encontrado com esses filtros.'}
+        </p>
+      )}
 
       {!isLoading && !errorMessage && quotes.length > 0 && (
         <ul className="card-grid">

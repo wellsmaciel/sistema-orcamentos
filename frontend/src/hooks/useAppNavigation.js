@@ -7,6 +7,8 @@ const HOME = {
   selectedClient: null,
   reviewQuoteId: null,
   focusQuote: null,
+  listClientId: null,
+  listClientName: null,
   createdClient: null,
   quoteClientId: null,
   key: 0,
@@ -27,6 +29,7 @@ function toHistoryState(entry, owner) {
     previousView: entry.previousView,
     reviewQuoteId: entry.reviewQuoteId,
     quoteClientId: entry.quoteClientId,
+    listClientId: entry.listClientId,
     focusQuote: entry.focusQuote
       ? { quoteId: entry.focusQuote.quoteId, quoteNumber: entry.focusQuote.quoteNumber, highlight: entry.focusQuote.highlight }
       : null,
@@ -48,10 +51,12 @@ function restoreNavigation(state, owner) {
     previousView: VIEWS.includes(state.previousView) ? state.previousView : null,
     reviewQuoteId: state.reviewQuoteId ?? null,
     quoteClientId: state.quoteClientId ?? null,
+    listClientId: state.listClientId ?? null,
     focusQuote: state.focusQuote ?? null,
     selectedQuote: details.selectedQuote ?? null,
     selectedClient: details.selectedClient ?? null,
     createdClient: details.createdClient ?? null,
+    listClientName: details.listClientName ?? null,
   };
 
   if (entry.view === 'edit-quote' && !entry.selectedQuote) {
@@ -69,7 +74,12 @@ function createEntry(next, previousView) {
   const key = Date.now() + Math.random();
   const entry = VIEWS.includes(next.view) ? { ...HOME, ...next, previousView, key } : { ...HOME, previousView, key };
 
-  detailsByKey.set(key, { selectedQuote: entry.selectedQuote, selectedClient: entry.selectedClient, createdClient: entry.createdClient });
+  detailsByKey.set(key, {
+    selectedQuote: entry.selectedQuote,
+    selectedClient: entry.selectedClient,
+    createdClient: entry.createdClient,
+    listClientName: entry.listClientName,
+  });
 
   return entry;
 }

@@ -8,6 +8,7 @@ const entry = {
   key: 123,
   reviewQuoteId: 'q1',
   quoteClientId: null,
+  listClientId: 'c1',
   focusQuote: { quoteId: 'q1', quoteNumber: 1, highlight: false },
   selectedQuote: { id: 'q1', client: { email: 'maria@example.com' } },
   selectedClient: null,
@@ -17,7 +18,7 @@ const entry = {
 test('o histórico guarda só a tela, identificadores e a conta', () => {
   const state = toHistoryState(entry, 'auth0|a');
 
-  assert.deepEqual(Object.keys(state).sort(), ['focusQuote', 'key', 'owner', 'previousView', 'quoteClientId', 'reviewQuoteId', 'view']);
+  assert.deepEqual(Object.keys(state).sort(), ['focusQuote', 'key', 'listClientId', 'owner', 'previousView', 'quoteClientId', 'reviewQuoteId', 'view']);
   assert.ok(!JSON.stringify(state).includes('maria@example.com'));
 });
 
@@ -36,9 +37,17 @@ test('a mesma conta recupera a tela e o filtro', () => {
   assert.equal(restored.view, 'quotes');
   assert.equal(restored.previousView, 'home');
   assert.deepEqual(restored.focusQuote, { quoteId: 'q1', quoteNumber: 1, highlight: false });
+  assert.equal(restored.listClientId, 'c1');
 });
 
 test('edição sem os dados em memória volta para a lista', () => {
   assert.equal(restoreNavigation({ ...toHistoryState(entry, 'auth0|a'), view: 'edit-quote', key: 999 }, 'auth0|a').view, 'quotes');
   assert.equal(restoreNavigation({ ...toHistoryState(entry, 'auth0|a'), view: 'edit-client', key: 999 }, 'auth0|a').view, 'clients');
+});
+
+test('o nome do cliente do filtro fica só na memória, nunca no histórico', () => {
+  const state = toHistoryState({ ...entry, listClientName: 'Maria Souza' }, 'auth0|a');
+
+  assert.ok(!JSON.stringify(state).includes('Maria Souza'));
+  assert.equal(restoreNavigation({ ...state, key: 999 }, 'auth0|a').listClientName, null);
 });
