@@ -44,7 +44,7 @@ describe('Modelo Company', () => {
         name: 'Prestador de Teste Serviços',
         email: 'contato@example.com',
         phone: '11999999999',
-        taxId: '12.345.678/0001-90',
+        taxId: '12.345.678/0001-95',
         street: 'Rua de Teste',
         number: '100',
         complement: null,
@@ -62,7 +62,7 @@ describe('Modelo Company', () => {
     expect(company.ownerUserId).toBe(user.id);
     expect(company.name).toBe('Prestador de Teste Serviços');
     expect(company.email).toBe('contato@example.com');
-    expect(company.taxId).toBe('12.345.678/0001-90');
+    expect(company.taxId).toBe('12.345.678/0001-95');
     expect(company.postalCode).toBe('01001-000');
     expect(company.active).toBe(true);
   });

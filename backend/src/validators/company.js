@@ -1,5 +1,5 @@
-import { PHONE_ERROR_MESSAGE, normalizeBrazilianPhone } from '../utils/phone.js';
-import { TAX_ID_ERROR_MESSAGE, normalizeBrazilianTaxId } from '../utils/tax-id.js';
+import { normalizeBrazilianPhone, phoneErrorMessage } from '../utils/phone.js';
+import { normalizeBrazilianTaxId, taxIdErrorMessage } from '../utils/tax-id.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -122,13 +122,13 @@ function validateCompanyInput(input) {
   });
 
   if (typeof input.phone === 'string' && input.phone.trim().length > 0 && input.phone.trim().length <= 30 && !normalizeBrazilianPhone(input.phone)) {
-    addError(errors, 'phone', PHONE_ERROR_MESSAGE);
+    addError(errors, 'phone', phoneErrorMessage(input.phone));
   }
 
   validateOptionalString(input.taxId, 'taxId', errors, 20);
 
   if (typeof input.taxId === 'string' && input.taxId.trim().length > 0 && !normalizeBrazilianTaxId(input.taxId)) {
-    addError(errors, 'taxId', TAX_ID_ERROR_MESSAGE);
+    addError(errors, 'taxId', taxIdErrorMessage(input.taxId));
   }
 
   validateAddress(input.address, errors);

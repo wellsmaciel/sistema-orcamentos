@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { saveClient } from '../services/client.js';
-import { PHONE_ERROR_MESSAGE, normalizeBrazilianPhone } from '../utils/phone.js';
+import { normalizeBrazilianPhone, phoneErrorMessage } from '../utils/phone.js';
 import { focusFirstFieldWithError } from '../utils/form-errors.js';
 import FormField from './FormField.jsx';
 import PhoneField from './PhoneField.jsx';
@@ -59,10 +59,11 @@ function ClientForm({ getAccessTokenSilently, client, onSaved, onCancel }) {
     const form = event.currentTarget;
 
     if (!normalizeBrazilianPhone(formData.phone)) {
-      setFieldErrors({ phone: PHONE_ERROR_MESSAGE });
+      const phoneErrors = { phone: phoneErrorMessage(formData.phone) };
+      setFieldErrors(phoneErrors);
       setAnnounceFieldErrors(true);
       setSubmitError('');
-      focusFirstFieldWithError(form, { phone: PHONE_ERROR_MESSAGE });
+      focusFirstFieldWithError(form, phoneErrors);
       return;
     }
 

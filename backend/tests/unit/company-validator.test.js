@@ -5,7 +5,7 @@ function buildValidInput() {
     name: 'Prestador de Teste Serviços',
     email: 'contato@example.com',
     phone: '11999999999',
-    taxId: '12.345.678/0001-90',
+    taxId: '12.345.678/0001-95',
     address: {
       street: 'Rua de Teste',
       number: '100',
@@ -63,19 +63,37 @@ describe('Validação dos dados profissionais', () => {
 
     expect(errors).toContainEqual({
       field: 'taxId',
-      message: 'Informe um CPF ou CNPJ com 11 ou 14 dígitos.',
+      message: 'Informe um CPF com 11 números ou um CNPJ com 14 caracteres.',
     });
   });
 
   test('deve aceitar CPF e CNPJ somente com números ou já formatados', () => {
-    expect(validateCompanyInput({ ...buildValidInput(), taxId: '12345678901' })).toEqual([]);
-    expect(validateCompanyInput({ ...buildValidInput(), taxId: '12.345.678/0001-90' })).toEqual([]);
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: '12345678909' })).toEqual([]);
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: '12.345.678/0001-95' })).toEqual([]);
   });
 
-  test('deve rejeitar letras no CPF ou CNPJ', () => {
+  test('deve conferir os dígitos verificadores e dizer qual documento está errado', () => {
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: '123.456.789-01' })).toContainEqual({
+      field: 'taxId',
+      message: 'CPF inválido: confira os números.',
+    });
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: '12.345.678/0001-90' })).toContainEqual({
+      field: 'taxId',
+      message: 'CNPJ inválido: confira os números e as letras.',
+    });
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: '111.111.111-11' })).toContainEqual(expect.objectContaining({ field: 'taxId' }));
+  });
+
+  test('deve aceitar o CNPJ alfanumérico, com o exemplo da Receita Federal', () => {
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: '12.ABC.345/01DE-35' })).toEqual([]);
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: '12abc34501de35' })).toEqual([]);
+    expect(validateCompanyInput({ ...buildValidInput(), taxId: '12.ABC.345/01DE-34' })).toContainEqual(expect.objectContaining({ field: 'taxId' }));
+  });
+
+  test('deve rejeitar texto junto do CPF ou CNPJ', () => {
     expect(validateCompanyInput({ ...buildValidInput(), taxId: 'CNPJ 12345678901234' })).toContainEqual({
       field: 'taxId',
-      message: 'Informe um CPF ou CNPJ com 11 ou 14 dígitos.',
+      message: 'Informe um CPF com 11 números ou um CNPJ com 14 caracteres.',
     });
   });
 
@@ -114,7 +132,7 @@ describe('Validação dos dados profissionais', () => {
 describe('telefone comercial', () => {
   test('rejeita telefone sem DDD, com exemplo do formato', () => {
     expect(validateCompanyInput({ ...buildValidInput(), phone: '3333-4444' })).toEqual([
-      { field: 'phone', message: 'Informe o telefone com DDD: celular, por exemplo 21999998888, ou fixo, por exemplo 2133334444.' },
+      { field: 'phone', message: 'Informe o telefone com DDD. Celular: 9 dígitos depois do DDD, começando com 9, por exemplo 21999998888. Fixo: 8 dígitos depois do DDD, começando com 2, 3, 4 ou 5, por exemplo 2133334444.' },
     ]);
   });
 

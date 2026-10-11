@@ -1,4 +1,4 @@
-import { PHONE_ERROR_MESSAGE, normalizeBrazilianPhone } from '../utils/phone.js';
+import { normalizeBrazilianPhone, phoneErrorMessage } from '../utils/phone.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -98,7 +98,7 @@ function validateClientInput(input) {
   if (typeof input.phone === 'string' && input.phone.trim().length > 0 && input.phone.trim().length <= 30 && !normalizeBrazilianPhone(input.phone)) {
     errors.push({
       field: 'phone',
-      message: PHONE_ERROR_MESSAGE,
+      message: phoneErrorMessage(input.phone),
     });
   }
 

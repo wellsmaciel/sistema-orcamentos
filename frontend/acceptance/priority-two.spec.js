@@ -71,7 +71,7 @@ test('dados profissionais podem ser atualizados', async ({ page }) => {
   expect(submittedBody.email).toBe('empresa@example.com');
 });
 
-test('CPF ou CNPJ pode ser digitado somente com números no celular', async ({ page }) => {
+test('CPF ou CNPJ pode ser digitado sem pontuação no celular, com teclado que aceita as letras do CNPJ novo', async ({ page }) => {
   let submittedBody;
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route('**/api/v1/company', (route) => {
@@ -85,14 +85,15 @@ test('CPF ou CNPJ pode ser digitado somente com números no celular', async ({ p
   await page.goto('/acceptance/fixture.html?mode=company');
   const taxId = page.getByLabel('CPF ou CNPJ');
 
-  await expect(taxId).toHaveAttribute('inputmode', 'numeric');
-  await taxId.fill('12345678000190');
+  await expect(taxId).toHaveAttribute('autocapitalize', 'characters');
+  await expect(taxId).not.toHaveAttribute('inputmode', 'numeric');
+  await taxId.fill('12345678000195');
   await taxId.blur();
-  await expect(taxId).toHaveValue('12.345.678/0001-90');
+  await expect(taxId).toHaveValue('12.345.678/0001-95');
   await page.getByRole('button', { name: 'Salvar dados profissionais' }).click();
 
   await expect(page.getByText('Dados profissionais salvos com sucesso.')).toBeVisible();
-  expect(submittedBody.taxId).toBe('12.345.678/0001-90');
+  expect(submittedBody.taxId).toBe('12.345.678/0001-95');
 });
 
 test('cliente pode ser editado', async ({ page }) => {
@@ -150,7 +151,7 @@ test('telefone do cliente é padronizado e validado antes de salvar', async ({ p
 
   await phone.fill('9999-8888');
   await page.getByRole('button', { name: 'Salvar alterações' }).click();
-  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD: celular, por exemplo 21999998888, ou fixo, por exemplo 2133334444.');
+  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD. Celular: 9 dígitos depois do DDD, começando com 9, por exemplo 21999998888. Fixo: 8 dígitos depois do DDD, começando com 2, 3, 4 ou 5, por exemplo 2133334444.');
   await expect(phone).toHaveAttribute('aria-invalid', 'true');
   await expect(phone).toHaveCSS('border-color', 'rgb(185, 28, 28)');
   expect(submittedBody).toBeUndefined();
@@ -180,7 +181,7 @@ test('telefone comercial sem DDD não é enviado', async ({ page }) => {
   await page.getByRole('button', { name: 'Salvar dados profissionais' }).click();
 
   const phone = page.getByLabel('Telefone comercial');
-  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD: celular, por exemplo 21999998888, ou fixo, por exemplo 2133334444.');
+  await expect(page.getByRole('alert')).toHaveText('Informe o telefone com DDD. Celular: 9 dígitos depois do DDD, começando com 9, por exemplo 21999998888. Fixo: 8 dígitos depois do DDD, começando com 2, 3, 4 ou 5, por exemplo 2133334444.');
   await expect(phone).toHaveAttribute('aria-invalid', 'true');
   await expect(phone).toHaveCSS('border-color', 'rgb(185, 28, 28)');
   expect(saveRequests).toBe(0);
