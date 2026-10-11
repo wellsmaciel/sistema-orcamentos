@@ -176,6 +176,11 @@ As verificações também são executadas automaticamente pelo GitHub Actions em
 - **Backend - migrations e testes:** migrations em um PostgreSQL de teste e testes de unidade e integração.
 - **Infraestrutura - plano do Railway:** compara `.railway/railway.ts` com o ambiente de produção (`railway config plan --detailed-exit-code`) e falha se houver diferença. O job nunca aplica mudanças.
 
+### Limitações conhecidas dos testes
+
+- Os testes de aceite usam uma página de testes (`frontend/acceptance/fixture.html`) que monta cada tela separadamente, sem o login do Auth0. Por isso, a ligação entre telas feita no `App.jsx` não tem teste automatizado. Exemplo: o "Abrir orçamento" do quadro de respostas e da área de gestão. Cada lado é testado separadamente: o botão envia o orçamento certo, e a lista, ao recebê-lo, busca pelo número e destaca o cartão. Essa ligação é conferida manualmente no ambiente publicado.
+- O "Abrir orçamento" usa a busca da lista, que procura pelo número e também pelo nome do cliente. Se mais de 20 orçamentos mais recentes fossem de clientes com o número no nome (por exemplo, "000041"), o orçamento procurado ficaria fora da primeira página e não seria destacado. O caso é improvável, porque o número é buscado com os zeros à esquerda.
+
 ## Logs e auditoria
 
 - **Requisições:** a API escreve uma linha JSON por requisição na saída padrão, coletada pelo Railway, com método, padrão da rota, status, duração, identificador da requisição e identificador do usuário. O endereço real não é registrado, para que tokens de links públicos e dados pessoais não cheguem aos logs. Cada resposta traz o cabeçalho `X-Request-Id`, também presente nos logs de erro.

@@ -290,7 +290,7 @@ function QuoteList({ getAccessTokenSilently, onEdit, onOpenProfile, initialRevie
             const existingCorrection = quote.correction ?? null;
 
             return (
-              <li key={quote.id}>
+              <li key={quote.id} className={reviewQuoteId === quote.id ? 'card-grid-wide' : undefined}>
                 <article id={`quote-${quote.id}`} className={reviewQuoteId === quote.id || highlightQuoteId === quote.id ? 'quote-card-reviewing' : undefined}>
                   <h3>Orçamento nº {formatQuoteNumber(quote.quoteNumber)}</h3>
                   {reviewQuoteId === quote.id && <p className="review-badge">Em revisão</p>}

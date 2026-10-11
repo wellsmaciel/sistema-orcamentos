@@ -4,7 +4,7 @@ import { PERIOD_OPTIONS, STATUS_ROWS, formatAcceptanceRate, formatDaysWaiting, f
 import { formatQuoteMoney } from '../utils/quote-form.js';
 import { formatQuoteNumber } from '../utils/format.js';
 
-function ManagementView({ getAccessTokenSilently, onOpenQuotes }) {
+function ManagementView({ getAccessTokenSilently, onOpenQuotes, onOpenQuote }) {
   const [period, setPeriod] = useState('month');
   const [summary, setSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,6 +97,20 @@ function ManagementView({ getAccessTokenSilently, onOpenQuotes }) {
               {summary.awaitingResponse.map((item) => (
                 <li key={item.quoteId}>
                   Orçamento nº {formatQuoteNumber(item.quoteNumber)} — {item.clientName} — {formatQuoteMoney(item.totalAmount)} — {formatDaysWaiting(item.daysWaiting)}
+                  {/* Mesmo atalho do quadro de respostas: a lista abre filtrada pelo número, com o cartão destacado. */}
+                  {onOpenQuote && (
+                    <>
+                      {' '}
+                      <button
+                        type="button"
+                        className="inline-link-button"
+                        onClick={() => onOpenQuote(item)}
+                        aria-label={`Abrir orçamento nº ${formatQuoteNumber(item.quoteNumber)}`}
+                      >
+                        Abrir orçamento
+                      </button>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>

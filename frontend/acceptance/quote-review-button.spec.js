@@ -45,3 +45,24 @@ test('com a revisão aberta, o cartão não mostra o botão "Revisar orçamento"
   await first.getByRole('button', { name: 'Voltar à lista' }).click();
   await expect(first.getByRole('button', { name: 'Revisar orçamento' })).toBeVisible();
 });
+
+test('no computador, o cartão em revisão ocupa a largura toda da lista', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const drafts = [buildDraft('quote-1', 1), buildDraft('quote-2', 2)];
+  await page.route('**/api/v1/quotes/search?*', (route) => route.fulfill({ json: { items: drafts, total: 2, page: 1, pageSize: 20, totalPages: 1 } }));
+  await page.route('**/api/v1/company', (route) => route.fulfill({ json: { id: 'c', name: 'Oficina', email: 'o@example.com', phone: '(11) 3333-4444', hasLogo: false } }));
+
+  await page.goto('/acceptance/fixture.html');
+  const grid = page.locator('ul.card-grid');
+  const second = page.locator('#quote-quote-2');
+  const gridWidth = (await grid.boundingBox()).width;
+  expect((await second.boundingBox()).width).toBeLessThan(gridWidth * 0.6);
+
+  await second.getByRole('button', { name: 'Revisar orçamento' }).click();
+  await expect(second.getByRole('button', { name: 'Confirmar e gerar link' })).toBeVisible();
+  expect((await second.boundingBox()).width).toBeGreaterThan(gridWidth * 0.95);
+
+  await second.getByRole('button', { name: 'Voltar à lista' }).click();
+  await expect(second.getByRole('button', { name: 'Revisar orçamento' })).toBeVisible();
+  expect((await second.boundingBox()).width).toBeLessThan(gridWidth * 0.6);
+});

@@ -62,3 +62,12 @@ test('falha ao carregar os indicadores permite tentar novamente', async ({ page 
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
   await expect(page.getByRole('list', { name: 'Indicadores do período' })).toContainText('Orçamentos criados6');
 });
+
+test('cada orçamento aguardando resposta tem um atalho para abri-lo', async ({ page }) => {
+  await page.route('**/api/v1/management/summary?*', (route) => route.fulfill({ json: monthSummary }));
+
+  await page.goto('/acceptance/fixture.html?mode=management');
+  await page.getByRole('button', { name: 'Abrir orçamento nº 000041' }).click();
+
+  await expect(page.locator('body')).toHaveAttribute('data-opened-quote', 'q1:41');
+});
