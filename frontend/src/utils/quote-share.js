@@ -91,4 +91,4 @@ function buildEmailShareUrl(quote, publicUrl) {
   return `mailto:${quote.client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(buildShareMessage(quote, publicUrl))}`;
 }
 
-export { buildEmailShareUrl, buildShareMessage, buildWhatsAppShareUrl, normalizeWhatsAppPhone };
+export { buildEmailShareUrl, buildShareMessage, buildWhatsAppShareUrl, normalizeWhatsAppPhone, summarizeService };

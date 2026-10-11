@@ -5,7 +5,7 @@ import { confirmQuote, createQuoteCorrection } from '../services/quote-actions.j
 import { buildEmailShareUrl, buildWhatsAppShareUrl } from '../utils/quote-share.js';
 import QuoteReview from './QuoteReview.jsx';
 import QuoteHistory from './QuoteHistory.jsx';
-import { formatAmount, formatDate, formatQuoteNumber } from '../utils/format.js';
+import { formatAmount, formatDate, formatQuoteNumber, formatServiceAddressLine } from '../utils/format.js';
 
 const statusLabels = {
   DRAFT: 'Rascunho',
@@ -424,6 +424,20 @@ function QuoteList({ getAccessTokenSilently, onEdit, onOpenProfile, initialRevie
                   <p>
                     <strong>Data do serviço:</strong> {formatDate(quote.serviceDate)}
                   </p>
+
+                  {/* O endereço fica no cartão para o dia do serviço; durante a revisão ele já aparece na conferência. */}
+                  {quote.serviceAddress && reviewQuoteId !== quote.id && (
+                    <>
+                      <p>
+                        <strong>Endereço do serviço:</strong> {formatServiceAddressLine(quote.serviceAddress)}
+                      </p>
+                      {quote.locationNotes && (
+                        <p>
+                          <strong>Observações do local:</strong> {quote.locationNotes}
+                        </p>
+                      )}
+                    </>
+                  )}
 
                   <p>
                     <strong>Descrição:</strong> {quote.description}

@@ -7,6 +7,7 @@ import ClientList from './components/ClientList.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import TopNav from './components/TopNav.jsx';
 import ResponseNotifications from './components/ResponseNotifications.jsx';
+import UpcomingServices from './components/UpcomingServices.jsx';
 import AccountView from './components/AccountView.jsx';
 import ManagementView from './components/ManagementView.jsx';
 import QuoteForm from './components/QuoteForm.jsx';
@@ -194,6 +195,7 @@ function AuthenticatedApp() {
             onOpenQuotes={() => handleNavigate('quotes')}
             onOpenQuote={handleOpenQuote}
           />
+          <UpcomingServices getAccessTokenSilently={getAccessTokenSilently} onOpenQuote={handleOpenQuote} />
           <Dashboard onNavigate={handleNavigate} />
         </>
       ) : (

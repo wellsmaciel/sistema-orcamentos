@@ -70,6 +70,31 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/v1/agenda:
+    get:
+      tags:
+        - Avisos
+      summary: Lista os próximos serviços do prestador
+      description: >
+        Retorna até 5 orçamentos aceitos com data prevista de hoje em diante (horário de Brasília),
+        do mais próximo para o mais distante, e o total de serviços agendados. "today" é a data
+        usada como hoje, para o frontend marcar os serviços de hoje e de amanhã.
+      operationId: listUpcomingServices
+      security:
+        - Auth0Bearer: []
+      responses:
+        '200':
+          description: Próximos serviços e total.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpcomingServicesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/v1/notifications/responses:
     get:
       tags:
@@ -1850,6 +1875,37 @@ components:
               clientName: { type: string }
               acceptedCount: { type: integer, minimum: 1 }
               acceptedAmount: { type: string }
+
+    UpcomingServicesResponse:
+      type: object
+      required: [today, total, items]
+      properties:
+        today:
+          type: string
+          format: date
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              quoteId: { type: string, format: uuid }
+              quoteNumber: { type: integer }
+              clientName: { type: string }
+              description: { type: string }
+              totalAmount: { type: string }
+              serviceDate: { type: string, format: date }
+              serviceAddress:
+                type: object
+                properties:
+                  street: { type: string }
+                  number: { type: string }
+                  complement: { type: string, nullable: true }
+                  district: { type: string }
+                  city: { type: string }
+                  state: { type: string }
+                  postalCode: { type: string }
 
     ResponseNotificationsResponse:
       type: object
