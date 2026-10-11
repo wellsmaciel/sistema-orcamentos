@@ -83,7 +83,14 @@ if (mode === 'clients-created') {
 if (mode === 'company') content = <CompanyForm getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'client-edit') content = <ClientForm client={client} getAccessTokenSilently={getAccessTokenSilently} />;
 if (mode === 'activities') content = <ActivityList getAccessTokenSilently={getAccessTokenSilently} />;
-if (mode === 'management') content = <ManagementView getAccessTokenSilently={getAccessTokenSilently} />;
+if (mode === 'management') {
+  content = (
+    <ManagementView
+      getAccessTokenSilently={getAccessTokenSilently}
+      onOpenQuote={(item) => { document.body.dataset.openedQuote = `${item.quoteId}:${item.quoteNumber}`; }}
+    />
+  );
+}
 if (mode === 'account') {
   const auth0User = { sub: parameters.get('login') === 'google' ? 'google-oauth2|123' : 'auth0|123', email: 'prestador@example.com' };
   content = <AccountView getAccessTokenSilently={getAccessTokenSilently} auth0User={auth0User} onLogout={() => { document.body.dataset.loggedOut = 'true'; }} />;

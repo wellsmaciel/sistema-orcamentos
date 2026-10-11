@@ -132,7 +132,7 @@ function AuthenticatedApp() {
     navigate({ view: 'edit-quote', selectedQuote: quote });
   }
 
-  function handleOpenQuoteFromNotification(item) {
+  function handleOpenQuote(item) {
     navigate({ view: 'quotes', focusQuote: { quoteId: item.quoteId, quoteNumber: item.quoteNumber } });
   }
 
@@ -187,7 +187,7 @@ function AuthenticatedApp() {
           <ResponseNotifications
             getAccessTokenSilently={getAccessTokenSilently}
             onOpenQuotes={() => handleNavigate('quotes')}
-            onOpenQuote={handleOpenQuoteFromNotification}
+            onOpenQuote={handleOpenQuote}
           />
           <Dashboard onNavigate={handleNavigate} />
         </>
@@ -199,7 +199,13 @@ function AuthenticatedApp() {
 
           {currentView === 'company' && <CompanyForm getAccessTokenSilently={getAccessTokenSilently} />}
 
-          {currentView === 'management' && <ManagementView getAccessTokenSilently={getAccessTokenSilently} onOpenQuotes={() => handleNavigate('quotes')} />}
+          {currentView === 'management' && (
+            <ManagementView
+              getAccessTokenSilently={getAccessTokenSilently}
+              onOpenQuotes={() => handleNavigate('quotes')}
+              onOpenQuote={handleOpenQuote}
+            />
+          )}
 
           {currentView === 'clients' && (
             <section>
