@@ -131,7 +131,8 @@ function HelpGuide() {
           A tela inicial mostra os serviços já aceitos pelos clientes, do mais próximo para o mais distante, a partir de hoje. Os de hoje
           aparecem com o selo <strong>Hoje</strong>. Em cada serviço, <strong>Abrir orçamento</strong> leva ao orçamento, e{' '}
           <strong>Adicionar ao Google Agenda</strong> abre o Google Agenda com o evento já preenchido (cliente, serviço, valor e endereço).
-          Nada é salvo na sua agenda até você confirmar lá.
+          Nada é salvo na sua agenda até você confirmar lá. O mesmo botão aparece no cartão de cada orçamento aceito, em{' '}
+          <strong>Meus orçamentos</strong>.
         </p>
 
         <h2 id="gestao">Gestão</h2>

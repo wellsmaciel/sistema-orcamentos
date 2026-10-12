@@ -3,6 +3,7 @@ import { requestQuotesPage } from '../services/quote-list.js';
 import { requestCompany } from '../services/company.js';
 import { confirmQuote, createQuoteCorrection } from '../services/quote-actions.js';
 import { buildEmailShareUrl, buildWhatsAppShareUrl } from '../utils/quote-share.js';
+import { buildGoogleCalendarUrl } from '../utils/agenda.js';
 import QuoteReview from './QuoteReview.jsx';
 import QuoteHistory from './QuoteHistory.jsx';
 import { formatAmount, formatDate, formatQuoteNumber, formatServiceAddressLine } from '../utils/format.js';
@@ -381,6 +382,21 @@ function QuoteList({ getAccessTokenSilently, onEdit, onOpenProfile, initialRevie
                           )}
                           <a className="button-link" href={buildEmailShareUrl(quote, buildPublicQuoteUrl(quote.publicToken))}>
                             Enviar por e-mail
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Aceito: o mesmo atalho do quadro "Próximos serviços", para o serviço entrar na agenda do prestador. */}
+                      {quote.status === 'ACCEPTED' && (
+                        <div className="share-actions">
+                          <a
+                            className="button-link"
+                            href={buildGoogleCalendarUrl({ ...quote, clientName: quote.client.name })}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Adicionar ao Google Agenda: orçamento nº ${formatQuoteNumber(quote.quoteNumber)} (abre em nova aba)`}
+                          >
+                            Adicionar ao Google Agenda
                           </a>
                         </div>
                       )}
