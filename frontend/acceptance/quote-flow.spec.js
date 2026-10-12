@@ -210,3 +210,21 @@ test('o cartão do orçamento mostra o endereço do serviço, sem repetir durant
   await expect(draftCard.getByRole('region', { name: 'Confira todos os dados antes de confirmar' })).toContainText('Rua Principal');
   await expect(draftCard.getByText(/Endereço do serviço:/)).toHaveCount(1);
 });
+
+test('orçamento aceito tem o atalho para o Google Agenda; enviado, não', async ({ page }) => {
+  const accepted = { ...buildQuote('FIXED_TOTAL'), id: 'quote-9', quoteNumber: 9, status: 'ACCEPTED', publicToken: 'token-9' };
+  const sent = { ...buildQuote('FIXED_TOTAL'), id: 'quote-10', quoteNumber: 10, status: 'SENT', publicToken: 'token-10' };
+  await page.route('**/api/v1/quotes/search?*', (route) => route.fulfill({ json: { items: [accepted, sent], total: 2, page: 1, pageSize: 20, totalPages: 1 } }));
+
+  await page.goto('/acceptance/fixture.html');
+
+  const link = page.locator('#quote-quote-9').getByRole('link', { name: 'Adicionar ao Google Agenda: orçamento nº 000009 (abre em nova aba)' });
+  await expect(link).toHaveAttribute('target', '_blank');
+  const url = new URL(await link.getAttribute('href'));
+  expect(url.hostname).toBe('calendar.google.com');
+  expect(url.searchParams.get('text')).toBe('Serviço: Cliente Exemplo');
+  expect(url.searchParams.get('dates')).toBe('20991015/20991016');
+  expect(url.searchParams.get('location')).toBe('Rua Principal, 10, Centro, São Paulo - SP, 01001-000');
+
+  await expect(page.locator('#quote-quote-10').getByRole('link', { name: /Google Agenda/ })).toHaveCount(0);
+});
