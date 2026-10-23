@@ -104,7 +104,8 @@ describe('Serviço de orçamentos', () => {
         },
       ],
       totalAmount: '1500.5',
-      serviceDate: '2026-10-15',
+      // Mantém a confirmação válida independentemente das datas históricas usadas nos filtros.
+      serviceDate: '2099-10-15',
       serviceAddress: {
         street: '  Avenida do Serviço  ',
         number: '  200  ',
@@ -1597,7 +1598,7 @@ describe('Serviço de orçamentos', () => {
     const updateInput = buildQuoteInput(client.id);
     delete updateInput.clientId;
     updateInput.description = 'Descrição revisada.';
-    updateInput.serviceDate = '2026-10-20';
+    updateInput.serviceDate = '2099-10-20';
     updateInput.items.push({ description: 'Peça adicional', quantity: '2' });
     await updateQuote(owner.id, quote.id, updateInput, { transaction });
 
@@ -1620,7 +1621,7 @@ describe('Serviço de orçamentos', () => {
     expect(originalEvents[0].details.after.items).toHaveLength(1);
     expect(originalEvents[1].details.changes).toEqual(expect.arrayContaining([
       expect.objectContaining({ field: 'description', before: 'Execução do serviço solicitado.', after: 'Descrição revisada.' }),
-      expect.objectContaining({ field: 'serviceDate', after: '2026-10-20' }),
+      expect.objectContaining({ field: 'serviceDate', after: '2099-10-20' }),
       expect.objectContaining({ field: 'items' }),
     ]));
     expect(originalEvents[3].details.rejectionReason).toBe('Preciso rever o prazo.');
